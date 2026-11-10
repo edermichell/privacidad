@@ -1,7 +1,7 @@
 # Último Refugio · servidor multijugador por salas (Tailscale)
 
 Tu PC hace de servidor: varias **salas** (cada una es un mundo propio, hasta **10 jugadores**), que se guardan solas. Los jugadores entran desde el móvil por **Tailscale** (red privada: nada queda abierto a internet).
-En el juego, el botón del menú ahora es **MULTIJUGADOR**: arriba, las **salas del servidor**; abajo, el **COOP de misma red** (hasta 4, como antes, sin servidor).
+En el juego, el botón del menú es **MULTIJUGADOR**: arriba, las **salas del servidor** (aparecen solas, sin escribir la dirección), con **salas oficiales**, **salas de jugadores públicas o privadas** y **«Buen anfitrión»** (salas 24/7); abajo, el **COOP de misma red** (hasta 4, sin servidor).
 
 ## Cómo funciona
 - `servidor.js` sirve el juego, hace de relé para que los jugadores se encuentren y mantiene los anfitriones: un navegador sin pantalla (Edge en Windows) por cada sala activa.
@@ -24,9 +24,17 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 
 ## Cómo entran los jugadores
 1. Tailscale activo en su móvil y con acceso a tu red (o tú compartes la máquina *Servidor* desde el panel de Tailscale: *Machines → Share*).
-2. En el juego: **MULTIJUGADOR** → escribir `100.70.104.87:8080` → **ACTUALIZAR** → elegir una sala → **UNIRSE**. La dirección se recuerda.
-   - Con la **app de Android (APK v13.7)** o con el juego en el navegador (`http://100.70.104.87:8080/juego/`; en el navegador la dirección ya viene escrita).
+2. En el juego: **MULTIJUGADOR** → las salas aparecen solas → **UNIRSE**. El juego trae de fábrica `100.70.104.87:8080` y `server.tail12bbaa.ts.net:8080` (cambiables en «Cambiar servidor»); recuerda el último que funcionó.
+   - Con la **app de Android (APK v13.8)** o con el juego en el navegador (`http://100.70.104.87:8080/juego/`).
 3. **COOP misma red** (hasta 4, sin servidor): igual que antes, en el mismo menú.
+
+## Salas de jugadores (públicas y privadas) y «Buen anfitrión»
+- **Cualquier jugador** puede **crear una sala**: *MULTIJUGADOR → + CREAR SALA*, con nombre y tipo **pública** (sale en la lista) o **privada** (solo entra quien tenga el **código de 6 letras**, con *ENTRAR CON CÓDIGO*). El dueño ve en su sala los botones CÓDIGO, HACER PÚBLICA/PRIVADA y BORRAR.
+- **Gratis:** 1 sala por jugador (`gratisSalasMax`); se duerme sin jugadores y se **borra tras 14 días** sin nadie (`gratisCaducaDias`).
+- **«Buen anfitrión»** (licencia con vencimiento): más salas (según la licencia) y **salas 24/7**: no se duermen, no caducan y están siempre listas (sin esperar a que despierten). Cupo en el servidor: `salas247Max` (y siempre queda un hueco libre de `salasActivasMax`).
+- **Dueño sin cuentas:** cada dispositivo genera una identidad (id + clave) y el servidor guarda solo el *hash* de la clave. Si el jugador reinstala o cambia de móvil, pierde el control de sus salas y su licencia (limitación actual).
+- **Dar una licencia:** `GENERAR_LICENCIA.bat` (o `node servidor.js --licencia 30 3` = 30 días, 3 salas) imprime un código `BA-XXXX-XXXX`; el jugador lo escribe en *MULTIJUGADOR → Buen anfitrión → CANJEAR* (cuenta los días desde que lo canjea; un código sirve para un solo jugador). Funciona con el servidor encendido. Si la licencia vence, sus salas 24/7 pasan a gratis.
+- **Venderlo dentro de la app:** ver `PRODUCTO_BUEN_ANFITRION.md`. **Hoy no cobra nada**: la tarjeta de la Tienda y del lobby dice «Precio por definir» y se canjea con códigos que tú entregas.
 
 ## Ajustes (`config.json`)
 | Clave | Qué hace |
@@ -34,7 +42,10 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 | `puerto` | Puerto (8080). Si lo cambias, edita también `ABRIR_FIREWALL_TAILSCALE.bat`. |
 | `salas` | Lista de salas: `id` (4–6 letras/números, único), `nombre`, y opcionalmente `semilla`, `modo`, `tamano`… propios de esa sala. Añadir una sala = añadir una línea. |
 | `maxJugadores` | Jugadores por sala (1–10). |
-| `salasActivasMax` | Salas despiertas a la vez. Cada una usa ~0,5–1 GB de RAM y CPU (ver «Rendimiento»). |
+| `salasActivasMax` | Salas despiertas a la vez (incluye las 24/7). Cada una usa ~0,5–1 GB de RAM y CPU (ver «Rendimiento»). |
+| `salasUsuario`, `salasUsuarioMax` | Permitir que los jugadores creen salas (true/false) y máximo de salas de jugadores (40). |
+| `gratisSalasMax`, `gratisCaducaDias` | Salas gratis por jugador (1) y días sin jugadores antes de borrarla (14). |
+| `salas247Max`, `simular247`, `licenciaSalasPorDefecto` | Cupo de salas 24/7; `simular247: true` hace que el mundo siga corriendo sin jugadores; salas por licencia (3). |
 | `dormirTrasMin` | Minutos sin jugadores antes de dormir la sala (0 = nunca). |
 | `simularSinJugadores` | `false`: sala vacía en pausa. `true`: el mundo sigue sin gente, con el anfitrión aparcado lejos del punto de entrada (los zombis se acumulan con los días). |
 | `fpsServidor` | Pasos por segundo del anfitrión (30 por defecto; menos CPU). |
@@ -68,5 +79,5 @@ Copia el nuevo `index.html` sobre `juego\index.html` y reinicia el servidor. **T
 - **Falta el navegador** (Linux/Mac): `npx playwright-core install chromium`.
 
 ## Qué está probado y qué no
-**Probado (Linux, Chromium, una sola máquina):** instalación limpia; salas con mundos independientes; despertar/dormir y continuar el mundo; límite de salas activas (503); **10 jugadores en una sala** entrando por la lista, el 11.º rechazado, todos se ven entre sí, el anfitrión fantasma oculto, zombis que persiguen a los jugadores y no al anfitrión; reinicio automático tras caída; guardado al cerrar; COOP de misma red (2 y 4 jugadores) sin cambios.
+**Probado (Linux, Chromium, una sola máquina):** instalación limpia; salas con mundos independientes; **las salas aparecen solas (también desde `file://`, como la APK)**; **crear sala pública/privada, entrar con código, privada oculta de la lista, límite de salas gratis, canjear licencia, sala 24/7, borrar, ajena rechazada, licencia vencida y sala gratis inactiva borrada**; despertar/dormir y continuar el mundo; límite de salas activas (503); **10 jugadores en una sala** entrando por la lista, el 11.º rechazado, todos se ven entre sí, el anfitrión fantasma oculto, zombis que persiguen a los jugadores y no al anfitrión; reinicio automático tras caída; guardado al cerrar; COOP de misma red (2 y 4 jugadores) sin cambios.
 **NO probado:** Windows (los `.bat`), **Tailscale real**, móviles reales (rendimiento, calor, pantalla bloqueada, reconexión), la APK dentro del servidor (no se compiló), 24 h reales seguidas, ni 10 jugadores con dibujo real en 10 dispositivos (en la prueba los invitados no dibujaban). La conexión directa móvil↔PC por Tailscale usa WebRTC con direcciones de Tailscale: debería funcionar, pero hay que confirmarlo.

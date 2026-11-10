@@ -11,9 +11,9 @@ const http = require('http'), fs = require('fs'), path = require('path'), os = r
 let chromium; try { chromium = require('playwright-core').chromium; } catch (e) { try { chromium = require('playwright').chromium; } catch (e2) { console.error('Falta playwright-core. Ejecuta INSTALAR (o: npm install).'); process.exit(1); } }
 
 const ROOT = __dirname;
-const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 2, dormirTrasMin: 10,
+const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
+  simularSinJugadores: false, fpsServidor: 30, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -23,7 +23,33 @@ CFG.maxJugadores = Math.max(1, Math.min(10, CFG.maxJugadores | 0 || 10));
 const seen = new Set(); CFG.salas = (CFG.salas || []).map((r, i) => { const id = String(r.id || ('SALA' + (i + 1))).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6); if (id.length < 4 || seen.has(id)) { console.error('Cada sala necesita un «id» único de 4 a 6 letras o números (' + id + ').'); process.exit(1); } seen.add(id); return Object.assign({}, r, { id, nombre: String(r.nombre || id).slice(0, 30) }); });
 if (!CFG.salas.length) { console.error('Define al menos una sala en config.json'); process.exit(1); }
 const DATA = path.resolve(ROOT, CFG.carpetaDatos); fs.mkdirSync(DATA, { recursive: true });
+const crypto = require('crypto');
+const sha = t => crypto.createHash('sha256').update(String(t)).digest('hex');
+const readJson = (f, d) => { try { return JSON.parse(fs.readFileSync(path.join(DATA, f), 'utf8')); } catch (e) { return d; } };
+const writeJson = (f, o) => { const p = path.join(DATA, f); fs.writeFileSync(p + '.tmp', JSON.stringify(o, null, 1)); fs.renameSync(p + '.tmp', p); };
+const CODEABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const newCode = n => { let t = ''; const b = crypto.randomBytes(n); for (let i = 0; i < n; i++) t += CODEABC[b[i] % CODEABC.length]; return t; };
 const log = (...a) => { const t = new Date().toISOString().replace('T', ' ').slice(0, 19); const line = t + ' ' + a.join(' '); console.log(line); try { fs.appendFileSync(path.join(DATA, 'servidor.log'), line + '\n'); } catch (e) { } };
+
+/* ---------------- licencias «Buen anfitrión» y dueños de salas ---------------- */
+function genLicense(dias, salas, nota) {
+  const L = readJson('licencias.json', {}); let c; do { c = 'BA-' + newCode(4) + '-' + newCode(4); } while (L[c]);
+  L[c] = { dias: Math.max(1, dias | 0 || 30), salas: Math.max(1, salas | 0 || CFG.licenciaSalasPorDefecto), creada: Date.now(), nota: String(nota || '').slice(0, 60), uid: null, vence: null }; writeJson('licencias.json', L); return c;
+}
+if (process.argv.includes('--licencia')) { const i = process.argv.indexOf('--licencia'); const c = genLicense(+process.argv[i + 1] || 30, +process.argv[i + 2] || 0, process.argv.slice(i + 3).join(' ')); const L = readJson('licencias.json', {})[c]; console.log('\nCódigo de «Buen anfitrión»: ' + c + '\n  Duración: ' + L.dias + ' días desde que se canjea · Salas propias: ' + L.salas + '\n  (El jugador lo escribe en MULTIJUGADOR → Buen anfitrión → CANJEAR.)\n'); process.exit(0); }
+const ownersAll = () => readJson('duenos.json', {});
+function licOf(uid) { const o = ownersAll()[uid]; if (!o || !o.lic) return null; const l = readJson('licencias.json', {})[o.lic]; return l && l.vence && l.vence > Date.now() ? Object.assign({ codigo: o.lic }, l) : null; }
+const licenseOk = uid => !!(uid && licOf(uid));
+const UIDRE = /^[A-Za-z0-9]{8,32}$/, TOKRE = /^[A-Za-z0-9]{16,64}$/;
+/* identidad: el dispositivo genera uid + token y el servidor guarda solo el hash del token (se registra en el primer uso) */
+function auth(uid, tok, register) {
+  if (!UIDRE.test(uid || '') || !TOKRE.test(tok || '')) return { ok: false, error: 'identidad no válida' };
+  const O = ownersAll(), th = sha(tok), o = O[uid];
+  if (o) return o.th === th ? { ok: true, uid } : { ok: false, error: 'identidad no válida' };
+  if (!register) return { ok: false, unknown: true };
+  O[uid] = { th, lic: null, creado: Date.now() }; writeJson('duenos.json', O); return { ok: true, uid };
+}
+const hits = new Map(); function limited(key, max, ms) { const n = Date.now(), a = (hits.get(key) || []).filter(t => n - t < ms); a.push(n); hits.set(key, a); if (hits.size > 5000) hits.clear(); return a.length > max; }
 
 /* ---------------- dirección de Tailscale ---------------- */
 function tailscaleIp() {
@@ -83,7 +109,10 @@ class Room {
     this.id = cfg.id; this.nombre = cfg.nombre; this.cfg = cfg; this.dir = path.join(DATA, 'salas', this.id); fs.mkdirSync(path.join(this.dir, 'copias'), { recursive: true });
     this.save = path.join(this.dir, 'mundo_actual.json'); this.ctx = null; this.page = null; this.status = 'dormida'; this.state = null; this.lastBusy = Date.now(); this.lastSave = 0; this.lastCopy = 0;
     this.restarts = 0; this.failN = 0; this.nextTry = 0; this.startedAt = 0; this.badCount = 0; this.promise = null; this.stopping = false; this.freshAt = 0; this.wanted = false;
+    this.dynamic = !!cfg.dynamic; this.owner = cfg.owner || null; this.publica = cfg.publica !== false; this.plan247 = !!cfg.plan247; this.creada = cfg.creada || Date.now(); this.lastPlayers = cfg.lastPlayers || Date.now();
   }
+  get nunca() { return this.plan247; }
+  record() { return { id: this.id, nombre: this.nombre, owner: this.owner, publica: this.publica, plan247: this.plan247, creada: this.creada, lastPlayers: this.lastPlayers, dynamic: true }; }
   world() { const w = {}; for (const k of WORLDKEYS) w[k] = this.cfg[k] !== undefined ? this.cfg[k] : CFG[k]; return w; }
   hasSave() { try { return fs.statSync(this.save).size > 1000; } catch (e) { return false; } }
   async start() {
@@ -110,7 +139,7 @@ class Room {
       }
       await page.waitForFunction(() => STATE === 'play', null, { timeout: 90000 });
       await page.waitForTimeout(2500); await page.keyboard.press('Space').catch(() => { }); await page.waitForTimeout(800);
-      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !CFG.simularSinJugadores, ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor });
+      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor });
       this.startedAt = Date.now(); this.failN = 0; this.lastBusy = Date.now(); this.status = 'activa'; log('[' + this.id + '] sala lista (máx. ' + CFG.maxJugadores + ' jugadores)');
     } catch (e) {
       this.failN++; this.nextTry = Date.now() + Math.min(60000, 5000 * this.failN); this.status = 'dormida'; log('[' + this.id + '] no pudo arrancar:', String(e.message || e).split('\n')[0]);
@@ -140,18 +169,42 @@ class Room {
   async fresh() { if (this.status !== 'activa' || Date.now() - this.freshAt < 1500) return; this.freshAt = Date.now(); const s = await this.poll(); if (s && !s.bad) this.state = s; }
   async watchdog() {
     if (this.stopping || this.promise) return;
-    if (this.status === 'dormida') { if (this.wanted && Date.now() >= this.nextTry) await this.start(); return; }
+    if (this.status === 'dormida') { if ((this.wanted || (this.nunca && licenseOk(this.owner))) && Date.now() >= this.nextTry && (this.nunca || activeCount() < CFG.salasActivasMax)) await this.start(); return; }
     if (this.status !== 'activa') return;
     const s = await this.poll(); this.state = s;
     if (!this.page || !s || s.bad || s.st !== 'play' || !(browser && browser.isConnected())) { this.badCount++; if (this.badCount >= 2 || !this.page) { log('[' + this.id + '] anfitrión caído (' + ((s && (s.bad || s.st)) || 'sin página') + '), reiniciando'); this.badCount = 0; this.restarts++; this.status = 'dormida'; this.wanted = true; this.nextTry = 0; await this._close(true); await this.start(); } return; }
     this.badCount = 0;
-    if (s.peers + s.connecting > 0) this.lastBusy = Date.now();
-    else if (CFG.dormirTrasMin > 0 && Date.now() - this.lastBusy > CFG.dormirTrasMin * 60000) { await this.sleep('sin jugadores ' + CFG.dormirTrasMin + ' min'); return; }
+    if (s.peers + s.connecting > 0) { this.lastBusy = Date.now(); if (this.dynamic && Date.now() - this.lastPlayers > 60000) { this.lastPlayers = Date.now(); saveUserRooms(); } }
+    else if (!this.nunca && CFG.dormirTrasMin > 0 && Date.now() - this.lastBusy > CFG.dormirTrasMin * 60000) { await this.sleep('sin jugadores ' + CFG.dormirTrasMin + ' min'); return; }
     if ((s.role !== 'host' || s.es === 2) && !s.peers && !s.connecting) { log('[' + this.id + '] la sala no estaba abierta, reabriendo'); try { await this.page.evaluate(() => { if (NET.role) netClose(); netHost(); }); } catch (e) { } }
   }
-  info() { const s = this.state || {}; return { id: this.id, nombre: this.nombre, estado: this.status, jugadores: this.status === 'activa' ? (s.peers || 0) : 0, conectando: s.connecting || 0, max: CFG.maxJugadores, dia: this.status === 'activa' ? s.day : undefined, nombres: this.status === 'activa' ? (s.names || []) : [], zombis: s.z, pausada: !!s.paused, reinicios: this.restarts, ultimoGuardado: this.lastSave ? new Date(this.lastSave).toISOString() : null, errores: s.err || 0, guardada: this.hasSave() }; }
+  info() { const s = this.state || {}; return { id: this.id, nombre: this.nombre, estado: this.status, jugadores: this.status === 'activa' ? (s.peers || 0) : 0, conectando: s.connecting || 0, max: CFG.maxJugadores, dia: this.status === 'activa' ? s.day : undefined, nombres: this.status === 'activa' ? (s.names || []) : [], zombis: s.z, pausada: !!s.paused, reinicios: this.restarts, ultimoGuardado: this.lastSave ? new Date(this.lastSave).toISOString() : null, errores: s.err || 0, guardada: this.hasSave(), publica: this.publica, plan247: this.plan247, usuario: this.dynamic }; }
 }
 const rooms = new Map(CFG.salas.map(c => [c.id, new Room(c)]));
+const saveUserRooms = () => { try { writeJson('salas_usuario.json', [...rooms.values()].filter(r => r.dynamic).map(r => r.record())); } catch (e) { log('[salas] no se pudo guardar la lista:', e.message); } };
+for (const r of readJson('salas_usuario.json', [])) { if (r && r.id && !rooms.has(r.id)) rooms.set(r.id, new Room(Object.assign({}, r, { dynamic: true }))); }
+const userRooms = uid => [...rooms.values()].filter(r => r.dynamic && r.owner === uid);
+const max247 = () => Math.min(CFG.salas247Max, Math.max(0, CFG.salasActivasMax - 1));
+function planOf(uid) { const l = licOf(uid), own = userRooms(uid); return { anfitrion: !!l, vence: l ? new Date(l.vence).toISOString() : null, salasMax: l ? l.salas : CFG.gratisSalasMax, salasUsadas: own.length, salas247: own.filter(r => r.plan247).length, gratisMax: CFG.gratisSalasMax, max247: max247(), activas247: [...rooms.values()].filter(r => r.plan247).length }; }
+function createRoom(uid, nombre, publica, want247) {
+  if (!CFG.salasUsuario) return { ok: false, error: 'Este servidor no permite crear salas.' };
+  nombre = String(nombre || '').replace(/[<>&"\u0000-\u001f]/g, '').trim().slice(0, 24); if (nombre.length < 3) return { ok: false, error: 'Ponle un nombre de 3 a 24 letras.' };
+  const pl = planOf(uid); if (want247 && !pl.anfitrion) return { ok: false, error: 'Las salas 24/7 son para «Buen anfitrión».' };
+  if (pl.salasUsadas >= pl.salasMax) return { ok: false, error: pl.anfitrion ? 'Ya tienes ' + pl.salasMax + ' salas (tu límite). Borra una para crear otra.' : 'Ya tienes tu sala gratis. Con «Buen anfitrión» puedes tener más y 24/7.' };
+  if ([...rooms.values()].filter(r => r.dynamic).length >= CFG.salasUsuarioMax) return { ok: false, error: 'El servidor llegó a su máximo de salas de jugadores.' };
+  if (want247) { if (!pl.anfitrion) return { ok: false, error: 'Las salas 24/7 son para «Buen anfitrión».' }; if (pl.salas247 >= pl.salasMax) return { ok: false, error: 'Ya usas todas tus salas 24/7.' }; if (pl.activas247 >= pl.max247) return { ok: false, error: 'El servidor no tiene cupo para más salas 24/7 ahora mismo.' }; }
+  let id; do { id = newCode(6); } while (rooms.has(id));
+  const r = new Room({ id, nombre, owner: uid, publica: !!publica, plan247: !!want247, dynamic: true }); rooms.set(id, r); saveUserRooms(); if (want247) { r.wanted = true; } log('[salas] nueva sala ' + id + ' «' + nombre + '» (' + (publica ? 'pública' : 'privada') + (want247 ? ', 24/7' : '') + ')');
+  return { ok: true, id, sala: r.info() };
+}
+async function deleteRoom(r) { try { await r.sleep(); } catch (e) { } rooms.delete(r.id); saveUserRooms(); try { fs.rmSync(r.dir, { recursive: true, force: true }); } catch (e) { } log('[salas] sala ' + r.id + ' borrada'); }
+function maintenance() {
+  for (const r of [...rooms.values()]) {
+    if (!r.dynamic) continue;
+    if (r.plan247 && !licenseOk(r.owner)) { r.plan247 = false; saveUserRooms(); log('[salas] ' + r.id + ' deja de ser 24/7 (licencia vencida)'); }
+    if (!r.plan247 && r.status === 'dormida' && Date.now() - r.lastPlayers > CFG.gratisCaducaDias * 86400000) deleteRoom(r).catch(() => { });
+  }
+}
 const activeCount = () => [...rooms.values()].filter(r => r.status === 'activa' || r.status === 'iniciando').length;
 async function wake(room) {
   if (room.status === 'activa') return { ok: true, estado: 'activa' }; if (room.status === 'iniciando') return { ok: true, estado: 'iniciando' };
@@ -167,7 +220,7 @@ const freshAll = () => Promise.all([...rooms.values()].map(r => r.fresh()));
 function urlJuego() { const ip = tailscaleIp(); return ip ? 'http://' + ip + ':' + CFG.puerto + '/juego/' : null; }
 function landing() {
   const ip = tailscaleIp(), url = urlJuego() || ('http://' + os.hostname() + ':' + CFG.puerto + '/juego/');
-  const rs = [...rooms.values()].map(r => r.info()).map(r => '<div class="c"><b>' + esc(r.nombre) + '</b> <small>(' + esc(r.id) + ')</small><br>' + (r.estado === 'activa' ? '<span class="ok">activa</span> · ' + r.jugadores + '/' + r.max + ' jugadores' + (r.nombres.length ? ' (' + r.nombres.map(esc).join(', ') + ')' : '') + (r.dia ? ' · día ' + r.dia : '') + ' · zombis ' + (r.zombis ?? '–') + (r.pausada ? ' · en pausa' : '') : '<span class="no">' + r.estado + '</span>' + (r.guardada ? ' · mundo guardado' : ' · mundo sin crear')) + '</div>').join('');
+  const rs = [...rooms.values()].filter(r => !r.dynamic || r.publica).map(r => r.info()).map(r => '<div class="c"><b>' + esc(r.nombre) + '</b> <small>(' + esc(r.id) + ')</small><br>' + (r.estado === 'activa' ? '<span class="ok">activa</span> · ' + r.jugadores + '/' + r.max + ' jugadores' + (r.nombres.length ? ' (' + r.nombres.map(esc).join(', ') + ')' : '') + (r.dia ? ' · día ' + r.dia : '') + ' · zombis ' + (r.zombis ?? '–') + (r.pausada ? ' · en pausa' : '') : '<span class="no">' + r.estado + '</span>' + (r.guardada ? ' · mundo guardado' : ' · mundo sin crear')) + '</div>').join('');
   return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Último Refugio · servidor</title><style>body{font-family:system-ui,Arial;background:#141816;color:#e8e4da;margin:0;padding:20px}main{max-width:560px;margin:0 auto}h1{margin:0 0 4px}.c{background:#1f2622;border:1px solid #38423b;border-radius:10px;padding:14px;margin:12px 0}a.btn{display:inline-block;background:#d9541e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold}small{color:#9aa59d}.ok{color:#7dd36a}.no{color:#ff9a7a}</style></head><body><main><h1>Último Refugio</h1><small>Servidor multijugador · ' + esc(CFG.nombreServidor) + '</small>'
     + rs + '<div class="c"><a class="btn" href="/juego/">JUGAR</a><br><br><small>Dirección para los móviles (con Tailscale activo):<br><b>' + esc(url) + '</b><br>En el juego: MULTIJUGADOR → escribe <b>' + esc((ip || os.hostname()) + ':' + CFG.puerto) + '</b> → ACTUALIZAR → elige una sala.</small></div>'
     + (ip ? '' : '<div class="c no">No se detecta Tailscale en este equipo: solo se puede entrar desde aquí. Inicia Tailscale; se detecta solo en unos segundos.</div>') + '</main><script>setTimeout(()=>location.reload(),15000)</script></body></html>';
@@ -179,9 +232,36 @@ function handler(req, res) {
     if (p.startsWith('/sig/')) { const topic = p.slice(5).replace(/\/sse$/, ''); if (!/^[a-z0-9_-]{3,40}$/i.test(topic)) { res.writeHead(400, CORS); return res.end(); }
       if (req.method === 'POST' || req.method === 'PUT') return relayPost(topic, req, res); if (req.method === 'GET' && p.endsWith('/sse')) return relaySse(topic, req, res); res.writeHead(404, CORS); return res.end(); }
     if (p === '/juego' || p === '/juego/' || p === '/juego/index.html') { const b = gameHtml(); res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }); return res.end(b); }
-    if (p === '/salas') { freshAll().then(() => json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), salas: [...rooms.values()].map(r => r.info()) })); return; }
-    let m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/despertar$/);
-    if (m) { const r = rooms.get(m[1].toUpperCase()); if (!r) return json(res, 404, { ok: false, error: 'sala desconocida' }); wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
+    const ip = req.socket.remoteAddress || '?', Q = k => u.searchParams.get(k); let m;
+    if (p === '/salas') {
+      const a = auth(Q('uid'), Q('tok'), false), uid = a.ok ? a.uid : null;
+      freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
+        list.sort((x, y) => (x.usuario ? 1 : 0) - (y.usuario ? 1 : 0) || (y.jugadores - x.jugadores)); json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), crear: CFG.salasUsuario, plan: uid ? planOf(uid) : { anfitrion: false, salasMax: CFG.gratisSalasMax, salasUsadas: 0, salas247: 0, gratisMax: CFG.gratisSalasMax, max247: max247() }, salas: list }); }); return; }
+    if (p === '/sala/crear') {
+      if (limited('crear:' + ip, 12, 3600000)) return json(res, 429, { ok: false, error: 'Demasiadas salas creadas desde este dispositivo. Intenta más tarde.' });
+      const a = auth(Q('uid'), Q('tok'), true); if (!a.ok) return json(res, 403, { ok: false, error: a.error });
+      const o = createRoom(a.uid, Q('nombre'), Q('tipo') !== 'privada', Q('plan') === '247'); return json(res, o.ok ? 200 : 400, o); }
+    if (p === '/licencia/canjear') {
+      if (limited('lic:' + ip, 10, 600000)) return json(res, 429, { ok: false, error: 'Demasiados intentos. Espera unos minutos.' });
+      const a = auth(Q('uid'), Q('tok'), true); if (!a.ok) return json(res, 403, { ok: false, error: a.error });
+      const code = String(Q('codigo') || '').toUpperCase().replace(/[^A-Z0-9-]/g, ''), L = readJson('licencias.json', {}), l = L[code];
+      if (!l) return json(res, 404, { ok: false, error: 'Código no válido.' });
+      if (l.uid && l.uid !== a.uid) return json(res, 409, { ok: false, error: 'Ese código ya fue usado por otro jugador.' });
+      if (!l.uid) { l.uid = a.uid; l.vence = Date.now() + l.dias * 86400000; writeJson('licencias.json', L); }
+      const O = ownersAll(); O[a.uid].lic = code; writeJson('duenos.json', O); log('[licencia] ' + code + ' canjeada'); return json(res, 200, { ok: true, plan: planOf(a.uid) }); }
+    m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/info$/);
+    if (m) { const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: r.info() })); return; }
+    m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/gestionar$/);
+    if (m) {
+      const r = rooms.get(m[1].toUpperCase()); if (!r || !r.dynamic) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'sala desconocida' }); }
+      const a = auth(Q('uid'), Q('tok'), false); if (!a.ok || r.owner !== a.uid) return json(res, 403, { ok: false, error: 'Solo el dueño de la sala puede hacer eso.' });
+      const act = Q('accion');
+      if (act === 'borrar') { deleteRoom(r).then(() => json(res, 200, { ok: true })); return; }
+      if (act === 'publica' || act === 'privada') { r.publica = act === 'publica'; saveUserRooms(); return json(res, 200, { ok: true }); }
+      return json(res, 400, { ok: false, error: 'acción desconocida' }); }
+    if (p === '/admin/licencia' && isLocal(req)) { const c = genLicense(+Q('dias') || 30, +Q('salas') || 0, Q('nota')); return json(res, 200, { codigo: c }); }
+    m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/despertar$/);
+    if (m) { const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
     if (p === '/estado') { freshAll().then(() => json(res, 200, { activo: [...rooms.values()].some(r => r.status === 'activa'), tailscale: tailscaleIp(), url: urlJuego(), salasActivas: activeCount(), salas: [...rooms.values()].map(r => r.info()) })); return; }
     if (p === '/admin/guardar' && isLocal(req)) { Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
     m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m && isLocal(req)) { const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }
@@ -202,6 +282,7 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
   else if (tailscaleIp()) log('Tailscale detectado:', tailscaleIp(), '→ en el juego: MULTIJUGADOR → «' + tailscaleIp() + ':' + CFG.puerto + '»');
   log('Salas:', [...rooms.values()].map(r => r.id + ' («' + r.nombre + '»)').join(', '), '· máx. ' + CFG.maxJugadores + ' jugadores por sala · ' + CFG.salasActivasMax + ' salas activas a la vez');
   setInterval(() => { if (CFG.escuchar !== 'todas') bindAll(); }, 10000);
+  maintenance(); setInterval(maintenance, 10 * 60000);
   setInterval(() => { for (const r of rooms.values()) r.watchdog().catch(e => log('[vigilante ' + r.id + ']', e.message)); }, 5000);
   setInterval(() => { for (const r of rooms.values()) if (r.status === 'activa') r.saveWorld('auto').catch(() => { }); }, Math.max(20, CFG.guardarCadaSeg) * 1000);
   let closing = false; const bye = async sig => { if (closing) return; closing = true; log('Cerrando (' + sig + '): guardando los mundos…'); for (const r of rooms.values()) { try { await r.sleep(); } catch (e) { } } try { if (browser) await browser.close(); } catch (e) { } process.exit(0); };
