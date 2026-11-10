@@ -8,12 +8,13 @@
    Uso: node servidor.js   (ver LEEME_SERVIDOR.md) */
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), os = require('os');
+let WebSocketServer; try { WebSocketServer = require('ws').WebSocketServer; } catch (e) { console.error('Falta el paquete «ws». Ejecuta INSTALAR (o: npm install).'); process.exit(1); }
 let chromium; try { chromium = require('playwright-core').chromium; } catch (e) { try { chromium = require('playwright').chromium; } catch (e2) { console.error('Falta playwright-core. Ejecuta INSTALAR (o: npm install).'); process.exit(1); } }
 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', maxConexionesPorIp: 20, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -47,7 +48,9 @@ function auth(uid, tok, register) {
   const O = ownersAll(), th = sha(tok), o = O[uid];
   if (o) return o.th === th ? { ok: true, uid } : { ok: false, error: 'identidad no válida' };
   if (typeof register === 'function' ? !register() : !register) return { ok: false, unknown: true };
-  O[uid] = { th, lic: null, creado: Date.now() }; writeJson('duenos.json', O); return { ok: true, uid };
+  O[uid] = { th, lic: null, creado: Date.now() };
+  const ks = Object.keys(O); if (ks.length > 8000) { const keep = new Set(); try { for (const r of rooms.values()) if (r.owner) keep.add(r.owner); for (const l of Object.values(readJson('licencias.json', {}))) if (l.uid) keep.add(l.uid); } catch (e) { } ks.filter(k => !keep.has(k) && k !== uid).sort((a, b) => (O[a].creado || 0) - (O[b].creado || 0)).slice(0, ks.length - 6000).forEach(k => delete O[k]); }
+  writeJson('duenos.json', O); return { ok: true, uid };
 }
 /* ---- baneos, reportes y verificación de identidad al unirse ---- */
 const bansAll = () => readJson('bans.json', { global: {}, salas: {} });
@@ -128,9 +131,11 @@ class Room {
     this.id = cfg.id; this.nombre = cfg.nombre; this.cfg = cfg; this.dir = path.join(DATA, 'salas', this.id); fs.mkdirSync(path.join(this.dir, 'copias'), { recursive: true });
     this.save = path.join(this.dir, 'mundo_actual.json'); this.ctx = null; this.page = null; this.status = 'dormida'; this.state = null; this.lastBusy = Date.now(); this.lastSave = 0; this.lastCopy = 0;
     this.restarts = 0; this.failN = 0; this.nextTry = 0; this.startedAt = 0; this.badCount = 0; this.promise = null; this.stopping = false; this.freshAt = 0; this.wanted = false;
+    this.ctl = null; this.bridges = new Map();
     this.dynamic = !!cfg.dynamic; this.owner = cfg.owner || null; this.publica = cfg.publica !== false; this.plan247 = !!cfg.plan247; this.creada = cfg.creada || Date.now(); this.lastPlayers = cfg.lastPlayers || Date.now();
   }
   get nunca() { return this.plan247; }
+  dropBridges() { for (const b of this.bridges.values()) { wsClose(b.guest, 1000, 'La sala se cerró.'); if (b.peer) wsClose(b.peer, 1000, ''); } this.bridges.clear(); if (this.ctl) { try { this.ctl.terminate(); } catch (e) { } this.ctl = null; } }
   async players() { if (!this.page || this.status !== 'activa') return []; try { return await Promise.race([this.page.evaluate(() => SRV.players()), new Promise((_, j) => setTimeout(() => j(new Error('t')), 6000))]); } catch (e) { return []; } }
   async kick(slot, msg) { if (!this.page || this.status !== 'activa') return false; try { return await this.page.evaluate(([a, b]) => SRV.kick(a, b), [slot, msg]); } catch (e) { return false; } }
   async restart() { if (this.promise) await this.promise.catch(() => { }); this.stopping = true; try { await this.saveWorld('cierre'); await this._close(true); } finally { this.stopping = false; } this.status = 'dormida'; this.nextTry = 0; this.wanted = true; this.state = null; log('[' + this.id + '] reiniciada'); await this.start(); }
@@ -170,7 +175,7 @@ class Room {
       await this._close(true);
     }
   }
-  async _close(quiet) { const c = this.ctx; this.ctx = null; this.page = null; if (!c) return; try { await Promise.race([c.close(), new Promise(r => setTimeout(r, 8000))]); } catch (e) { } if (!quiet) log('[' + this.id + '] sala cerrada'); }
+  async _close(quiet) { this.dropBridges(); const c = this.ctx; this.ctx = null; this.page = null; if (!c) return; try { await Promise.race([c.close(), new Promise(r => setTimeout(r, 8000))]); } catch (e) { } if (!quiet) log('[' + this.id + '] sala cerrada'); }
   async sleep(why) { if (this.promise) await this.promise.catch(() => { }); this.wanted = false; this.stopping = true; try { await this.saveWorld('cierre'); await this._close(); } finally { this.stopping = false; this.status = 'dormida'; this.state = null; } if (why) log('[' + this.id + '] a dormir (' + why + ')'); }
   async saveWorld(why) {
     if (!this.page) return false;
@@ -238,15 +243,21 @@ async function wake(room) {
 /* ---------------- HTTP ---------------- */
 const json = (res, code, o) => { res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, CORS)); res.end(JSON.stringify(o)); };
 const ownIps = () => { const out = new Set(['127.0.0.1', '::1']); try { for (const l of Object.values(os.networkInterfaces())) for (const a of l || []) out.add(a.address); } catch (e) { } return out; };
-const isLocal = req => { let a = req.socket.remoteAddress || ''; if (a.startsWith('::ffff:')) a = a.slice(7); return ownIps().has(a); };   /* el propio PC, también si abre el panel con su dirección de Tailscale */
+const PROXYH = ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'forwarded', 'via', 'x-real-ip', 'cf-connecting-ip', 'cf-ray', 'tailscale-user-login', 'tailscale-funnel-request'];
+const hostIsLocal = h => { h = String(h || '').toLowerCase().replace(/:\d+$/, '').replace(/^\[|\]$/g, ''); return h === 'localhost' || ownIps().has(h); };
+/* «Local» = viene del propio PC, SIN pasar por un proxy (Funnel/Cloudflare/…) y pidiendo una dirección propia: así el panel de administración nunca queda público */
+const isLocal = req => { let a = req.socket.remoteAddress || ''; if (a.startsWith('::ffff:')) a = a.slice(7); if (!ownIps().has(a)) return false; for (const h of PROXYH) if (req.headers[h]) return false; return hostIsLocal(req.headers.host); };
+/* IP real del cliente: si la conexión llega de un proxy en este mismo PC, se usa la última IP que añadió el proxy en X-Forwarded-For */
+function clientIp(req) { let a = req.socket.remoteAddress || '?'; if (a.startsWith('::ffff:')) a = a.slice(7); if ((a === '127.0.0.1' || a === '::1') && req.headers['x-forwarded-for']) { const l = String(req.headers['x-forwarded-for']).split(',').map(t => t.trim()).filter(Boolean); if (l.length) return l[l.length - 1].slice(0, 60); } return a; }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const freshAll = () => Promise.all([...rooms.values()].map(r => r.fresh()));
 function urlJuego() { const ip = tailscaleIp(); return ip ? 'http://' + ip + ':' + CFG.puerto + '/juego/' : null; }
+const urlPub = () => CFG.urlPublica ? String(CFG.urlPublica).replace(/\/+$/, '') : '';
 function landing() {
   const ip = tailscaleIp(), url = urlJuego() || ('http://' + os.hostname() + ':' + CFG.puerto + '/juego/');
   const rs = [...rooms.values()].filter(r => !r.dynamic || r.publica).map(r => r.info()).map(r => '<div class="c"><b>' + esc(r.nombre) + '</b> <small>(' + esc(r.id) + ')</small><br>' + (r.estado === 'activa' ? '<span class="ok">activa</span> · ' + r.jugadores + '/' + r.max + ' jugadores' + (r.nombres.length ? ' (' + r.nombres.map(esc).join(', ') + ')' : '') + (r.dia ? ' · día ' + r.dia : '') + ' · zombis ' + (r.zombis ?? '–') + (r.pausada ? ' · en pausa' : '') : '<span class="no">' + r.estado + '</span>' + (r.guardada ? ' · mundo guardado' : ' · mundo sin crear')) + '</div>').join('');
   return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Último Refugio · servidor</title><style>body{font-family:system-ui,Arial;background:#141816;color:#e8e4da;margin:0;padding:20px}main{max-width:560px;margin:0 auto}h1{margin:0 0 4px}.c{background:#1f2622;border:1px solid #38423b;border-radius:10px;padding:14px;margin:12px 0}a.btn{display:inline-block;background:#d9541e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold}small{color:#9aa59d}.ok{color:#7dd36a}.no{color:#ff9a7a}</style></head><body><main><h1>Último Refugio</h1><small>Servidor multijugador · ' + esc(CFG.nombreServidor) + '</small>'
-    + rs + '<div class="c"><a class="btn" href="/juego/">JUGAR</a><br><br><small>Dirección para los móviles (con Tailscale activo):<br><b>' + esc(url) + '</b><br>En el juego: MULTIJUGADOR → escribe <b>' + esc((ip || os.hostname()) + ':' + CFG.puerto) + '</b> → ACTUALIZAR → elige una sala.</small></div>'
+    + rs + (urlPub() ? '<div class="c"><small>Dirección pública (cualquiera, sin Tailscale):</small><br><b>' + esc(urlPub()) + '</b><br><small>Juego: ' + esc(urlPub()) + '/juego/ · en la app: MULTIJUGADOR (las salas aparecen solas)</small></div>' : '<div class="c"><small>Servidor <b>no publicado</b>: solo entran jugadores con Tailscale. Para abrirlo a todos mira «Publicar sin Tailscale» en LEEME_SERVIDOR.md.</small></div>') + '<div class="c"><a class="btn" href="/juego/">JUGAR</a><br><br><small>Dirección para los móviles (con Tailscale activo):<br><b>' + esc(url) + '</b><br>En el juego: MULTIJUGADOR → escribe <b>' + esc((ip || os.hostname()) + ':' + CFG.puerto) + '</b> → ACTUALIZAR → elige una sala.</small></div>'
     + (ip ? '' : '<div class="c no">No se detecta Tailscale en este equipo: solo se puede entrar desde aquí. Inicia Tailscale; se detecta solo en unos segundos.</div>') + '</main><script>setTimeout(()=>location.reload(),15000)</script></body></html>';
 }
 const MOTIVOS = { trampas: 'Trampas', toxico: 'Tóxico o insultos', griefing: 'Molestar / destruir sin motivo', otro: 'Otro' };
@@ -279,7 +290,7 @@ function handler(req, res) {
     if (p.startsWith('/sig/')) { const topic = p.slice(5).replace(/\/sse$/, ''); if (!/^[a-z0-9_-]{3,40}$/i.test(topic)) { res.writeHead(400, CORS); return res.end(); }
       if (req.method === 'POST' || req.method === 'PUT') return relayPost(topic, req, res); if (req.method === 'GET' && p.endsWith('/sse')) return relaySse(topic, req, res); res.writeHead(404, CORS); return res.end(); }
     if (p === '/juego' || p === '/juego/' || p === '/juego/index.html') { const b = gameHtml(); res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }); return res.end(b); }
-    const ip = req.socket.remoteAddress || '?', Q = k => u.searchParams.get(k); let m;
+    const ip = clientIp(req), Q = k => u.searchParams.get(k); let m;
     if (p === '/salas') {
       const a = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)), uid = a.ok ? a.uid : null;
       freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
@@ -344,14 +355,55 @@ function handler(req, res) {
     res.writeHead(404); res.end('no encontrado');
   } catch (e) { try { res.writeHead(500); res.end(); } catch (e2) { } log('[http] error:', e.message); }
 }
+/* ---------------- relé WebSocket: el juego sin WebRTC (no hace falta Tailscale en el móvil) ----------------
+   invitado ⇄ servidor ⇄ anfitrión de la sala (el navegador sin pantalla de este mismo PC). El servidor verifica identidad y baneos al entrar. */
+const wss = new WebSocketServer({ noServer: true, maxPayload: 512 * 1024, perMessageDeflate: false });
+const ipConn = new Map(); const ipConns = (ip, d) => { const n = Math.max(0, (ipConn.get(ip) || 0) + d); if (n) ipConn.set(ip, n); else ipConn.delete(ip); return n; };
+function wsClose(ws, code, reason) { try { ws.close(code, String(reason || '').slice(0, 100)); } catch (e) { try { ws.terminate(); } catch (e2) { } } }
+function onUpgrade(req, socket, head) {
+  let u; try { u = new URL(req.url, 'http://x'); } catch (e) { return socket.destroy(); } if (u.pathname !== '/ws') return socket.destroy();
+  const role = u.searchParams.get('role') || 'guest', room = rooms.get(String(u.searchParams.get('room') || '').toUpperCase().slice(0, 6)), ip = clientIp(req);
+  if ((role === 'host' || role === 'peer') && !isLocal(req)) { socket.write('HTTP/1.1 403 Forbidden\r\n\r\n'); return socket.destroy(); }
+  if (role === 'guest' && limited('ws:' + ip, 40, 60000)) { socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n'); return socket.destroy(); }
+  wss.handleUpgrade(req, socket, head, ws => {
+    ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; }); ws.on('error', () => { });
+    if (!room) return wsClose(ws, 4404, 'No existe esa sala.');
+    if (role === 'host') return wsHost(ws, room); if (role === 'peer') return wsPeer(ws, room, u.searchParams.get('pid')); wsGuest(ws, room, u, ip);
+  });
+}
+function wsHost(ws, room) {
+  if (room.ctl && room.ctl.readyState === 1) { try { room.ctl.terminate(); } catch (e) { } } room.ctl = ws; ws.on('close', () => { if (room.ctl === ws) room.ctl = null; });
+  ws.on('message', d => { let m; try { m = JSON.parse(d.toString()); } catch (e) { return; } if (m.k === 'deny') { const b = room.bridges.get(m.pid); if (b) { room.bridges.delete(m.pid); clearTimeout(b.timer); wsClose(b.guest, 4409, m.m || 'No puedes entrar.'); } } });
+}
+function wsGuest(ws, room, u, ip) {
+  const n = ipConns(ip, +1); ws.on('close', () => ipConns(ip, -1)); if (n > CFG.maxConexionesPorIp) return wsClose(ws, 4429, 'Demasiadas conexiones desde tu red.');
+  if (room.status !== 'activa' || !room.ctl || room.ctl.readyState !== 1) return wsClose(ws, 4503, 'La sala no está lista. Intenta de nuevo en unos segundos.');
+  const v = verifyJoin(room.id, u.searchParams.get('uid'), u.searchParams.get('n'), u.searchParams.get('s')); if (!v.ok) return wsClose(ws, 4403, v.error);
+  const pid = newCode(10), b = { guest: ws, peer: null, buf: [], bytes: 0, timer: null, rate: { t: Date.now(), n: 0 } }; room.bridges.set(pid, b);
+  b.timer = setTimeout(() => { if (!b.peer) { room.bridges.delete(pid); wsClose(ws, 4504, 'La sala no respondió.'); } }, 10000);
+  ws.on('message', (d, isBin) => {
+    const t = Date.now(); if (t - b.rate.t > 1000) { b.rate.t = t; b.rate.n = 0; } if (++b.rate.n > 400) return wsClose(ws, 1008, 'Demasiados mensajes.');
+    if (b.peer) { if (b.peer.readyState === 1) b.peer.send(d, { binary: isBin }); } else if (b.buf.length < 200 && b.bytes < 1e6) { b.buf.push([d, isBin]); b.bytes += d.length; }
+  });
+  ws.on('close', () => { clearTimeout(b.timer); room.bridges.delete(pid); if (b.peer) wsClose(b.peer, 1000, ''); });
+  try { room.ctl.send(JSON.stringify({ k: 'join', pid, uid: v.uid || '' })); } catch (e) { wsClose(ws, 4503, 'La sala no está lista.'); }
+}
+function wsPeer(ws, room, pid) {
+  const b = room.bridges.get(String(pid || '')); if (!b || b.peer) return wsClose(ws, 4404, 'sin pareja');
+  b.peer = ws; clearTimeout(b.timer); for (const [d, isBin] of b.buf) ws.send(d, { binary: isBin }); b.buf = [];
+  ws.on('message', (d, isBin) => { if (b.guest.readyState === 1) { if (b.guest.bufferedAmount > 8e6) return wsClose(b.guest, 1013, 'Tu conexión es demasiado lenta.'); b.guest.send(d, { binary: isBin }); } });
+  ws.on('close', () => { room.bridges.delete(pid); wsClose(b.guest, 1000, ''); });
+}
+setInterval(() => { for (const ws of wss.clients) { if (!ws.isAlive) { try { ws.terminate(); } catch (e) { } continue; } ws.isAlive = false; try { ws.ping(); } catch (e) { } } }, 20000);
 const servers = new Map();
-function listen(addr) { if (servers.has(addr)) return; const srv = http.createServer(handler); srv.on('error', e => log('[http] ' + addr + ': ' + e.message)); srv.keepAliveTimeout = 65000; srv.listen(CFG.puerto, addr, () => log('[http] escuchando en http://' + addr + ':' + CFG.puerto + '/')); servers.set(addr, srv); }
+function listen(addr) { if (servers.has(addr)) return; const srv = http.createServer(handler); srv.on('error', e => log('[http] ' + addr + ': ' + e.message)); srv.on('upgrade', onUpgrade); srv.keepAliveTimeout = 65000; srv.headersTimeout = 20000; srv.requestTimeout = 120000; srv.listen(CFG.puerto, addr, () => log('[http] escuchando en http://' + addr + ':' + CFG.puerto + '/')); servers.set(addr, srv); }
 function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen('0.0.0.0'); return; } const ip = tailscaleIp(); if (ip) listen(ip); }
 
 /* ---------------- arranque / cierre ---------------- */
 (async () => {
   log('Último Refugio · servidor multijugador. Datos en', DATA); bindAll();
   if (!tailscaleIp() && CFG.escuchar !== 'todas') log('AVISO: no se detecta Tailscale (100.x.x.x). Solo se podrá jugar desde este equipo hasta que Tailscale esté activo; se detectará solo.');
+  if (urlPub()) log('Dirección pública configurada:', urlPub(), '(los jugadores entran sin Tailscale mientras esté publicada)');
   else if (tailscaleIp()) log('Tailscale detectado:', tailscaleIp(), '→ en el juego: MULTIJUGADOR → «' + tailscaleIp() + ':' + CFG.puerto + '»');
   log('Salas:', [...rooms.values()].map(r => r.id + ' («' + r.nombre + '»)').join(', '), '· máx. ' + CFG.maxJugadores + ' jugadores por sala · ' + CFG.salasActivasMax + ' salas activas a la vez');
   setInterval(() => { if (CFG.escuchar !== 'todas') bindAll(); }, 10000);

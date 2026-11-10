@@ -36,5 +36,7 @@
   "salas247Max": 2,
   "simular247": false,
   "salasUsuarioMax": 40,
-  "licenciaSalasPorDefecto": 3
+  "licenciaSalasPorDefecto": 3,
+  "maxConexionesPorIp": 20,
+  "urlPublica": "https://server.tail12bbaa.ts.net"
 }

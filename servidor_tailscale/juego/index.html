@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v13.9 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -20997,11 +20997,11 @@ function s136Mark() {
   const _al = actLabel; actLabel = function (it) { return S136_BY[it.id] ? 'Leer' : _al.apply(this, arguments); };
 }
 
-/* ===================== v13.9 · MULTIJUGADOR: SALAS AUTOMÁTICAS, PÚBLICAS/PRIVADAS Y «BUEN ANFITRIÓN» =====================
+/* ===================== v14.0 · MULTIJUGADOR: SALAS AUTOMÁTICAS, PÚBLICAS/PRIVADAS Y «BUEN ANFITRIÓN» =====================
    · Las salas del servidor aparecen solas (servidores por defecto + el último usado); no hace falta escribir la dirección.
    · Crear sala pública o privada; entrar a una privada con su código; «Buen anfitrión» (licencia) = salas 24/7.
    · COOP misma red (hasta 4) sigue igual y usa el servicio público. */
-const UR_DEFAULT_SERVERS = ['100.70.104.87:8080', 'server.tail12bbaa.ts.net:8080'];
+const UR_DEFAULT_SERVERS = ['https://server.tail12bbaa.ts.net', '100.70.104.87:8080', 'server.tail12bbaa.ts.net:8080'];
 const UR_HOST_PRICE = '';          /* texto de precio de «Buen anfitrión» (vacío = «por definir») */
 const S137 = { url: '', rooms: [], ice: [], via: 0, busy: 0, plan: null, crear: true, tipo: 'publica', plan247: false, timer: 0, ok: false };
 NET.srv = 0; NET.cap = 0;
@@ -21085,7 +21085,7 @@ async function s138JoinId(id, fromCode) {
       let ok = false; for (let i = 0; i < 50 && !ok; i++) { await new Promise(r => setTimeout(r, 1000)); const d = await s138Get(S137.url, '/sala/' + encodeURIComponent(id) + '/info'); if (d.ok && d.sala.estado === 'activa') { ok = true; room = d.sala; } }
       if (!ok) { s137Msg('La sala no despertó a tiempo. Intenta de nuevo.', true); S137.busy = 0; return; }
     }
-    s137Msg(''); NET.sig = S137.url + '/sig'; NET.ice = S137.ice || []; NET.srv = 1; NET.cap = room.max; S137.via = 1; netJoin(room.id);
+    s137Msg(''); netJoinWs(room);
   } catch (e) { s137Msg('No se pudo entrar a la sala. Revisa la conexión con el servidor.', true); }
   S137.busy = 0; netUI();
 }
@@ -21309,6 +21309,31 @@ function lkRaid() {
   if (!lkRaidOn() || P.dead) return; const w = wpnOf(), id = P.eq && P.eq.id, mul = { fireaxe: 2.4, axe: 2.2, sledge: 2.6, crowbar: 1.7, pickaxe: 2.2, shovel: 1.3, bat: 1.1, nbat: 1.3 }[id] || 1, d = Math.round((w ? w.dmg : 7) * mul);
   for (const rr of [1.0, 1.5]) { const tx = Math.floor(P.x + Math.cos(P.dir) * rr), ty = Math.floor(P.y + Math.sin(P.dir) * rr); if (!inb(tx, ty)) continue; const i = idx(tx, ty); if (!lkRaidable(i)) continue;
     if (NET.role === 'guest') { netSend({ t: 'RD', i, d }); sfx('bash', 0); spawnPart('chip', tx + .5, ty + .5, 1, 3); } else lkDamageH(i, d, lkWho()); return; }
+}
+
+/* ===================== v14.0 · UNIRSE POR WEBSOCKET (sin Tailscale ni WebRTC) =====================
+   El invitado habla con el servidor por WebSocket (http/https normal, funciona detrás de cualquier red) y el servidor
+   reenvía al anfitrión de la sala. Mismo protocolo de juego de siempre; solo cambia el canal. */
+class WsChan {
+  constructor(ws) {
+    this.ws = ws; this.binaryType = 'arraybuffer'; this.onopen = null; this.onclose = null; this.onmessage = null; ws.binaryType = 'arraybuffer';
+    ws.onopen = () => { if (this.onopen) this.onopen(); }; ws.onmessage = e => { if (this.onmessage) this.onmessage(e); }; ws.onclose = e => { if (this.onclose) this.onclose(e); }; ws.onerror = () => { };
+    if (ws.readyState === 1) setTimeout(() => { if (this.onopen) this.onopen(); }, 0);
+  }
+  get readyState() { const s = this.ws.readyState; return s === 1 ? 'open' : s === 0 ? 'connecting' : s === 2 ? 'closing' : 'closed'; }
+  get bufferedAmount() { return this.ws.bufferedAmount; }
+  send(d) { this.ws.send(d); }
+  close() { try { this.ws.close(); } catch (e) { } }
+}
+function netJoinWs(room) {
+  NET.err = ''; if (NET.role) netLeave(true);
+  NET.role = 'guest'; NET.on = true; NET.code = String(room.id).toUpperCase(); NET.st = 'connecting'; NET.ready = false; NET.id = Math.random().toString(36).slice(2, 9); NET.gotOffer = true; NET.srv = 1; NET.cap = room.max; NET.es = null; NET.pc = null; netUI();
+  const id = s138Id(), n = Math.random().toString(36).slice(2, 12) + Date.now().toString(36), s = s139Sha(s139Sha(id.tok) + ':' + n + ':' + NET.code);
+  const url = S137.url.replace(/^http/i, 'ws') + '/ws?' + new URLSearchParams({ role: 'guest', room: NET.code, uid: id.uid, n, s }).toString();
+  let ws; try { ws = new WebSocket(url); } catch (e) { netFail('No se pudo abrir la conexión con el servidor.'); return; }
+  const ch = new WsChan(ws); netBind(ch);
+  ch.onclose = ev => { const why = ev && ev.reason; if (NET.st === 'connecting' || NET.st === 'linked' || NET.st === 'loading') netFail(why || 'No se pudo conectar con la sala.'); else netLost(); };
+  NET.joinT = setTimeout(() => { if (NET.st === 'connecting' || NET.st === 'linked') netFail('No se pudo conectar con la sala. Intenta de nuevo.'); }, 40000);
 }
 
 /* ===================== AUDIO (sintetizado) ===================== */
@@ -23676,7 +23701,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23717,7 +23742,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23740,7 +23765,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23769,7 +23794,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23803,7 +23828,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23834,7 +23859,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -23867,7 +23892,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -23896,12 +23921,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 13.9') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.0') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

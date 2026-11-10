@@ -22,10 +22,22 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 5. Para 24/7: **`EVITAR_SUSPENSION_WINDOWS.bat`** (no suspender, ni al cerrar la tapa, enchufado) y **`AUTOARRANQUE_WINDOWS.bat`** (arranca al iniciar sesión).
 > Si es un portátil: enchufado y ventilado; si se calienta mucho, baja `maxJugadores` o `salasActivasMax`.
 
-## ¿Hace falta Tailscale para jugar?
-**Sí, hoy sí.** El servidor solo escucha en el PC y en su dirección de Tailscale (`100.x.x.x`), y la conexión de juego es directa entre el móvil y el PC (WebRTC), así que **cada jugador necesita Tailscale en su móvil** (gratis; con tu cuenta o con el equipo compartido). Sin Tailscale no se ve el servidor. Para jugar sin Tailscale haría falta cambiar el transporte a WebSocket a través del servidor y exponerlo a internet (ver la respuesta en el chat); no está hecho.
+## Publicar sin Tailscale (que cualquiera pueda jugar)
+Desde la v14.0 el juego se conecta al servidor por **WebSocket** (ya no usa WebRTC con las salas): basta con que el servidor sea **alcanzable por internet con HTTPS**. Los jugadores **no instalan nada**: solo la app (o el juego en el navegador) y las salas aparecen solas. Los jugadores con Tailscale siguen entrando igual.
+**Opción recomendada: Tailscale Funnel** (la tienes casi lista: tu máquina ya tiene HTTPS/MagicDNS):
+1. Ejecuta **`PUBLICAR_FUNNEL.bat`** (si falta permiso, Tailscale muestra un enlace para activar *Funnel* en tu panel).
+2. Copia la dirección `https://….ts.net` que muestra (para ti: `https://server.tail12bbaa.ts.net`) y ponla en `config.json` → `"urlPublica"`. Reinicia el servidor.
+3. Prueba desde un móvil **sin** Tailscale (datos móviles): abre `https://server.tail12bbaa.ts.net/` y luego el juego → MULTIJUGADOR. La app v14.0 ya trae esa dirección como primera opción.
+4. Para dejar de publicarlo: **`QUITAR_FUNNEL.bat`**.
+**Otras opciones** (para cualquier dirección HTTPS que llegue a `127.0.0.1:8080`): Cloudflare Tunnel (gratis, sin abrir puertos), o abrir el puerto 8080 en el router con un nombre dinámico y un proxy HTTPS (Caddy). En ese caso pon `"escuchar": "todas"` solo si el puerto va directo, y escribe esa dirección en `urlPublica`; en la app, «Cambiar servidor».
+**Lo que debes saber antes de publicarlo**
+- **Subida de tu internet:** cada jugador consume ~30–60 KB/s de subida del PC (10 jugadores ≈ 4 Mbit/s). Funnel además tiene límites de ancho de banda de Tailscale (no garantizados).
+- **Seguridad:** el panel `/admin`, las licencias, el guardado y la verificación **solo abren desde el propio PC y sin pasar por el proxy** (probado: detrás de un proxy público dan 404/403; nadie de fuera puede hacerse pasar por anfitrión). Públicos quedan: el juego, la lista de salas, crear salas (con límites), y el WebSocket de jugadores (identidad verificada, baneos, límite de conexiones por IP `maxConexionesPorIp`, límite de mensajes).
+- **Abuso:** al ser público, cualquiera puede crear salas gratis y despertar salas (hasta `salasActivasMax`). Si no quieres salas de jugadores: `"salasUsuario": false`. Baja `salasUsuarioMax`/`gratisSalasMax` si hace falta, y usa el panel para expulsar/banear.
+- **Privacidad:** el servidor ve la IP de los jugadores (solo para límites; no se guarda en disco) y sus nombres de sala. Actualiza tu política de privacidad.
 
 ## Cómo entran los jugadores
+0. **Sin Tailscale:** si publicaste el servidor (arriba), solo necesitan la app v14.0: MULTIJUGADOR → las salas aparecen. Lo siguiente es para quien use Tailscale.
 1. Tailscale activo en su móvil y con acceso a tu red (o tú compartes la máquina *Servidor* desde el panel de Tailscale: *Machines → Share*).
 2. En el juego: **MULTIJUGADOR** → las salas aparecen solas → **UNIRSE**. El juego trae de fábrica `100.70.104.87:8080` y `server.tail12bbaa.ts.net:8080` (cambiables en «Cambiar servidor»); recuerda el último que funcionó.
    - Con la **app de Android (APK v13.8)** o con el juego en el navegador (`http://100.70.104.87:8080/juego/`).
@@ -63,6 +75,7 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 | `salas` | Lista de salas: `id` (4–6 letras/números, único), `nombre`, y opcionalmente `semilla`, `modo`, `tamano`… propios de esa sala. Añadir una sala = añadir una línea. |
 | `maxJugadores` | Jugadores por sala (1–10). |
 | `salasActivasMax` | Salas despiertas a la vez (incluye las 24/7). Cada una usa ~0,5–1 GB de RAM y CPU (ver «Rendimiento»). |
+| `urlPublica`, `maxConexionesPorIp` | Dirección pública HTTPS (se muestra en la página de estado) y conexiones simultáneas por IP real (20). |
 | `reportesParaExpulsar`, `exigirIdentidad` | Reportes distintos para expulsar automáticamente (3; 0 = nunca) y exigir identidad verificada para entrar (true). |
 | `salasUsuario`, `salasUsuarioMax` | Permitir que los jugadores creen salas (true/false) y máximo de salas de jugadores (40). |
 | `gratisSalasMax`, `gratisCaducaDias` | Salas gratis por jugador (1) y días sin jugadores antes de borrarla (14). |
