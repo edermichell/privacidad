@@ -1,0 +1,30 @@
+Asunto: Último Refugio v13.5 — nueva versión para probar (paisaje y mapa)
+
+Hola equipo:
+
+Ya tenemos una nueva versión de Último Refugio para probar: la v13.5. Gracias a quienes reportaron que la música se trababa y el teléfono se calentaba: en la v13.4 se cambió cómo se reproduce la música y se añadió un modo ligero de audio. Me gustaría saber si en su teléfono mejoró.
+
+QUÉ HAY DE NUEVO EN LA v13.5
+- Paisaje más cuidado: más variación de color según terreno y estación, detalles (hojas, flores, nieve, charcos, piedras), senderos de tierra y objetos junto a las casas.
+- El mapa se siente menos vacío: campamentos y pequeños sitios con botín repartidos por el mapa grande (entre 112 y 156 en un mapa de 360×360).
+- Sin perder rendimiento: los detalles se dibujan una sola vez al descubrir cada zona, así que no deberían costar fotogramas.
+
+(Adjuntar: correo_antes_despues_paisaje_v135.jpg y correo_puntos_de_interes_v135.jpg)
+
+QUÉ ME AYUDARÍA QUE PROBARAN
+1. Rendimiento y calor: jueguen 15–20 minutos seguidos. ¿Se calienta el teléfono? ¿Hay tirones o la música se traba?
+2. Mapa: recorran zonas abiertas y busquen los nuevos campamentos. ¿Todavía se ve vacío algún lugar? ¿Algo se ve raro o fuera de lugar?
+3. Partidas guardadas: abran una partida de una versión anterior. Debe cargar bien (verán el nuevo aspecto del suelo, es normal).
+4. Cooperativo (hasta 4 jugadores): si pueden, prueben con 2–4 teléfonos en la misma red Wi-Fi. Solo lo he probado con navegadores de prueba, no con teléfonos reales, así que su opinión es muy valiosa.
+
+CÓMO REPORTAR
+Indíquenme modelo de teléfono y versión de Android, qué estaban haciendo y, si es posible, una captura o video corto. Si algo falla, anoten la hora aproximada.
+
+DESCARGA
+[PEGAR AQUÍ EL ENLACE DE DESCARGA DE LA v13.5]
+(Si ya tienen una versión anterior instalada, instálenla encima para conservar su partida.)
+
+¡Gracias por su tiempo y sus reportes!
+
+Saludos,
+[TU NOMBRE]
