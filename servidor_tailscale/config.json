@@ -38,5 +38,6 @@
   "salasUsuarioMax": 40,
   "licenciaSalasPorDefecto": 3,
   "maxConexionesPorIp": 20,
-  "urlPublica": "https://server.tail12bbaa.ts.net"
+  "urlPublica": "https://server.tail12bbaa.ts.net",
+  "claveAdmin": ""
 }

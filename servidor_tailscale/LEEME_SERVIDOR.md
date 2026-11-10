@@ -55,7 +55,7 @@ Desde la v14.0 el juego se conecta al servidor por **WebSocket** (ya no usa WebR
 - **Identidad verificada:** al entrar a una sala del servidor el juego demuestra la identidad del dispositivo (sin enviar la clave); así los baneos y reportes se pueden asociar a un jugador y no se puede suplantar a otro. **Los clientes anteriores a la v13.9 no pueden entrar a las salas** (`exigirIdentidad: false` lo desactiva, pero entonces no hay baneos fiables).
 - **Reportar:** *Pausa → MULTIJUGADOR → «Reportar un jugador»* (trampas, tóxico, molestar, otro). Solo puede reportar quien está en la sala. Con `reportesParaExpulsar` (3) reportes de jugadores distintos en 24 h, el jugador es **expulsado** automáticamente (no baneado).
 - **Dueño de la sala:** *Pausa → MULTIJUGADOR → ADMINISTRAR MI SALA* (o desde la lista): **expulsar**, **banear/quitar baneo**, ver **reportes** (ignorar), **REINICIAR SALA** (recarga con su mundo guardado y desconecta a todos) y **NUEVO MUNDO** (archiva el actual en `copias\anterior_*.json` y empieza otro).
-- **Administrador (tú, en el PC):** `http://127.0.0.1:8080/admin` (solo abre desde el propio PC): todas las salas con sus jugadores, reiniciar/dormir/nuevo mundo/borrar, reportes de todas las salas, **baneo en todo el servidor**, quitar baneos y generar licencias. Las salas oficiales solo las gestionas tú desde ahí.
+- **Administrador (tú, en el PC):** doble clic en **`ABRIR_PANEL_ADMIN.bat`** o escribe `http://127.0.0.1:8080/admin` en el navegador **del PC servidor** (también hay un botón en `http://127.0.0.1:8080/`). **No abre** con la dirección pública, ni con la de Tailscale desde otro dispositivo (por seguridad); en ese caso muestra un aviso que lo explica. Para administrar desde otro dispositivo define `"claveAdmin"` en `config.json` (usuario `admin` + esa clave; úsalo solo por HTTPS; 8 claves erróneas bloquean 10 min). Cada acceso denegado queda en `datos\servidor.log` con el motivo (`[admin] acceso denegado…`). Contenido: todas las salas con sus jugadores, reiniciar/dormir/nuevo mundo/borrar, reportes de todas las salas, **baneo en todo el servidor**, quitar baneos y generar licencias. Las salas oficiales solo las gestionas tú desde ahí.
 - Los reportes y baneos se guardan en `datos\reportes.json` y `datos\bans.json`.
 
 ## ¿Qué se conserva en el servidor? (probado)
@@ -75,6 +75,7 @@ Desde la v14.0 el juego se conecta al servidor por **WebSocket** (ya no usa WebR
 | `salas` | Lista de salas: `id` (4–6 letras/números, único), `nombre`, y opcionalmente `semilla`, `modo`, `tamano`… propios de esa sala. Añadir una sala = añadir una línea. |
 | `maxJugadores` | Jugadores por sala (1–10). |
 | `salasActivasMax` | Salas despiertas a la vez (incluye las 24/7). Cada una usa ~0,5–1 GB de RAM y CPU (ver «Rendimiento»). |
+| `claveAdmin` | Clave para abrir el panel de administración desde otros dispositivos (vacía = solo desde el propio PC). |
 | `urlPublica`, `maxConexionesPorIp` | Dirección pública HTTPS (se muestra en la página de estado) y conexiones simultáneas por IP real (20). |
 | `reportesParaExpulsar`, `exigirIdentidad` | Reportes distintos para expulsar automáticamente (3; 0 = nunca) y exigir identidad verificada para entrar (true). |
 | `salasUsuario`, `salasUsuarioMax` | Permitir que los jugadores creen salas (true/false) y máximo de salas de jugadores (40). |

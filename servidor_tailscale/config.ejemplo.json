@@ -38,5 +38,6 @@
   "salasUsuarioMax": 40,
   "licenciaSalasPorDefecto": 3,
   "maxConexionesPorIp": 20,
-  "urlPublica": ""
+  "urlPublica": "",
+  "claveAdmin": ""
 }

@@ -14,7 +14,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', maxConexionesPorIp: 20, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -244,6 +244,22 @@ async function wake(room) {
 const json = (res, code, o) => { res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, CORS)); res.end(JSON.stringify(o)); };
 const ownIps = () => { const out = new Set(['127.0.0.1', '::1']); try { for (const l of Object.values(os.networkInterfaces())) for (const a of l || []) out.add(a.address); } catch (e) { } return out; };
 const PROXYH = ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'forwarded', 'via', 'x-real-ip', 'cf-connecting-ip', 'cf-ray', 'tailscale-user-login', 'tailscale-funnel-request'];
+/* Administración: desde el propio PC sin clave; desde otro dispositivo SOLO si defines «claveAdmin» en config.json (usuario «admin» + esa clave; úsalo solo por HTTPS) */
+function adminOk(req) {
+  if (isLocal(req)) return true; if (!CFG.claveAdmin) return false; if (adminBlocked(req)) return false;
+  const h = String(req.headers.authorization || ''), ip = clientIp(req); if (!h.startsWith('Basic ')) return false;
+  let pw = ''; try { pw = Buffer.from(h.slice(6), 'base64').toString('utf8').split(':').slice(1).join(':'); } catch (e) { return false; }
+  const A = Buffer.from(sha(pw)), B = Buffer.from(sha(String(CFG.claveAdmin)));
+  if (crypto.timingSafeEqual(A, B)) return true; limited('admfail:' + ip, 1e9, 600000); return false;
+}
+const adminBlocked = req => !!CFG.claveAdmin && (hits.get('admfail:' + clientIp(req)) || []).filter(t => Date.now() - t < 600000).length >= 8;
+function adminDenied(req, res, page) {
+  try { const pr = PROXYH.filter(h => req.headers[h]); log('[admin] acceso denegado: remoto=' + (req.socket.remoteAddress || '?') + ' host=' + (req.headers.host || '?') + (pr.length ? ' cabeceras de proxy=' + pr.join(',') : '') + ' ruta=' + String(req.url).split('?')[0]); } catch (e) { }
+  if (adminBlocked(req)) { res.writeHead(429); return res.end('Demasiados intentos. Espera 10 minutos.'); }
+  if (CFG.claveAdmin) { res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Administracion"', 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Escribe usuario admin y la clave.'); }
+  if (page) { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:system-ui;background:#141816;color:#e8e4da;padding:24px;max-width:560px;margin:auto"><h2>Panel de administración</h2><p>Por seguridad, el panel <b>solo abre desde el PC servidor</b>, escribiendo en su navegador:</p><p style="font-size:20px"><b>http://127.0.0.1:' + CFG.puerto + '/admin</b></p><p style="color:#9aa59d">No sirve abrirlo con la dirección pública ni con la de Tailscale desde otro dispositivo. Si quieres administrar desde otro dispositivo, define <code>claveAdmin</code> en <code>config.json</code> (y úsalo por HTTPS).</p></body>'); }
+  res.writeHead(404); return res.end('no encontrado');
+}
 const hostIsLocal = h => { h = String(h || '').toLowerCase().replace(/:\d+$/, '').replace(/^\[|\]$/g, ''); return h === 'localhost' || ownIps().has(h); };
 /* «Local» = viene del propio PC, SIN pasar por un proxy (Funnel/Cloudflare/…) y pidiendo una dirección propia: así el panel de administración nunca queda público */
 const isLocal = req => { let a = req.socket.remoteAddress || ''; if (a.startsWith('::ffff:')) a = a.slice(7); if (!ownIps().has(a)) return false; for (const h of PROXYH) if (req.headers[h]) return false; return hostIsLocal(req.headers.host); };
@@ -253,11 +269,11 @@ const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const freshAll = () => Promise.all([...rooms.values()].map(r => r.fresh()));
 function urlJuego() { const ip = tailscaleIp(); return ip ? 'http://' + ip + ':' + CFG.puerto + '/juego/' : null; }
 const urlPub = () => CFG.urlPublica ? String(CFG.urlPublica).replace(/\/+$/, '') : '';
-function landing() {
+function landing(local) {
   const ip = tailscaleIp(), url = urlJuego() || ('http://' + os.hostname() + ':' + CFG.puerto + '/juego/');
   const rs = [...rooms.values()].filter(r => !r.dynamic || r.publica).map(r => r.info()).map(r => '<div class="c"><b>' + esc(r.nombre) + '</b> <small>(' + esc(r.id) + ')</small><br>' + (r.estado === 'activa' ? '<span class="ok">activa</span> · ' + r.jugadores + '/' + r.max + ' jugadores' + (r.nombres.length ? ' (' + r.nombres.map(esc).join(', ') + ')' : '') + (r.dia ? ' · día ' + r.dia : '') + ' · zombis ' + (r.zombis ?? '–') + (r.pausada ? ' · en pausa' : '') : '<span class="no">' + r.estado + '</span>' + (r.guardada ? ' · mundo guardado' : ' · mundo sin crear')) + '</div>').join('');
   return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Último Refugio · servidor</title><style>body{font-family:system-ui,Arial;background:#141816;color:#e8e4da;margin:0;padding:20px}main{max-width:560px;margin:0 auto}h1{margin:0 0 4px}.c{background:#1f2622;border:1px solid #38423b;border-radius:10px;padding:14px;margin:12px 0}a.btn{display:inline-block;background:#d9541e;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold}small{color:#9aa59d}.ok{color:#7dd36a}.no{color:#ff9a7a}</style></head><body><main><h1>Último Refugio</h1><small>Servidor multijugador · ' + esc(CFG.nombreServidor) + '</small>'
-    + rs + (urlPub() ? '<div class="c"><small>Dirección pública (cualquiera, sin Tailscale):</small><br><b>' + esc(urlPub()) + '</b><br><small>Juego: ' + esc(urlPub()) + '/juego/ · en la app: MULTIJUGADOR (las salas aparecen solas)</small></div>' : '<div class="c"><small>Servidor <b>no publicado</b>: solo entran jugadores con Tailscale. Para abrirlo a todos mira «Publicar sin Tailscale» en LEEME_SERVIDOR.md.</small></div>') + '<div class="c"><a class="btn" href="/juego/">JUGAR</a><br><br><small>Dirección para los móviles (con Tailscale activo):<br><b>' + esc(url) + '</b><br>En el juego: MULTIJUGADOR → escribe <b>' + esc((ip || os.hostname()) + ':' + CFG.puerto) + '</b> → ACTUALIZAR → elige una sala.</small></div>'
+    + rs + (urlPub() ? '<div class="c"><small>Dirección pública (cualquiera, sin Tailscale):</small><br><b>' + esc(urlPub()) + '</b><br><small>Juego: ' + esc(urlPub()) + '/juego/ · en la app: MULTIJUGADOR (las salas aparecen solas)</small></div>' : '<div class="c"><small>Servidor <b>no publicado</b>: solo entran jugadores con Tailscale. Para abrirlo a todos mira «Publicar sin Tailscale» en LEEME_SERVIDOR.md.</small></div>') + (local ? '<div class="c"><a class="btn" href="/admin">PANEL DE ADMINISTRACIÓN</a> <small>(solo visible desde este PC)</small></div>' : '') + '<div class="c"><a class="btn" href="/juego/">JUGAR</a><br><br><small>Dirección para los móviles (con Tailscale activo):<br><b>' + esc(url) + '</b><br>En el juego: MULTIJUGADOR → escribe <b>' + esc((ip || os.hostname()) + ':' + CFG.puerto) + '</b> → ACTUALIZAR → elige una sala.</small></div>'
     + (ip ? '' : '<div class="c no">No se detecta Tailscale en este equipo: solo se puede entrar desde aquí. Inicia Tailscale; se detecta solo en unos segundos.</div>') + '</main><script>setTimeout(()=>location.reload(),15000)</script></body></html>';
 }
 const MOTIVOS = { trampas: 'Trampas', toxico: 'Tóxico o insultos', griefing: 'Molestar / destruir sin motivo', otro: 'Otro' };
@@ -328,13 +344,13 @@ function handler(req, res) {
         saveReports(R); log('[' + r.id + '] reporte (' + motivo + ') contra ' + String(tg.uid).slice(0, 6)); return json(res, 200, { ok: true, mensaje: msg });
       })().catch(e => json(res, 500, { ok: false, error: e.message })); return;
     }
-    if (p === '/admin' && isLocal(req)) { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(adminPage()); }
-    if (p === '/admin/api/estado' && isLocal(req)) {
+    if (p === '/admin') { if (!adminOk(req)) return adminDenied(req, res, true);  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(adminPage()); }
+    if (p === '/admin/api/estado') { if (!adminOk(req)) return adminDenied(req, res, false); 
       (async () => { const salas = []; for (const r of rooms.values()) { await r.fresh(); const i = r.info(); const rep = reportsAll().filter(x => x.sala === r.id && x.estado === 'nuevo'); const pl = await r.players(); i.jug = pl.map(x => ({ slot: x.slot, nombre: x.nombre, id: String(x.uid || '').slice(0, 6), reportes: new Set(rep.filter(y => y.contra === x.uid).map(y => y.de)).size })); salas.push(i); }
         const b = bansAll(), bans = Object.entries(b.global || {}).map(([uid, v]) => Object.assign({ uid, ambito: 'servidor', sala: '' }, v)); for (const [sid, o] of Object.entries(b.salas || {})) for (const [uid, v] of Object.entries(o)) bans.push(Object.assign({ uid, ambito: 'sala ' + sid, sala: sid }, v));
         json(res, 200, { salas, reportes: reportsAll().filter(x => x.estado === 'nuevo').slice(-50).map(x => ({ id: x.id, sala: x.sala, nombre: x.nombreContra, contra: String(x.contra).slice(0, 6), motivo: MOTIVOS[x.motivo] || x.motivo, fecha: x.fecha })), bans, licencias: Object.keys(readJson('licencias.json', {})).length }); })().catch(e => json(res, 500, { error: e.message })); return; }
-    if (p === '/admin/api/sala' && isLocal(req)) { const r = rooms.get((Q('id') || '').toUpperCase()); if (!r) return json(res, 404, { ok: false, error: 'sala desconocida' }); if (Q('accion') === 'borrar') { if (!r.dynamic) return json(res, 400, { ok: false, error: 'Las salas oficiales se quitan en config.json.' }); deleteRoom(r).then(() => json(res, 200, { ok: true })); return; } manage(r, Q('accion'), Q, true).then(o => json(res, 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
-    if (p === '/admin/api/desbanear' && isLocal(req)) { delBan(Q('sala') || null, Q('uid')); return json(res, 200, { ok: true }); }
+    if (p === '/admin/api/sala') { if (!adminOk(req)) return adminDenied(req, res, false);  const r = rooms.get((Q('id') || '').toUpperCase()); if (!r) return json(res, 404, { ok: false, error: 'sala desconocida' }); if (Q('accion') === 'borrar') { if (!r.dynamic) return json(res, 400, { ok: false, error: 'Las salas oficiales se quitan en config.json.' }); deleteRoom(r).then(() => json(res, 200, { ok: true })); return; } manage(r, Q('accion'), Q, true).then(o => json(res, 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
+    if (p === '/admin/api/desbanear') { if (!adminOk(req)) return adminDenied(req, res, false);  delBan(Q('sala') || null, Q('uid')); return json(res, 200, { ok: true }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/gestionar$/);
     if (m) {
       const r = rooms.get(m[1].toUpperCase()); if (!r || !r.dynamic) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'sala desconocida' }); }
@@ -343,14 +359,14 @@ function handler(req, res) {
       if (act === 'borrar') { deleteRoom(r).then(() => json(res, 200, { ok: true })); return; }
       if (act === 'publica' || act === 'privada') { r.publica = act === 'publica'; saveUserRooms(); return json(res, 200, { ok: true }); }
       manage(r, act, Q, false).then(o => json(res, o.ok === false ? 400 : 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
-    if (p === '/admin/licencia' && isLocal(req)) { const c = genLicense(+Q('dias') || 30, +Q('salas') || 0, Q('nota')); return json(res, 200, { codigo: c }); }
+    if (p === '/admin/licencia') { if (!adminOk(req)) return adminDenied(req, res, false);  const c = genLicense(+Q('dias') || 30, +Q('salas') || 0, Q('nota')); return json(res, 200, { codigo: c }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/despertar$/);
     if (m) { auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
     if (p === '/estado') { freshAll().then(() => json(res, 200, { activo: [...rooms.values()].some(r => r.status === 'activa'), tailscale: tailscaleIp(), url: urlJuego(), salasActivas: activeCount(), salas: [...rooms.values()].map(r => r.info()) })); return; }
-    if (p === '/admin/guardar' && isLocal(req)) { Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
-    m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m && isLocal(req)) { const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }
+    if (p === '/admin/guardar') { if (!adminOk(req)) return adminDenied(req, res, false);  Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
+    m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m) { if (!adminOk(req)) return adminDenied(req, res, false); const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }
     if (p === '/admin/eval' && isLocal(req) && process.env.URSRV_DEBUG === '1') { const r = rooms.get((u.searchParams.get('sala') || '').toUpperCase()); if (!r || !r.page) { res.writeHead(404); return res.end('sala no activa'); } r.page.evaluate(c => { try { return JSON.stringify((0, eval)(c)); } catch (e) { return 'ERR ' + e.message; } }, u.searchParams.get('js') || '').then(o => { res.writeHead(200); res.end(String(o)); }).catch(e => { res.writeHead(500); res.end(e.message); }); return; }
-    if (p === '/' || p === '/index.html') { freshAll().then(() => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(landing()); }); return; }
+    if (p === '/' || p === '/index.html') { freshAll().then(() => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(landing(isLocal(req))); }); return; }
     if (p === '/favicon.ico') { res.writeHead(204); return res.end(); }
     res.writeHead(404); res.end('no encontrado');
   } catch (e) { try { res.writeHead(500); res.end(); } catch (e2) { } log('[http] error:', e.message); }
@@ -402,6 +418,7 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
 /* ---------------- arranque / cierre ---------------- */
 (async () => {
   log('Último Refugio · servidor multijugador. Datos en', DATA); bindAll();
+  log('PANEL DE ADMINISTRACIÓN: abre en este PC  http://127.0.0.1:' + CFG.puerto + '/admin' + (CFG.claveAdmin ? '  (desde otros dispositivos: usuario admin + claveAdmin)' : '  (solo desde este PC)'));
   if (!tailscaleIp() && CFG.escuchar !== 'todas') log('AVISO: no se detecta Tailscale (100.x.x.x). Solo se podrá jugar desde este equipo hasta que Tailscale esté activo; se detectará solo.');
   if (urlPub()) log('Dirección pública configurada:', urlPub(), '(los jugadores entran sin Tailscale mientras esté publicada)');
   else if (tailscaleIp()) log('Tailscale detectado:', tailscaleIp(), '→ en el juego: MULTIJUGADOR → «' + tailscaleIp() + ':' + CFG.puerto + '»');
