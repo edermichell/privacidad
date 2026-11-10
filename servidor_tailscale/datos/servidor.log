@@ -1,0 +1,5 @@
+2026-11-10 22:51:42 Último Refugio · servidor multijugador. Datos en /home/user/privacidad/servidor_tailscale/datos
+2026-11-10 22:51:42 AVISO: no se detecta Tailscale (100.x.x.x). Solo se podrá jugar desde este equipo hasta que Tailscale esté activo; se detectará solo.
+2026-11-10 22:51:42 Salas: SALA1 («Refugio 1»), SALA2 («Refugio 2») · máx. 10 jugadores por sala · 3 salas activas a la vez
+2026-11-10 22:51:42 [http] escuchando en http://127.0.0.1:18090/
+2026-11-10 22:52:03 Cerrando (SIGTERM): guardando los mundos…

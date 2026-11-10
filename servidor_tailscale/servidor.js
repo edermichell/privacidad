@@ -237,7 +237,8 @@ async function wake(room) {
 
 /* ---------------- HTTP ---------------- */
 const json = (res, code, o) => { res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }, CORS)); res.end(JSON.stringify(o)); };
-const isLocal = req => { const a = req.socket.remoteAddress || ''; return a === '127.0.0.1' || a === '::1' || a === '::ffff:127.0.0.1'; };
+const ownIps = () => { const out = new Set(['127.0.0.1', '::1']); try { for (const l of Object.values(os.networkInterfaces())) for (const a of l || []) out.add(a.address); } catch (e) { } return out; };
+const isLocal = req => { let a = req.socket.remoteAddress || ''; if (a.startsWith('::ffff:')) a = a.slice(7); return ownIps().has(a); };   /* el propio PC, también si abre el panel con su dirección de Tailscale */
 const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const freshAll = () => Promise.all([...rooms.values()].map(r => r.fresh()));
 function urlJuego() { const ip = tailscaleIp(); return ip ? 'http://' + ip + ':' + CFG.puerto + '/juego/' : null; }

@@ -7,7 +7,7 @@ button{background:#2d3a33;color:#e8e4da;border:1px solid #4a5a50;border-radius:6
 small{color:#9aa59d}.ok{color:#7dd36a}.no{color:#ff9a7a}
 </style></head><body><main>
 <h1>Panel del servidor</h1><small>Solo se abre desde este PC. Se actualiza solo cada 8 s.</small>
-<div id="app"></div>
+<div id="app"><div class="c"><small>Cargando…</small></div></div>
 </main>
 <script>
 const E = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -23,22 +23,34 @@ async function lic() {
   const r = await J('/admin/licencia?' + new URLSearchParams({ dias: d, salas: s })); prompt('Código (cópialo):', r.codigo);
 }
 function btn(label, id, a, q, cls) { return `<button class="${cls || ''}" data-id="${E(id)}" data-a="${a}" data-q='${E(JSON.stringify(q || {}))}'>${label}</button>`; }
-async function load() {
-  let d; try { d = await J('/admin/api/estado'); } catch (e) { return; }
+function render(d) {
   let h = '<h2>Salas</h2>';
-  for (const r of d.salas) {
+  for (const r of (d.salas || [])) {
     h += `<div class="c"><b>${E(r.nombre)}</b> <small>(${E(r.id)}${r.usuario ? (r.publica ? ', pública' : ', privada') : ', oficial'}${r.plan247 ? ', 24/7' : ''})</small> · ${r.estado === 'activa' ? `<span class="ok">activa</span> ${r.jugadores}/${r.max}` : `<span class="no">${E(r.estado)}</span>`}<br>`;
     h += btn('Reiniciar', r.id, 'reiniciar') + btn('Nuevo mundo', r.id, 'nuevomundo') + btn('Dormir', r.id, 'dormir') + (r.usuario ? btn('Borrar', r.id, 'borrar', {}, 'r') : '');
-    for (const p of r.jug) h += `<div class="p">• ${E(p.nombre)} <small>id ${E(p.id)} · reportes ${p.reportes}</small> ${btn('Expulsar', r.id, 'expulsar', { slot: p.slot })}${btn('Banear sala', r.id, 'banear', { slot: p.slot })}${btn('Banear servidor', r.id, 'banglobal', { slot: p.slot }, 'r')}</div>`;
+    for (const p of (r.jug || [])) h += `<div class="p">• ${E(p.nombre)} <small>id ${E(p.id)} · reportes ${p.reportes}</small> ${btn('Expulsar', r.id, 'expulsar', { slot: p.slot })}${btn('Banear sala', r.id, 'banear', { slot: p.slot })}${btn('Banear servidor', r.id, 'banglobal', { slot: p.slot }, 'r')}</div>`;
     h += '</div>';
   }
-  h += '<h2>Reportes nuevos</h2>' + (d.reportes.length ? '' : '<small>Ninguno.</small>');
-  for (const x of d.reportes) h += `<div class="c">Sala ${E(x.sala)} · contra <b>${E(x.nombre)}</b> <small>(id ${E(x.contra)})</small> · ${E(x.motivo)} · ${new Date(x.fecha).toLocaleString()} ${btn('Ignorar', x.sala, 'ignorar', { rid: x.id })}</div>`;
-  h += '<h2>Baneados</h2>' + (d.bans.length ? '' : '<small>Nadie.</small>');
-  for (const b of d.bans) h += `<div class="c">${E(b.nombre || '?')} <small>id ${E(b.uid.slice(0, 6))} · ${E(b.ambito)} · ${E(b.motivo || '')}</small> <button data-un="${E(b.sala || '')}" data-uid="${E(b.uid)}">Quitar</button></div>`;
-  h += `<h2>Licencias «Buen anfitrión»</h2><div class="c"><button id="lic">Generar código</button> <small>${d.licencias} códigos creados</small></div>`;
-  document.getElementById('app').innerHTML = h;
+  const rp = d.reportes || [], bn = d.bans || [];
+  h += '<h2>Reportes nuevos</h2>' + (rp.length ? '' : '<small>Ninguno.</small>');
+  for (const x of rp) h += `<div class="c">Sala ${E(x.sala)} · contra <b>${E(x.nombre)}</b> <small>(id ${E(x.contra)})</small> · ${E(x.motivo)} · ${new Date(x.fecha).toLocaleString()} ${btn('Ignorar', x.sala, 'ignorar', { rid: x.id })}</div>`;
+  h += '<h2>Baneados</h2>' + (bn.length ? '' : '<small>Nadie.</small>');
+  for (const b of bn) h += `<div class="c">${E(b.nombre || '?')} <small>id ${E(String(b.uid).slice(0, 6))} · ${E(b.ambito)} · ${E(b.motivo || '')}</small> <button data-un="${E(b.sala || '')}" data-uid="${E(b.uid)}">Quitar</button></div>`;
+  h += `<h2>Licencias «Buen anfitrión»</h2><div class="c"><button id="lic">Generar código</button> <small>${d.licencias || 0} códigos creados</small></div>`;
+  return h;
 }
+async function load() {
+  const app = document.getElementById('app');
+  try {
+    const r = await fetch('/admin/api/estado', { cache: 'no-store' }), txt = await r.text(); let d;
+    try { d = JSON.parse(txt); } catch (e) { throw new Error('respuesta no válida (HTTP ' + r.status + '): ' + txt.slice(0, 150)); }
+    if (!r.ok || !d.salas) throw new Error(d.error || ('HTTP ' + r.status));
+    app.innerHTML = render(d);
+  } catch (e) {
+    app.innerHTML = '<div class="c no"><b>No se pudo cargar el panel:</b> ' + E(e.message) + '<br><small>Prueba abrir <b>http://127.0.0.1:' + location.port + '/admin/api/estado</b> y mira qué muestra. Si ves este mensaje, reinicia el servidor y recarga con Ctrl+F5.</small></div>';
+  }
+}
+window.addEventListener('error', e => { const a = document.getElementById('app'); if (a && !a.innerHTML.trim()) a.innerHTML = '<div class="c no">Error en la página: ' + E(e.message) + '</div>'; });
 document.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.id === 'lic') return lic(); if (b.dataset.un !== undefined) return desb(b.dataset.un, b.dataset.uid);

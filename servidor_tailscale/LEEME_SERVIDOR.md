@@ -22,6 +22,9 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 5. Para 24/7: **`EVITAR_SUSPENSION_WINDOWS.bat`** (no suspender, ni al cerrar la tapa, enchufado) y **`AUTOARRANQUE_WINDOWS.bat`** (arranca al iniciar sesión).
 > Si es un portátil: enchufado y ventilado; si se calienta mucho, baja `maxJugadores` o `salasActivasMax`.
 
+## ¿Hace falta Tailscale para jugar?
+**Sí, hoy sí.** El servidor solo escucha en el PC y en su dirección de Tailscale (`100.x.x.x`), y la conexión de juego es directa entre el móvil y el PC (WebRTC), así que **cada jugador necesita Tailscale en su móvil** (gratis; con tu cuenta o con el equipo compartido). Sin Tailscale no se ve el servidor. Para jugar sin Tailscale haría falta cambiar el transporte a WebSocket a través del servidor y exponerlo a internet (ver la respuesta en el chat); no está hecho.
+
 ## Cómo entran los jugadores
 1. Tailscale activo en su móvil y con acceso a tu red (o tú compartes la máquina *Servidor* desde el panel de Tailscale: *Machines → Share*).
 2. En el juego: **MULTIJUGADOR** → las salas aparecen solas → **UNIRSE**. El juego trae de fábrica `100.70.104.87:8080` y `server.tail12bbaa.ts.net:8080` (cambiables en «Cambiar servidor»); recuerda el último que funcionó.
@@ -91,6 +94,7 @@ Copia el nuevo `index.html` sobre `juego\index.html` y reinicia el servidor. **T
 `bash linux/instalar.sh`; para 24/7 el servicio `linux/urefugio.service` (edita `USUARIO` y `RUTA`).
 
 ## Solución de problemas
+- **El panel `/admin` sale vacío:** usa la última versión de `servidor.js` y `admin.html` (deben estar los dos en la carpeta), reinicia el servidor y recarga con Ctrl+F5. Si falla, el panel ahora muestra el motivo en pantalla; también puedes abrir `http://127.0.0.1:8080/admin/api/estado` y mirar qué responde.
 - **«No se pudo conectar con el servidor»** en el juego: Tailscale activo en el móvil y en el PC, servidor encendido, regla de firewall, y la dirección con `:8080`.
 - **La sala tarda en despertar:** la primera vez crea el mundo (hasta ~30 s). Si el servidor dice que ya hay `salasActivasMax` salas activas, espera a que una se vacíe y duerma.
 - **«No se encontró la sala» / se queda en «conectando»:** reintenta; si persiste mira `datos\servidor.log`. Último recurso: `"usarStunTurn": true`.
