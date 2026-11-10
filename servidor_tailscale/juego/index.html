@@ -828,7 +828,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     <div class="pz-g">
       <button id="bSetP" class="mbs"><i class="ic">&#9881;</i><span>AJUSTES</span></button>
       <button id="bShopP" class="mbs mshop"><i class="ic">&#9733;</i><span>TIENDA</span></button>
-      <button id="bMP" class="mbs mmulti"><i class="ic">&#9679;</i><span>COOP</span></button>
+      <button id="bMP" class="mbs mmulti"><i class="ic">&#9679;</i><span>MULTIJUGADOR</span></button>
       <button id="bSaveP" class="mbs"><i class="ic">&#10003;</i><span>GUARDAR</span></button>
     </div>
     <button id="bQuit" class="mbs pz-q"><span>Guardar y salir al menú</span></button>
@@ -856,7 +856,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
         <div class="mrow"><button class="mbs mdaily" id="bDaily"><i class="ic">&#9873;</i><span>RETO DIARIO<small id="dailyInfo"></small></span></button>
         <button class="mbs" id="bAch"><i class="ic">&#9733;</i><span>LOGROS<small id="achInfo"></small></span></button></div>
         <div class="mrow"><button class="mbs mshop" id="bShop"><i class="ic">&#9733;</i><span>TIENDA<small id="shopInfo"></small></span></button>
-        <button class="mbs mmulti" id="bMulti"><i class="ic">&#9679;</i><span>COOP<small>hasta 4 jugadores</small></span></button></div>
+        <button class="mbs mmulti" id="bMulti"><i class="ic">&#9679;</i><span style="font-size:.66em;letter-spacing:-.02em">MULTIJUGADOR<small style="letter-spacing:0;font-size:1.25em">hasta 10 jugadores</small></span></button></div>
       </div>
       <div class="rec" id="best" hidden></div>
     </section>
@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v13.6 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v13.7 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -944,7 +944,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
           <p><b>Biomas (tipo REGIÓN):</b> entre los barrios hay bosques de pinos, pantanos con lodo (te frena) y niebla, lagos con muelle, campamentos con cabañas, granjas con cultivos y granero, y cementerios con capilla. Cada lugar tiene su propio botín y peligros; explorar varios da logros.</p>
           <p><b>Inicio de la historia:</b> la partida comienza con la ciudad llena de civiles (calles, casas, tiendas). La infección nace en un foco lejano y se propaga durante varios días: primero rumores y sirenas, luego los primeros infectados, y al final la ciudad cae. Los civiles hablan según cómo va el brote. Si un zombi mata a uno, se levanta.</p>
           <p><b>La ciudad se deteriora:</b> al empezar, casas y calles se ven normales y cuidadas. Conforme el brote llega a cada zona se ensucian y agrietan, aparecen grafitis y sangre, las ventanas se rompen, se tapian con tablones o quedan vacías, la hiedra avanza, los techos se hunden y la basura invade las calles. Algunas casas se incendian y echan humo. Las partes de tu propia base no se deterioran.</p>
-          <p><b>Multijugador coop (hasta 4 jugadores):</b> uno abre la sala en Pausa → Multijugador y comparte el código de 6 letras; los demás (hasta 3) lo escriben en COOP (menú principal). Comparten el mismo mundo: ven al compañero, los zombis atacan al más cercano, las puertas, contenedores y objetos del suelo se sincronizan. Cada quien tiene su propia mochila y necesidades. Mejor en la misma red Wi-Fi; si no conecta, usen «Conexión manual». Todos pueden hacer lo mismo: construir y desmontar, conducir, comerciar y reclutar civiles, usar gasolineras, generadores, huertos y barriles. El invitado conserva su personaje en ese mundo.</p>
+          <p><b>Multijugador con servidor (hasta 10 jugadores):</b> en MULTIJUGADOR escribe la dirección de tu servidor, pulsa ACTUALIZAR y elige una sala. Cada sala es un mundo propio que se guarda solo. <b>COOP misma red (hasta 4 jugadores):</b> uno abre la sala en Pausa → Multijugador y comparte el código de 6 letras; los demás (hasta 3) lo escriben en COOP (menú principal). Comparten el mismo mundo: ven al compañero, los zombis atacan al más cercano, las puertas, contenedores y objetos del suelo se sincronizan. Cada quien tiene su propia mochila y necesidades. Mejor en la misma red Wi-Fi; si no conecta, usen «Conexión manual». Todos pueden hacer lo mismo: construir y desmontar, conducir, comerciar y reclutar civiles, usar gasolineras, generadores, huertos y barriles. El invitado conserva su personaje en ese mundo.</p>
           <p><b>Mesas de trabajo:</b> ahora hay estaciones dedicadas: banco de carpintero (ferreterías, talleres), cocina de leña (mercados, casas), mesa médica (farmacias, hospitales) y banco de armas (policía, armería). Las recetas avanzadas exigen estar junto a su estación; en el panel de fabricación se ve cuál necesitas y si estás cerca. También puedes construir cofres y estantes para guardar cosas.</p>
           <p><b>Base militar:</b> en algunos mapas hay una base cercada con soldados que te defienden, intendente para comerciar y médico. Descansa ahí y comercia. Hay cuartos, cabañas y depósitos con botín, pero <b>si lo tomas a la vista de los soldados te vuelves enemigo de toda la base</b>. En otras semillas la base ya cayó: está llena de zombis, pero con gran botín.</p>
           <p><b>Novedades de botín:</b> katana, rifle, revólver, mazo, bengalas, petardos y bombas caseras; botiquín, antibióticos y adrenalina; cinta para reparar armas; chalecos y mochila táctica. Las farmacias y hospitales guardan la mejor medicina.</p>
@@ -1018,8 +1018,16 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
 <div id="netchip" hidden></div>
 <div id="mpm" hidden>
   <div class="howc card">
-    <header class="chd"><b>MULTIJUGADOR COOP</b><button id="mpX" aria-label="Cerrar">CERRAR</button></header>
+    <header class="chd"><b>MULTIJUGADOR</b><button id="mpX" aria-label="Cerrar">CERRAR</button></header>
     <div class="hbody wbody">
+      <style>.mproom{display:flex;align-items:center;gap:8px;padding:8px 10px;border:2px solid #2a3a2d;border-radius:4px;margin:6px 0;background:#0b120d}.mproom b{flex:1;font-weight:400;color:#fff3d6}.mproom small{color:#9fb4a2;font-size:.8em}.mproom .mbp{width:auto;padding:8px 14px;white-space:nowrap}.mproom .mbp:disabled{filter:grayscale(.8) brightness(.7)}</style>
+      <div id="mpSrv">
+        <div class="lab">SERVIDOR · SALAS (hasta 10 jugadores)</div>
+        <div class="mprow"><input id="mpSrvUrl" placeholder="Dirección del servidor (ej. 100.x.x.x:8080)" autocomplete="off" autocapitalize="none" spellcheck="false" style="text-transform:none;letter-spacing:0;font-size:14px;text-align:left"><button id="mpSrvGo" class="mbp"><span>ACTUALIZAR</span></button></div>
+        <div id="mpRooms"><p class="hint">Escribe la dirección de tu servidor y pulsa ACTUALIZAR.</p></div>
+        <p id="mpSrvMsg" class="hint"></p>
+      </div>
+      <div class="lab" style="margin-top:16px">COOP · MISMA RED (hasta 4 jugadores)</div>
       <p>Juega con hasta 3 personas más en el mismo mundo, contra los zombis. Uno abre la sala y comparte el código; los demás lo escriben aquí. Funciona mejor en la misma red Wi-Fi.</p>
       <div id="mpHostBox" hidden>
         <div class="lab">TU SALA</div>
@@ -20649,7 +20657,7 @@ netJoin = function (code) {
   NET.role = 'guest'; NET.on = true; NET.code = code; NET.st = 'connecting'; NET.err = ''; NET.ready = false; NET.id = Math.random().toString(36).slice(2, 9); NET.gotOffer = false; netUI();
   NET.es = netSub(async m => {
     try {
-      if (m.k === 'full' && m.to === NET.id) { netFail('La sala está llena (máximo 4 jugadores).'); return; }
+      if (m.k === 'full' && m.to === NET.id) { netFail('La sala está llena (máximo ' + (NET.cap || 4) + ' jugadores).'); return; }
       if (m.k === 'offer' && m.to === NET.id && !NET.gotOffer) {
         NET.gotOffer = true; const pc = netMkPc(); pc.ondatachannel = e => netBind(e.channel);
         await pc.setRemoteDescription({ type: 'offer', sdp: m.sdp }); await pc.setLocalDescription(await pc.createAnswer()); await netGather(pc);
@@ -20697,7 +20705,7 @@ netSendWorld = async function () {
         const n = NET.peers.filter(p => p.st === 'playing').length;
         if (chip && NET.on) { chip.textContent = n ? 'COOP ● ' + (n + 1) + ' jugadores' : (NET.peers.length ? 'SALA … conectando' : 'SALA ○ esperando · ' + NET.code); chip.className = n ? 'ok' : ''; }
         const hs = $('mpHostSt'); if (hs && (STATE === 'play' || STATE === 'dead') && n) hs.textContent = 'Conectados: ' + n + ' de ' + NET.max + ' compañeros.' + (n < NET.max ? ' Pueden entrar más con el mismo código.' : ' Sala llena.');
-      } else if (NET.role === 'guest' && NET.st === 'playing' && chip) chip.textContent = 'COOP ● ' + (2 + NET.oth.size) + ' jugadores';
+      } else if (NET.role === 'guest' && NET.st === 'playing' && chip) chip.textContent = (NET.srv ? 'SALA' : 'COOP') + ' ● ' + ((NET.srv ? 1 : 2) + NET.oth.size) + ' jugadores';
     } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   };
   /* invitado: los demás invitados llegan en la instantánea */
@@ -20967,6 +20975,66 @@ function s136Mark() {
   };
   const _al = actLabel; actLabel = function (it) { return S136_BY[it.id] ? 'Leer' : _al.apply(this, arguments); };
 }
+
+/* ===================== v13.7 · MULTIJUGADOR: SALAS EN UN SERVIDOR + COOP MISMA RED =====================
+   · Servidor propio (p. ej. un PC con Tailscale): lista de salas con jugadores/máximo; UNIRSE despierta la sala y entra.
+   · COOP misma red (hasta 4) sigue igual, con el servicio público de salas.
+   La conexión sigue siendo WebRTC; el servidor solo hace de relé para encontrarse (y mantiene el mundo). */
+const S137 = { url: '', rooms: [], via: 0, busy: 0 };
+NET.srv = 0; NET.cap = 0;
+const s137Esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function s137Norm(u) {
+  u = String(u || '').trim().replace(/\/+$/, '').replace(/\/(juego|salas)(\/.*)?$/i, ''); if (!u) return '';
+  if (!/^https?:\/\//i.test(u)) u = 'http://' + u; if (!/^https?:\/\/[^\/]+:\d+$/i.test(u) && !/^https:/i.test(u)) u += ':8080'; return u;
+}
+try { const served = /^https?:$/.test(location.protocol) && !/ntfy/.test(location.host) && location.hostname; S137.url = served ? location.origin : (localStorage.getItem('ur_srv') || ''); } catch (e) { }
+async function s137Fetch(path, ms) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 7000);
+  try { const r = await fetch(S137.url + path, { cache: 'no-store', signal: c.signal }); if (!r.ok) throw new Error('http ' + r.status); return await r.json(); } finally { clearTimeout(t); }
+}
+function s137Msg(t, bad) { const m = $('mpSrvMsg'); if (m) { m.textContent = t || ''; m.style.color = bad ? '#ff8a7a' : ''; } }
+function s137Render() {
+  const box = $('mpRooms'); if (!box) return;
+  if (!S137.rooms.length) { box.innerHTML = '<p class="hint">No hay salas disponibles.</p>'; return; }
+  box.innerHTML = S137.rooms.map(r => {
+    const full = r.jugadores >= r.max, st = r.estado === 'activa' ? (r.jugadores + '/' + r.max + ' jugadores' + (r.dia ? ' · día ' + r.dia : '')) : r.estado === 'iniciando' ? 'iniciando…' : 'dormida · se despierta al entrar (0/' + r.max + ')';
+    return '<div class="mproom"><b>' + s137Esc(r.nombre) + '<br><small>' + st + '</small></b><button class="mbp" data-room="' + s137Esc(r.id) + '"' + (full ? ' disabled' : '') + '><span>' + (full ? 'LLENA' : 'UNIRSE') + '</span></button></div>';
+  }).join('');
+}
+async function s137Load(quiet) {
+  const inp = $('mpSrvUrl'); if (!inp) return; const u = s137Norm(inp.value); if (!u) { s137Msg('Escribe la dirección del servidor (ej. 100.70.104.87:8080).', true); return; }
+  S137.url = u; inp.value = u.replace(/^http:\/\//, ''); try { localStorage.setItem('ur_srv', u); } catch (e) { }
+  if (!quiet) s137Msg('Buscando salas…');
+  try { const d = await s137Fetch('/salas'); S137.rooms = d.salas || []; S137.ice = d.ice || []; s137Render(); s137Msg(S137.rooms.length ? '' : 'El servidor no tiene salas.'); }
+  catch (e) { S137.rooms = []; s137Render(); s137Msg('No se pudo conectar con el servidor. ¿Tailscale activo en este dispositivo y servidor encendido?', true); }
+}
+async function s137Join(id) {
+  if (S137.busy) return; S137.busy = 1; const room = S137.rooms.find(r => r.id === id); if (!room) { S137.busy = 0; return; }
+  try {
+    audioInit(); NET.err = ''; if (NET.role) netLeave(true);
+    if (room.estado !== 'activa') {
+      s137Msg('Despertando la sala «' + room.nombre + '»… (hasta 30 s la primera vez)'); await s137Fetch('/sala/' + encodeURIComponent(id) + '/despertar');
+      let ok = false; for (let i = 0; i < 45 && !ok; i++) { await new Promise(r => setTimeout(r, 1000)); const d = await s137Fetch('/salas'); const r2 = (d.salas || []).find(x => x.id === id); if (r2 && r2.estado === 'activa') { ok = true; Object.assign(room, r2); } }
+      if (!ok) { s137Msg('La sala no despertó a tiempo. Intenta de nuevo.', true); S137.busy = 0; return; }
+    }
+    s137Msg(''); NET.sig = S137.url + '/sig'; NET.ice = S137.ice || []; NET.srv = 1; NET.cap = room.max; S137.via = 1; netJoin(room.id);
+  } catch (e) { s137Msg('No se pudo entrar a la sala. Revisa la conexión con el servidor.', true); }
+  S137.busy = 0; netUI();
+}
+/* COOP misma red y anfitrión normal: siempre con el servicio público (no heredan el servidor) */
+{
+  const _nj = netJoin; netJoin = function () { if (!S137.via) { NET.sig = 'https://ntfy.sh'; NET.ice = null; NET.srv = 0; NET.cap = 0; } S137.via = 0; return _nj.apply(this, arguments); };
+  const _nh = netHost; netHost = function () { if (!window.__SRV_HOST) { NET.sig = 'https://ntfy.sh'; NET.ice = null; NET.srv = 0; NET.cap = 0; } return _nh.apply(this, arguments); };
+  const _nu = netUI; netUI = function () { const r = _nu.apply(this, arguments); const s = $('mpSrv'); if (s) s.hidden = (STATE === 'play' || STATE === 'dead') || (NET.role === 'guest' && NET.st !== 'off'); return r; };
+}
+(function s137Bind() {
+  const inp = $('mpSrvUrl'); if (!inp) return; inp.value = S137.url.replace(/^http:\/\//, '');
+  $('mpSrvGo').addEventListener('click', () => s137Load());
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') s137Load(); if (e.code === 'Escape') $('mpm').hidden = true; }); inp.addEventListener('keyup', e => e.stopPropagation());
+  $('mpRooms').addEventListener('click', e => { const b = e.target.closest('button[data-room]'); if (b && !b.disabled) s137Join(b.dataset.room); });
+  const open = () => { if (STATE !== 'play' && inp.value) s137Load(true); };
+  $('bMulti').addEventListener('click', open); $('bMP').addEventListener('click', open);
+})();
 
 /* ===================== AUDIO (sintetizado) ===================== */
 let AC = null, MG = null, muted = false, rainNode = null, windNode = null, noiseBuf = null, hbT = 0, crT = 0;
@@ -21694,7 +21762,7 @@ function render(dt) {
       push(Math.floor(n.x) + Math.floor(n.y), n.x + n.y, 'n', n);
   }
   if (!menu && !P.drive) push(Math.floor(P.x) + Math.floor(P.y), P.x + P.y, 'p');
-  if (!menu && NET.on) for (const R_ of netRemotes()) if (R_.ok && !R_.dead && !R_.drive && R_.x >= x0 - 3 && R_.x <= x1 + 3 && R_.y >= y0 - 3 && R_.y <= y1 + 3) push(Math.floor(R_.x) + Math.floor(R_.y), R_.x + R_.y, 'rp', R_);
+  if (!menu && NET.on) for (const R_ of netRemotes()) if (R_.ok && !(NET.srv && NET.role === 'guest' && R_ === NET.rp) && !R_.dead && !R_.drive && R_.x >= x0 - 3 && R_.x <= x1 + 3 && R_.y >= y0 - 3 && R_.y <= y1 + 3) push(Math.floor(R_.x) + Math.floor(R_.y), R_.x + R_.y, 'rp', R_);
   if (!menu) evPush(push, Q);
   if (!menu) for (const c of cars) {
     if (Math.abs(c.x - Q.x) > 20 || Math.abs(c.y - Q.y) > 20 || c.x < x0 - 3 || c.x > x1 + 3 || c.y < y0 - 3 || c.y > y1 + 3) continue;
@@ -23333,7 +23401,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23374,7 +23442,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23397,7 +23465,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+  if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23426,7 +23494,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23460,7 +23528,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+  if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23491,7 +23559,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -23524,7 +23592,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -23553,12 +23621,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 13.6') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 13.7') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

@@ -2,10 +2,15 @@
    Se inserta al servir la página; el APK no lo lleva. Activo solo con ?srv=1 (el anfitrión sin pantalla).
    - El jugador local del anfitrión es un "fantasma": no cuenta como objetivo de zombis/civiles si hay invitados.
    - Sin sonido, sin dibujo (ahorra casi toda la CPU); la simulación y la red siguen igual. */
-const SRV = { on: false, code: (window.SRV_CODE || ''), spawn: null, ticks: 0 };
+const SRV = { on: false, spawn: null, ticks: 0 };
 /* el servidor lo llama una vez cargado todo el juego (así ninguna capa posterior pisa estos cambios) */
 SRV.boot = function (opt) {
   if (SRV.on) return; SRV.on = true; opt = opt || {}; SRV.pauseEmpty = !!opt.pausar; SRV.park = null;
+  /* la sala usa el relé de este mismo servidor, conexiones directas (Tailscale) y hasta «max» jugadores reales */
+  window.__SRV_HOST = 1; NET.sig = location.origin + '/sig'; NET.ice = opt.ice || []; NET.srv = 1; NET.max = Math.max(1, Math.min(10, opt.max | 0 || 10)); NET.cap = NET.max;
+  if (opt.code) { netCode = () => String(opt.code); }
+  /* el anfitrión no dibuja: 30 pasos por segundo bastan y gastan menos CPU */
+  try { OPT.fps = opt.fps === 0 ? 0 : (opt.fps || 30); frameDeadline = 0; } catch (e) { }
   /* sitio de aparcamiento lejos del punto de entrada (para simular el mundo con el servidor vacío sin que los zombis se amontonen donde entra la gente) */
   try { let best = null, bd = -1; for (let y = 12; y < H - 12; y += 6) for (let x = 12; x < W - 12; x += 6) { const d = Math.hypot(x - P.x, y - P.y); if (d > bd && inb(x, y) && !solidTile(x, y) && !to[idx(x, y)] && !tb[idx(x, y)]) { bd = d; best = [x + .5, y + .5]; } } SRV.park = best; } catch (e) { }
   audioInit = function () { };
@@ -31,5 +36,3 @@ SRV.boot = function (opt) {
     SRV.paused = false; return _ug.apply(this, arguments);
   };
 };
-/* en cualquier página servida: el código de sala fijo ya escrito en el cuadro de unirse */
-try { if (window.SRV_CODE) addEventListener('DOMContentLoaded', () => { const i = document.getElementById('mpIn'); if (i && !i.value) i.value = window.SRV_CODE; }); } catch (e) { }
