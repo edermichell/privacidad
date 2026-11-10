@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v13.8 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v13.9 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -965,7 +965,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
           <p><b>Fracturas:</b> golpes fuertes, caídas y trepar ventanas pueden romperte un brazo o pierna: cojeas, vas más lento y apuntas peor. Fabrica una <i>tablilla</i> (tablón o ramas + trapos) y úsalo en Estado; el hueso sana en más o menos un día y medio de juego.</p>
           <p><b>Heridas profundas:</b> sangran fuerte y se reabren si corres o peleas. Véndalas y suturalas con <i>hilo y aguja</i>. <b>Balas:</b> usa las <i>pinzas</i> para extraerlas; si no, duelen y pueden infectarse.</p>
           <p><b>Ánimo:</b> el estrés sube con zombis cerca, cadáveres y la noche; baja comiendo bien, leyendo, jugando cartas, junto al fuego o con amigos. El aburrimiento sube si te quedas sin hacer nada. Con estrés alto tu puntería tiembla.</p>
-          <p><b>Puertas cerradas:</b> muchas casas y tiendas vienen con llave. Abre con <i>ganzúa</i> (se fabrica con 2 clavos; silenciosa, lenta), <i>palanca</i> (rápida, ruidosa) o patada (ruidosa y a veces duele). Los zombis también las golpean hasta romperlas; desde dentro puedes abrir libremente.</p>
+          <p><b>Candado de código:</b> fabrica un candado (6 clavos + cinta, con martillo), párate frente a una puerta o un mueble de almacenaje que hayas construido y pulsa USAR en el candado: eliges 4 números y se lo dices a tus amigos. En las salas del servidor se puede robar: fuerza el candado con ganzúa (lenta y silenciosa) o palanca (rápida y ruidosa) o rompe paredes, puertas, ventanas y cajas a golpes (mejor con hacha). El dueño recibe un aviso.</p><p><b>Puertas cerradas:</b> muchas casas y tiendas vienen con llave. Abre con <i>ganzúa</i> (se fabrica con 2 clavos; silenciosa, lenta), <i>palanca</i> (rápida, ruidosa) o patada (ruidosa y a veces duele). Los zombis también las golpean hasta romperlas; desde dentro puedes abrir libremente.</p>
           <p><b>Estanques y pesca:</b> hay lagunas en parques y campo. Con una <i>caña</i> pulsa USAR junto al agua para pescar (relaja). Puedes llenar botellas, pero el agua del estanque es sucia: hiérvela. Los zombis no entran al agua.</p>
           <p><b>Generador:</b> se encuentra en ferreterías, talleres y bodegas. Colócalo desde la Mochila, échale gasolina (lata) y arráncalo con USAR. Mientras funcione enciende farolas y ventanas en 13 casillas, pero gasta combustible y el ruido atrae zombis.</p>
           <p><b>Comida:</b> la comida se echa a perder (carne y pescado en un día, pan y sándwiches en pocos días; el frío del invierno la conserva). Revisa su estado en la descripción del objeto: lo pasado da poco y enferma, lo podrido te intoxica.</p>
@@ -1030,16 +1030,24 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
         <details id="mpNew"><summary>+ CREAR SALA (pública o privada)</summary>
           <div class="mprow"><input id="mpNewName" maxlength="24" placeholder="Nombre de tu sala" autocomplete="off" spellcheck="false" style="text-transform:none;letter-spacing:0;font-size:14px;text-align:left"></div>
           <div class="mpseg"><button id="mpNewPub" class="on">PÚBLICA</button><button id="mpNewPriv">PRIVADA</button></div>
-          <div class="mpseg"><button id="mpNew247" disabled>24/7 · BUEN ANFITRIÓN</button></div>
+          <div class="mpseg"><button id="mpNew247" hidden>24/7 · SALA SIEMPRE ABIERTA</button></div>
           <p class="hint">Pública: aparece en la lista. Privada: solo entra quien tenga el código. Las salas gratis se duermen si están vacías y se borran tras 14 días sin jugadores.</p>
           <div class="mpbtns"><button id="mpNewGo" class="mbp"><span>CREAR SALA</span></button></div>
         </details>
-        <div id="mpHostCard" class="mpcard"><div class="lab">BUEN ANFITRIÓN</div><b>Crea salas 24/7 y juega con tus amigos.</b><br><small id="mpHostPrice"></small><br><small id="mpHostSt2"></small>
-          <div class="mprow"><input id="mpLicIn" maxlength="12" placeholder="CÓDIGO BA-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" style="font-size:12px;letter-spacing:.1em"><button id="mpLicGo" class="mbs"><span>CANJEAR</span></button></div></div>
+        
         <details id="mpSrvCfg"><summary>Cambiar servidor</summary><div class="mprow"><input id="mpSrvUrl" placeholder="100.x.x.x:8080" autocomplete="off" autocapitalize="none" spellcheck="false" style="text-transform:none;letter-spacing:0;font-size:14px;text-align:left"><button id="mpSrvGo" class="mbp"><span>CONECTAR</span></button></div></details>
         <p id="mpSrvMsg" class="hint"></p>
       </div>
-      <div class="lab" style="margin-top:16px">COOP · MISMA RED (hasta 4 jugadores)</div>
+<div id="mpGame" hidden>
+        <div class="lab">SALA DEL SERVIDOR</div>
+        <div class="mpcard" style="border-color:#6a3a3a;background:#1a0f0f"><b style="color:#ff9a8a">REPORTAR UN JUGADOR</b><br><small>Trampas, insultos o molestar a otros. El dueño de la sala y el administrador lo revisan; varios reportes expulsan al jugador.</small>
+          <div class="mprow"><select id="mpRepWho" style="flex:1;min-width:0;background:#0b120d;color:#fff3d6;border:2px solid #2a3a2d;padding:8px"></select></div>
+          <div class="mprow"><select id="mpRepWhy" style="flex:1;min-width:0;background:#0b120d;color:#fff3d6;border:2px solid #2a3a2d;padding:8px"><option value="trampas">Hace trampas</option><option value="toxico">Tóxico o insultos</option><option value="griefing">Molesta / destruye sin motivo</option><option value="otro">Otro</option></select><button id="mpRepGo" class="mbp"><span>ENVIAR</span></button></div></div>
+        <div id="mpGameAdm" hidden><button id="mpGameAdmGo" class="mbs"><span>ADMINISTRAR MI SALA</span></button></div>
+        <p id="mpGameMsg" class="hint"></p>
+      </div>
+      <div id="mpMgr" hidden class="mpcard"></div>
+            <div class="lab" style="margin-top:16px">COOP · MISMA RED (hasta 4 jugadores)</div>
       <p>Juega con hasta 3 personas más en el mismo mundo, contra los zombis. Uno abre la sala y comparte el código; los demás lo escriben aquí. Funciona mejor en la misma red Wi-Fi.</p>
       <div id="mpHostBox" hidden>
         <div class="lab">TU SALA</div>
@@ -5763,6 +5771,7 @@ function bldReplay(list) {
   for (const r of list || []) {
     if (r.k === 'h') { const b = carveHouse(r.x, r.y, r.w, r.h, r.d, r.c, r.big, r.g, r.two); BLD.list.push(r); }
     else if (r.k === 'p') { const c = BCID[r.c]; if (!c) continue; applyPiece(c, r.i, r.hp); BLD.pc.set(r.i, r); BLD.list.push(r); }
+    else if (r.k === 'x') { to[r.i] = O_NONE; tbar[r.i] = 0; tbh[r.i] = 0; td[r.i] = 0; BLD.list.push(r); }
   }
 }
 function bldSaveData() { for (const r of BLD.list) if (r.k === 'p' && BLD.pc.get(r.i) === r && r.c === 'fence') r.hp = Math.max(1, tbh[r.i]); return BLD.list; }
@@ -20988,7 +20997,7 @@ function s136Mark() {
   const _al = actLabel; actLabel = function (it) { return S136_BY[it.id] ? 'Leer' : _al.apply(this, arguments); };
 }
 
-/* ===================== v13.8 · MULTIJUGADOR: SALAS AUTOMÁTICAS, PÚBLICAS/PRIVADAS Y «BUEN ANFITRIÓN» =====================
+/* ===================== v13.9 · MULTIJUGADOR: SALAS AUTOMÁTICAS, PÚBLICAS/PRIVADAS Y «BUEN ANFITRIÓN» =====================
    · Las salas del servidor aparecen solas (servidores por defecto + el último usado); no hace falta escribir la dirección.
    · Crear sala pública o privada; entrar a una privada con su código; «Buen anfitrión» (licencia) = salas 24/7.
    · COOP misma red (hasta 4) sigue igual y usa el servicio público. */
@@ -21011,6 +21020,23 @@ async function s138Get(base, path, extra, ms) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 7000);
   try { const r = await fetch(base + path + s138Qs(extra), { cache: 'no-store', signal: c.signal }); let d = null; try { d = await r.json(); } catch (e) { } if (!d) throw new Error('http ' + r.status); return d; } finally { clearTimeout(t); }
 }
+function s139Sha(msg) {
+  const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const b = new TextEncoder().encode(msg), l = b.length, n = ((l + 9 + 63) >> 6) << 6, d = new Uint8Array(n); d.set(b); d[l] = 0x80; const dv = new DataView(d.buffer); dv.setUint32(n - 4, l * 8 >>> 0); dv.setUint32(n - 8, Math.floor(l / 0x20000000));
+  let h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]; const w = new Uint32Array(64), R = (x, k) => (x >>> k) | (x << (32 - k));
+  for (let o = 0; o < n; o += 64) { for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4); for (let i = 16; i < 64; i++) { const s0 = R(w[i-15],7) ^ R(w[i-15],18) ^ (w[i-15] >>> 3), s1 = R(w[i-2],17) ^ R(w[i-2],19) ^ (w[i-2] >>> 10); w[i] = (w[i-16] + s0 + w[i-7] + s1) | 0; }
+    let [a, bb, c, dd, e, f, g, hh] = h; for (let i = 0; i < 64; i++) { const S1 = R(e,6) ^ R(e,11) ^ R(e,25), ch = (e & f) ^ (~e & g), t1 = (hh + S1 + ch + K[i] + w[i]) | 0, S0 = R(a,2) ^ R(a,13) ^ R(a,22), mj = (a & bb) ^ (a & c) ^ (bb & c), t2 = (S0 + mj) | 0; hh = g; g = f; f = e; e = (dd + t1) | 0; dd = c; c = bb; bb = a; a = (t1 + t2) | 0; }
+    h = [h[0]+a|0, h[1]+bb|0, h[2]+c|0, h[3]+dd|0, h[4]+e|0, h[5]+f|0, h[6]+g|0, h[7]+hh|0]; }
+  return h.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+/* al unirse a una sala del servidor se demuestra la identidad (sin enviar la clave) para que funcionen baneos y reportes */
+{
+  const _np = netPost; netPost = function (obj) {
+    if (obj && obj.k === 'join' && NET.srv) { try { const id = s138Id(), n = Math.random().toString(36).slice(2, 12) + Date.now().toString(36); obj = Object.assign({}, obj, { uid: id.uid, n, s: s139Sha(s139Sha(id.tok) + ':' + n + ':' + String(NET.code).toUpperCase()) }); } catch (e) { typeof dbgc === 'function' && dbgc(e); } }
+    return _np.call(this, obj);
+  };
+  const _ns = netSub; netSub = function (onMsg, onOpen, onErr) { return _ns.call(this, m => { if (m && m.k === 'ban' && NET.srv && m.to === NET.id) { netFail(m.m || 'No puedes entrar a esta sala.'); return; } return onMsg(m); }, onOpen, onErr); };
+}
 const s137Fetch = (path, ms) => s138Get(S137.url, path, null, ms);
 function s137Msg(t, bad) { const m = $('mpSrvMsg'); if (m) { m.textContent = t || ''; m.style.color = bad ? '#ff8a7a' : ''; } }
 function s138Cands() {
@@ -21032,12 +21058,11 @@ function s137Render() {
   else box.innerHTML = S137.rooms.map(r => {
     const full = r.jugadores >= r.max, st = r.estado === 'activa' ? (r.jugadores + '/' + r.max + ' jugadores' + (r.dia ? ' · día ' + r.dia : '')) : r.estado === 'iniciando' ? 'iniciando…' : 'dormida · se despierta al entrar (0/' + r.max + ')';
     const bd = (r.plan247 ? '<i class="bdg g">24/7</i>' : '') + (r.usuario ? (r.publica ? '<i class="bdg">PÚBLICA</i>' : '<i class="bdg p">PRIVADA</i>') : '<i class="bdg o">OFICIAL</i>') + (r.mia ? '<i class="bdg m">TUYA</i>' : '');
-    const mine = r.mia ? '<span class="mpmine"><button class="ghost" data-code="' + s137Esc(r.id) + '">CÓDIGO</button><button class="ghost" data-pub="' + s137Esc(r.id) + '" data-to="' + (r.publica ? 'privada' : 'publica') + '">' + (r.publica ? 'HACER PRIVADA' : 'HACER PÚBLICA') + '</button><button class="ghost" data-del="' + s137Esc(r.id) + '">BORRAR</button></span>' : '';
+    const mine = r.mia ? '<span class="mpmine"><button class="ghost" data-code="' + s137Esc(r.id) + '">CÓDIGO</button><button class="ghost" data-pub="' + s137Esc(r.id) + '" data-to="' + (r.publica ? 'privada' : 'publica') + '">' + (r.publica ? 'HACER PRIVADA' : 'HACER PÚBLICA') + '</button><button class="ghost" data-del="' + s137Esc(r.id) + '">BORRAR</button><button class="ghost" data-mgr="' + s137Esc(r.id) + '">ADMINISTRAR</button></span>' : '';
     return '<div class="mproom"><div class="mpi"><b>' + s137Esc(r.nombre) + '</b> ' + bd + '<br><small>' + st + '</small>' + mine + '</div><button class="mbp" data-room="' + s137Esc(r.id) + '"' + (full ? ' disabled' : '') + '><span>' + (full ? 'LLENA' : 'UNIRSE') + '</span></button></div>';
   }).join('');
-  const hc = $('mpHostSt2'), p = s138Plan();
-  if (hc) hc.innerHTML = p.anfitrion ? '<b style="color:#7dd36a">Activo</b> hasta ' + s137Esc(String(p.vence || '').slice(0, 10)) + ' · salas: ' + p.salasUsadas + '/' + p.salasMax + ' (24/7: ' + p.salas247 + ')' : 'No activo · salas gratis: ' + (p.salasUsadas || 0) + '/' + (p.gratisMax || 1) + ' (se duermen si están vacías)';
-  const b247 = $('mpNew247'); if (b247) { b247.disabled = !p.anfitrion; b247.title = p.anfitrion ? '' : 'Requiere «Buen anfitrión»'; if (!p.anfitrion && S137.plan247) { S137.plan247 = false; } b247.classList.toggle('on', !!S137.plan247); }
+  const p = s138Plan();
+  const b247 = $('mpNew247'); if (b247) { b247.hidden = !p.anfitrion; if (!p.anfitrion && S137.plan247) S137.plan247 = false; b247.classList.toggle('on', !!S137.plan247); }
   const nw = $('mpNew'); if (nw) nw.hidden = !S137.crear;
 }
 async function s138Refresh(quiet) {
@@ -21075,16 +21100,17 @@ async function s138Create() {
     s137Msg(S137.tipo === 'privada' ? 'Sala privada creada. Código para tus amigos: ' + d.id + ' (también en «CÓDIGO»). Entrando…' : 'Sala pública creada. Entrando…'); $('mpNewGo').disabled = false; s138JoinId(d.id);
   } catch (e) { s137Msg('No se pudo crear la sala: sin conexión con el servidor.', true); $('mpNewGo').disabled = false; }
 }
-async function s138Redeem() {
-  const c = ($('mpLicIn').value || '').trim(); if (c.length < 6) { s137Msg('Escribe el código de «Buen anfitrión».', true); return; }
-  try { const d = await s138Get(S137.url, '/licencia/canjear', { codigo: c }); if (!d.ok) { s137Msg(d.error || 'Código no válido.', true); return; } S137.plan = d.plan; $('mpLicIn').value = ''; s137Msg('¡Listo! «Buen anfitrión» activo hasta ' + String(d.plan.vence).slice(0, 10) + '.'); s137Render(); }
-  catch (e) { s137Msg('No se pudo canjear: sin conexión con el servidor.', true); }
+async function s138Redeem(code, say2) {
+  const c = String(code || '').trim(); if (c.length < 6) { say2('Escribe el código de «Buen anfitrión».'); return; }
+  try { if (!S137.url) await s138Connect(); if (!S137.url) { say2('No se encontró el servidor. Activa Tailscale e intenta de nuevo.'); return; }
+    const d = await s138Get(S137.url, '/licencia/canjear', { codigo: c }); if (!d.ok) { say2(d.error || 'Código no válido.'); return; } S137.plan = d.plan; say2('¡Listo! «Buen anfitrión» activo hasta ' + String(d.plan.vence).slice(0, 10) + '.'); }
+  catch (e) { say2('No se pudo canjear: sin conexión con el servidor.'); }
 }
 /* COOP misma red y anfitrión normal: siempre con el servicio público (no heredan el servidor) */
 {
   const _nj = netJoin; netJoin = function () { if (!S137.via) { NET.sig = 'https://ntfy.sh'; NET.ice = null; NET.srv = 0; NET.cap = 0; } S137.via = 0; return _nj.apply(this, arguments); };
   const _nh = netHost; netHost = function () { if (!window.__SRV_HOST) { NET.sig = 'https://ntfy.sh'; NET.ice = null; NET.srv = 0; NET.cap = 0; } return _nh.apply(this, arguments); };
-  const _nu = netUI; netUI = function () { const r = _nu.apply(this, arguments); const s = $('mpSrv'); if (s) s.hidden = (STATE === 'play' || STATE === 'dead') || (NET.role === 'guest' && NET.st !== 'off'); return r; };
+  const _nu = netUI; netUI = function () { const r = _nu.apply(this, arguments); const s = $('mpSrv'); if (s) s.hidden = (STATE === 'play' || STATE === 'dead') || (NET.role === 'guest' && NET.st !== 'off'); const g = $('mpGame'); if (g) g.hidden = !(STATE === 'play' && NET.srv && NET.role === 'guest'); return r; };
 }
 (function s138Bind() {
   const box = $('mpRooms'); if (!box) return; const seg = (id, f) => $(id).addEventListener('click', f);
@@ -21093,30 +21119,196 @@ async function s138Redeem() {
     if (j && !j.disabled) return s138JoinId(j.dataset.room);
     if (c) { const id = c.dataset.code; try { await navigator.clipboard.writeText(id); s137Msg('Código ' + id + ' copiado. Compártelo con tus amigos.'); } catch (er) { s137Msg('Código de tu sala: ' + id); } return; }
     if (d) { if (!confirm('¿Borrar esta sala y su mundo? No se puede deshacer.')) return; const r = await s138Get(S137.url, '/sala/' + d.dataset.del + '/gestionar', { accion: 'borrar' }).catch(() => null); s137Msg(r && r.ok ? 'Sala borrada.' : (r && r.error) || 'No se pudo borrar.', !(r && r.ok)); return s138Refresh(true); }
+    if (e.target.closest('button[data-mgr]')) return s139Mgr(e.target.closest('button[data-mgr]').dataset.mgr);
     if (p) { const r = await s138Get(S137.url, '/sala/' + p.dataset.pub + '/gestionar', { accion: p.dataset.to }).catch(() => null); s137Msg(r && r.ok ? 'Listo.' : 'No se pudo cambiar.', !(r && r.ok)); return s138Refresh(true); }
   });
   $('mpPrivGo').addEventListener('click', () => s138JoinId($('mpPrivIn').value, true));
   $('mpPrivIn').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
-  for (const id of ['mpPrivIn', 'mpNewName', 'mpLicIn', 'mpSrvUrl']) { const el = $(id); el.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') { if (id === 'mpPrivIn') s138JoinId(el.value, true); else if (id === 'mpNewName') s138Create(); else if (id === 'mpLicIn') s138Redeem(); else $('mpSrvGo').click(); } if (e.code === 'Escape') $('mpm').hidden = true; }); el.addEventListener('keyup', e => e.stopPropagation()); }
+  for (const id of ['mpPrivIn', 'mpNewName', 'mpSrvUrl']) { const el = $(id); el.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') { if (id === 'mpPrivIn') s138JoinId(el.value, true); else if (id === 'mpNewName') s138Create(); else $('mpSrvGo').click(); } if (e.code === 'Escape') $('mpm').hidden = true; }); el.addEventListener('keyup', e => e.stopPropagation()); }
   seg('mpNewPub', () => { S137.tipo = 'publica'; $('mpNewPub').classList.add('on'); $('mpNewPriv').classList.remove('on'); });
   seg('mpNewPriv', () => { S137.tipo = 'privada'; $('mpNewPriv').classList.add('on'); $('mpNewPub').classList.remove('on'); });
   seg('mpNew247', () => { if ($('mpNew247').disabled) return; S137.plan247 = !S137.plan247; $('mpNew247').classList.toggle('on', S137.plan247); });
-  seg('mpNewGo', s138Create); seg('mpLicGo', s138Redeem);
+  seg('mpNewGo', s138Create);
   $('mpSrvGo').addEventListener('click', () => { const u = s137Norm($('mpSrvUrl').value); if (!u) return; S137.url = u; try { localStorage.setItem('ur_srv', u); } catch (e) { } S137.ok = false; s137Render(); s138Refresh(); });
-  const price = $('mpHostPrice'); if (price) price.textContent = UR_HOST_PRICE ? 'Precio: ' + UR_HOST_PRICE : 'Precio: por definir (próximamente).';
-  const open = () => { if (STATE !== 'play') { S137.ok = false; s137Render(); s138Refresh(); s138Poll(); } };
+  const open = () => { if (STATE !== 'play') { S137.ok = false; s137Render(); s138Refresh(); s138Poll(); } else if (NET.srv) s139GameOpen(); };
   $('bMulti').addEventListener('click', open); $('bMP').addEventListener('click', open);
   $('mpX').addEventListener('click', () => { clearInterval(S137.timer); S137.timer = 0; });
 })();
-/* tarjeta «Buen anfitrión» en la Tienda */
+/* ---------- gestión de sala (dueño) y reportes (jugadores) ---------- */
+const S139 = { room: '' };
+const s139Box = () => $('mpMgr');
+async function s139Mgr(id, silent) {
+  S139.room = id || S139.room; const box = s139Box(); if (!box) return; if (!silent) { box.hidden = false; box.innerHTML = '<p class="hint">Cargando…</p>'; }
+  let d; try { d = await s138Get(S137.url, '/sala/' + S139.room + '/gestionar', { accion: 'jugadores' }); } catch (e) { box.innerHTML = '<p class="hint" style="color:#ff8a7a">Sin conexión con el servidor.</p>'; return; }
+  if (!d.ok) { box.innerHTML = '<p class="hint" style="color:#ff8a7a">' + s137Esc(d.error || 'No se pudo cargar.') + '</p>'; return; }
+  let h = '<div class="lab">ADMINISTRAR SALA</div><div class="mpbtns"><button class="mbs" data-mg="reiniciar"><span>REINICIAR SALA</span></button><button class="mbs" data-mg="nuevomundo"><span>NUEVO MUNDO</span></button><button class="ghost" data-mg="cerrar">CERRAR PANEL</button></div><p class="hint">Reiniciar recarga la sala con su mundo guardado (todos tendrán que volver a entrar). Nuevo mundo archiva el actual y empieza otro.</p>';
+  h += '<div class="lab">JUGADORES AHORA</div>' + (d.jugadores.length ? d.jugadores.map(p => '<div class="mproom"><div class="mpi"><b>' + s137Esc(p.nombre) + '</b> <small>id ' + s137Esc(p.id) + (p.reportes ? ' · <span style="color:#ff8a7a">' + p.reportes + ' reporte(s)</span>' : '') + '</small></div><button class="ghost" data-mg="expulsar" data-slot="' + p.slot + '">EXPULSAR</button><button class="mbp" data-mg="banear" data-slot="' + p.slot + '"><span>BANEAR</span></button></div>').join('') : '<p class="hint">No hay jugadores conectados.</p>');
+  h += '<div class="lab">REPORTES NUEVOS</div>' + (d.reportes.length ? d.reportes.map(x => '<div class="mproom"><div class="mpi"><b>' + s137Esc(x.nombre) + '</b> <small>id ' + s137Esc(x.contra) + ' · ' + s137Esc(x.motivo) + '</small></div><button class="ghost" data-mg="ignorar" data-rid="' + s137Esc(x.id) + '">IGNORAR</button></div>').join('') : '<p class="hint">Ninguno.</p>');
+  h += '<div class="lab">BANEADOS</div>' + (d.baneados.length ? d.baneados.map(b => '<div class="mproom"><div class="mpi"><b>' + s137Esc(b.nombre || '?') + '</b> <small>' + s137Esc(b.motivo || '') + '</small></div><button class="ghost" data-mg="desbanear" data-uid="' + s137Esc(b.uid) + '">QUITAR</button></div>').join('') : '<p class="hint">Nadie.</p>');
+  box.innerHTML = h;
+}
+async function s139MgrAct(b) {
+  const a = b.dataset.mg; if (a === 'cerrar') { s139Box().hidden = true; return; }
+  if ((a === 'nuevomundo' && !confirm('¿Empezar un mundo nuevo? Se archiva el actual y se pierde el progreso de todos.')) || (a === 'reiniciar' && !confirm('¿Reiniciar la sala? Todos los jugadores serán desconectados.')) || (a === 'banear' && !confirm('¿Banear a este jugador de tu sala?'))) return;
+  const q = { accion: a }; if (b.dataset.slot) q.slot = b.dataset.slot; if (b.dataset.rid) q.rid = b.dataset.rid; if (b.dataset.uid) q.uid = b.dataset.uid;
+  s137Msg(a === 'reiniciar' || a === 'nuevomundo' ? 'Aplicando… (puede tardar unos segundos)' : '');
+  const d = await s138Get(S137.url, '/sala/' + S139.room + '/gestionar', q, 60000).catch(() => null);
+  s137Msg(d && d.ok ? 'Listo.' : (d && d.error) || 'No se pudo.', !(d && d.ok)); if (a === 'reiniciar' || a === 'nuevomundo') { s139Box().hidden = true; } else s139Mgr(S139.room, true);
+}
+async function s139GameOpen() {
+  const g = $('mpGame'); if (!g || !NET.srv) return; const id = String(NET.code || '').toUpperCase(); S139.room = id; $('mpGameMsg').textContent = '';
+  try { const d = await s138Get(S137.url, '/sala/' + id + '/jugadores'); const sel = $('mpRepWho'); sel.innerHTML = (d.jugadores || []).filter(p => p.slot !== d.yo).map(p => '<option value="' + p.slot + '">' + s137Esc(p.nombre) + '</option>').join('') || '<option value="">(no hay otros jugadores)</option>'; } catch (e) { $('mpGameMsg').textContent = 'Sin conexión con el servidor.'; }
+  try { const i = await s138Get(S137.url, '/sala/' + id + '/info'); $('mpGameAdm').hidden = !(i.ok && i.sala && i.sala.mia); } catch (e) { $('mpGameAdm').hidden = true; }
+}
+(function s139Bind() {
+  const g = $('mpGame'); if (!g) return;
+  $('mpRepGo').addEventListener('click', async () => { const slot = $('mpRepWho').value; if (!slot) return; const d = await s138Get(S137.url, '/sala/' + S139.room + '/reportar', { slot, motivo: $('mpRepWhy').value }).catch(() => null); $('mpGameMsg').textContent = d ? (d.mensaje || d.error || '') : 'Sin conexión con el servidor.'; });
+  $('mpGameAdmGo').addEventListener('click', () => s139Mgr(S139.room));
+  $('mpMgr').addEventListener('click', e => { const b = e.target.closest('button[data-mg]'); if (b) s139MgrAct(b); });
+})();
+
+/* tarjeta «Buen anfitrión» en la Tienda (solo aquí: no aparece en las salas) */
 {
-  const _rs = renderShop; renderShop = function () {
+  const _rs = renderShop; S137.askT = 0;
+  renderShop = function () {
     _rs.apply(this, arguments); try {
       const el = $('shop'); if (el.hidden || (typeof shopView !== 'undefined' && shopView !== 'main')) return; const foot = el.querySelector('.shr.foot'); if (!foot) return;
-      const d = document.createElement('div'); d.className = 'prods'; d.innerHTML = '<div class="prod"><div><b>Buen anfitrión</b><span>Crea salas 24/7 y juega con tus amigos. ' + s137Esc(UR_HOST_PRICE ? 'Precio: ' + UR_HOST_PRICE + '.' : 'Precio por definir.') + '</span></div><button data-s138="host">VER</button></div>'; foot.parentNode.insertBefore(d, foot);
+      const p = S137.plan || {}, st = p.anfitrion ? '<b style="color:#7dd36a">Activo</b> hasta ' + s137Esc(String(p.vence || '').slice(0, 10)) + ' · salas ' + p.salasUsadas + '/' + p.salasMax : 'No activo';
+      const d = document.createElement('div'); d.className = 'prods'; d.innerHTML = '<div class="prod best"><div><b>Buen anfitrión</b><span>Crea salas 24/7 y juega con tus amigos. ' + s137Esc(UR_HOST_PRICE ? 'Precio: ' + UR_HOST_PRICE + '.' : 'Precio por definir.') + '<br>' + st + '<br><input id="shHostIn" maxlength="12" placeholder="CÓDIGO BA-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" style="margin-top:6px;width:90%;background:#0b120d;border:2px solid #2a3a2d;color:#fff3d6;padding:6px;font-size:12px;letter-spacing:.08em"></span></div><button data-s138="redeem">CANJEAR</button></div>'; foot.parentNode.insertBefore(d, foot);
+      if (Date.now() - S137.askT > 20000) { S137.askT = Date.now(); s138Refresh(true).then(() => { if (!$('shop').hidden && !(document.activeElement && document.activeElement.id === 'shHostIn')) renderShop(); }); }
     } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   };
-  $('shop').addEventListener('click', e => { if (!e.target.closest('[data-s138="host"]')) return; try { closeShop(); } catch (er) { } if (STATE === 'menu') { netOpenUI(); setTimeout(() => { s138Refresh(); s138Poll(); const c = $('mpHostCard'); if (c && c.scrollIntoView) c.scrollIntoView({ block: 'center' }); }, 50); } else say('Abre MULTIJUGADOR desde el menú principal para ver «Buen anfitrión».', 'tip'); });
+  $('shop').addEventListener('click', e => { const b = e.target.closest('[data-s138="redeem"]'); if (!b) return; e.stopPropagation(); const inp = $('shHostIn'); s138Redeem(inp && inp.value, t => { try { shopMsg(t); } catch (er) { } }).then(() => { try { renderShop(); } catch (er) { } }); }, true);
+  $('shop').addEventListener('keydown', e => { if (e.target && e.target.id === 'shHostIn') e.stopPropagation(); }); $('shop').addEventListener('keyup', e => { if (e.target && e.target.id === 'shHostIn') e.stopPropagation(); });
+}
+
+/* ===================== v13.9 · CANDADOS DE CÓDIGO, ALMACENAJE Y ASALTOS =====================
+   · Candado de código (4 dígitos) para puertas y almacenaje que construyes: compartes el código con tus amigos.
+   · El anfitrión (o el servidor de la sala) es quien guarda los códigos y decide: los demás solo saben que está cerrado.
+   · Robar: forzar el candado (ganzúa lenta y silenciosa, palanca rápida y ruidosa) o romper paredes, puertas, ventanas y almacenaje a golpes.
+   · Los asaltos y el forzado solo están activos en las salas del servidor (en solitario y en COOP de misma red no se roba). */
+const LK = { codes: new Map(), flags: new Set(), ok: new Map(), rh: new Map(), strip: false, q: 0, pend: new Map(), fo: new Map(), rl: new Map(), tries: new Map() };
+Object.assign(ITEMS, { padlock: { n: 'Candado de código', w: .3, t: 'tool', ic: 'lockpick', col: '#d8b84a' } });
+RECIPES.push({ id: 'padlock', n: 'Candado de código', d: 'Cerradura de 4 dígitos para tus puertas y cajas. Comparte el código con tus amigos', in: [['nails', 6], ['tape', 1]], out: [['padlock', 1]], t: 3, tool: 'hammer' });
+const lkHpOf = t => t === O_WALL ? 420 : t === O_DOOR ? 240 : t === O_WIN ? 120 : t === O_LOCKER ? 380 : (CONTAINER.has(t) && t !== O_CAR) ? 160 : 0;
+const lkHouseTile = i => { const x = i % W, y = (i / W) | 0; for (const r of BLD.list) if (r.k === 'h' && x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return true; return false; };
+const lkPlayerTile = i => BLD.pc.has(i) || lkHouseTile(i);
+const lkRaidable = i => { const t = to[i]; if (!lkHpOf(t) || t === O_FENCE) return false; return BLD.pc.has(i) || ((t === O_WALL || t === O_DOOR || t === O_WIN) && lkHouseTile(i)); };
+const lkLockable = i => { const t = to[i]; return (t === O_DOOR && lkPlayerTile(i)) || (CONTAINER.has(t) && t !== O_CAR && BLD.pc.has(i)); };
+const lkRaidOn = () => !!NET.srv;
+/* ---- lado que decide (anfitrión / solo) ---- */
+const lkWho = () => (NET.role === 'host' && NET.cur) ? { slot: NET.cur.slot, uid: NET.cur.uid || '', rp: NET.cur.rp } : { slot: 0, uid: '', rp: null };
+const lkKey = w => w.uid || ('s' + w.slot);
+const lkNear = (w, i) => { const p = w.rp || P, x = (i % W) + .5, y = ((i / W) | 0) + .5; return Math.hypot(p.x - x, p.y - y) < 3.4; };
+function lkFlag(i, on, destroyed) {
+  if (on) { LK.flags.add(i); if (to[i] === O_DOOR && !(td[i] & 1)) td[i] |= 2; } else { LK.flags.delete(i); if (to[i] === O_DOOR) td[i] &= ~2; }
+  if (NET.role === 'host' && NET.on) netSend({ t: 'LKF', i, on: on ? 1 : 0, x: destroyed ? 1 : 0 });
+}
+function lkAlert(i, what) {
+  const L = LK.codes.get(i); if (!L) return; const x = (i % W) + .5, y = ((i / W) | 0) + .5;
+  if (L.u === 's0' || L.u === '' || !NET.on || NET.role !== 'host') { say(what === 'forzando' ? '¡Alguien está forzando tu candado!' : what === 'forzada' ? 'Forzaron un candado tuyo' : what === 'golpe' ? '¡Están rompiendo algo tuyo!' : 'Alguien prueba códigos en tu candado', 'bad'); return; }
+  for (const p of NET.peers) if (p.ready && (p.uid === L.u || ('s' + p.slot) === L.u)) netSendRaw(p, { t: 'LKN', i, a: what });
+}
+function lkSetH(i, code, w) {
+  if (!lkLockable(i)) return { ok: false, m: 'Eso no se puede cerrar con candado (solo puertas y almacenaje que construyas).' }; if (!lkNear(w, i)) return { ok: false, m: 'Estás muy lejos.' };
+  if (LK.codes.has(i)) return { ok: false, m: 'Ya tiene un candado.' }; if (!/^\d{4}$/.test(String(code))) return { ok: false, m: 'El código son 4 números.' };
+  LK.codes.set(i, { c: String(code), u: lkKey(w) }); lkFlag(i, true); return { ok: true, m: 'Candado puesto. Código: ' + code + ' (compártelo con quien quieras que entre).' };
+}
+function lkTryH(i, code, w, remove) {
+  const L = LK.codes.get(i); if (!L) return { ok: false, m: 'No tiene candado.' }; if (!lkNear(w, i)) return { ok: false, m: 'Estás muy lejos.' };
+  const k = lkKey(w) + ':' + i, t = LK.tries.get(k) || { n: 0, until: 0, t0: 0 }, now = Date.now();
+  if (t.until > now) return { ok: false, m: 'Demasiados intentos. Espera ' + Math.ceil((t.until - now) / 1000) + ' s.' };
+  if (String(code) !== L.c) { if (now - t.t0 > 60000) { t.n = 0; t.t0 = now; } t.n++; if (t.n >= 5) { t.until = now + 60000; t.n = 0; } LK.tries.set(k, t); lkAlert(i, 'probando'); return { ok: false, m: 'Código incorrecto.' }; }
+  LK.tries.delete(k);
+  if (remove) { LK.codes.delete(i); lkFlag(i, false); return { ok: true, m: 'Candado quitado.', rem: 1 }; }
+  if (to[i] === O_DOOR) td[i] &= ~2; return { ok: true, m: 'Abierto.' };
+}
+function lkForceStartH(i, how, w) { if (!LK.codes.has(i) || !lkNear(w, i)) return; LK.fo.set(lkKey(w) + ':' + i, { t: Date.now(), how }); lkAlert(i, 'forzando'); const x = (i % W) + .5, y = ((i / W) | 0) + .5; makeNoise(x, y, how === 'crowbar' ? 14 : 5); }
+function lkForceH(i, how, w) {
+  const L = LK.codes.get(i); if (!L) return { ok: false, m: 'Ya no tiene candado.' }; if (!lkNear(w, i)) return { ok: false, m: 'Estás muy lejos.' };
+  const k = lkKey(w) + ':' + i, f = LK.fo.get(k); LK.fo.delete(k); const need = how === 'crowbar' ? 3800 : 10500; if (!f || f.how !== how || Date.now() - f.t < need) return { ok: false, m: 'Forzaste demasiado rápido: no cede.' };
+  const x = (i % W) + .5, y = ((i / W) | 0) + .5, win = how === 'crowbar' ? .85 : .42;
+  if (Math.random() < win) { LK.codes.delete(i); lkFlag(i, false); if (to[i] === O_DOOR) td[i] &= ~2; makeNoise(x, y, how === 'crowbar' ? 22 : 7); lkAlert2(L, i, 'forzada'); return { ok: true, m: how === 'crowbar' ? 'Revientas el candado a palancazos.' : 'Click: el candado cede.' }; }
+  const broke = how === 'lockpick' && Math.random() < .3; return { ok: false, broke, m: broke ? 'Se rompe la ganzúa.' : 'No cede… prueba otra vez.' };
+}
+function lkAlert2(L, i, what) { const save = LK.codes.get(i); LK.codes.set(i, L); lkAlert(i, what); if (!save) LK.codes.delete(i); }
+function lkDestroy(i) {
+  const c = containers.get(i); if (c && c.items && c.items.length) for (const it of c.items) floorItems.push({ x: (i % W) + .3 + Math.random() * .4, y: ((i / W) | 0) + .3 + Math.random() * .4, it }); if (c) containers.delete(i);
+  const L = LK.codes.get(i), rec = BLD.pc.get(i); if (rec) { const k = BLD.list.indexOf(rec); if (k >= 0) BLD.list.splice(k, 1); BLD.pc.delete(i); } else BLD.list.push({ k: 'x', i });
+  const x = (i % W) + .5, y = ((i / W) | 0) + .5; to[i] = O_NONE; tbar[i] = 0; tbh[i] = 0; td[i] = 0; LK.codes.delete(i); LK.rh.delete(i); LK.flags.delete(i);
+  invalidateChunkAt(i % W, (i / W) | 0);   /* el cambio de casilla lo detecta y envía el difusor de diferencias del anfitrión */
+  if (NET.role === 'host' && NET.on) netSend({ t: 'LKF', i, on: 0, x: 1 }); sfx('crash', Math.hypot(x - P.x, y - P.y)); spawnPart('chip', x, y, 1, 12); makeNoise(x, y, 24); if (L) lkAlert2(L, i, 'golpe');
+}
+function lkDamageH(i, d, w) {
+  if (!lkRaidable(i) || !lkNear(w, i)) return; const k = lkKey(w), now = Date.now(); if (now - (LK.rl.get(k) || 0) < 220) return; LK.rl.set(k, now); d = Math.max(1, Math.min(70, +d || 1));
+  const t = to[i], hp = (LK.rh.has(i) ? LK.rh.get(i) : lkHpOf(t)) - d, x = (i % W) + .5, y = ((i / W) | 0) + .5;
+  makeNoise(x, y, 18); sfx('bash', Math.hypot(x - P.x, y - P.y), { x, y }); spawnPart('chip', x, y, 1, 4);
+  if (LK.codes.has(i) && Math.random() < .25) lkAlert(i, 'golpe');
+  if (hp <= 0) lkDestroy(i); else LK.rh.set(i, hp);
+}
+/* ---- mensajes (invitado ↔ anfitrión) ---- */
+function lkCall(o) {
+  if (NET.role !== 'guest') { const w = lkWho(); return Promise.resolve(o.t === 'LKS' ? lkSetH(o.i, o.c, w) : o.t === 'LKT' ? lkTryH(o.i, o.c, w, false) : o.t === 'LKR' ? lkTryH(o.i, o.c, w, true) : lkForceH(o.i, o.how, w)); }
+  return new Promise(res => { const q = ++LK.q; LK.pend.set(q, res); netSend(Object.assign({ q }, o)); setTimeout(() => { if (LK.pend.has(q)) { LK.pend.delete(q); res({ ok: false, m: 'Sin respuesta del servidor.' }); } }, 9000); });
+}
+function lkNet(o) {
+  if (NET.role === 'host') {
+    const w = lkWho(), re = r => netSendRaw(NET.cur, Object.assign({ t: 'LKA', q: o.q, i: o.i }, r));
+    if (o.t === 'LKS') re(lkSetH(o.i, o.c, w)); else if (o.t === 'LKT') re(lkTryH(o.i, o.c, w, false)); else if (o.t === 'LKR') re(lkTryH(o.i, o.c, w, true)); else if (o.t === 'LKX0') lkForceStartH(o.i, o.how, w); else if (o.t === 'LKX') re(lkForceH(o.i, o.how, w));
+    return;
+  }
+  if (o.t === 'LKA') { const r = LK.pend.get(o.q); if (r) { LK.pend.delete(o.q); r(o); } }
+  else if (o.t === 'LKF') { if (o.on) { LK.flags.add(o.i); if (to[o.i] === O_DOOR && !(td[o.i] & 1)) td[o.i] |= 2; } else { LK.flags.delete(o.i); LK.rh.delete(o.i); if (to[o.i] === O_DOOR) td[o.i] &= ~2; } if (o.x) { const x = (o.i % W) + .5, y = ((o.i / W) | 0) + .5; sfx('crash', Math.hypot(x - P.x, y - P.y)); spawnPart('chip', x, y, 1, 12); } }
+  else if (o.t === 'LKN') say(o.a === 'forzando' ? '¡Alguien está forzando tu candado!' : o.a === 'forzada' ? 'Forzaron un candado tuyo' : o.a === 'golpe' ? '¡Están rompiendo algo tuyo!' : 'Alguien prueba códigos en tu candado', 'bad');
+}
+{
+  const _nm = netMsg; netMsg = function (o) { if (o && typeof o.t === 'string') { if (o.t.startsWith('LK')) return lkNet(o); if (o.t === 'RD') { if (NET.role === 'host') lkDamageH(o.i | 0, o.d, lkWho()); return; } } return _nm.apply(this, arguments); };
+  const _bs = buildSave; buildSave = function () { const s = _bs.apply(this, arguments); try { if (LK.codes.size) { if (LK.strip) s.clkf = [...LK.codes.keys()]; else s.clk = [...LK.codes].map(([i, v]) => [i, v.c, v.u]); } if (LK.rh.size) s.crh = [...LK.rh]; } catch (e) { typeof dbgc === 'function' && dbgc(e); } return s; };
+  const _as = applySave; applySave = function (s) { const r = _as.apply(this, arguments); try { LK.codes.clear(); LK.flags.clear(); LK.rh.clear(); LK.ok.clear(); if (s && Array.isArray(s.clk)) for (const [i, c, u] of s.clk) { LK.codes.set(i, { c, u }); LK.flags.add(i); } if (s && Array.isArray(s.clkf)) for (const i of s.clkf) LK.flags.add(i); if (s && Array.isArray(s.crh)) for (const [i, h] of s.crh) LK.rh.set(i, h); for (const i of LK.flags) if (to[i] === O_DOOR && !(td[i] & 1)) td[i] |= 2; } catch (e) { typeof dbgc === 'function' && dbgc(e); } return r; };
+  const _nsw = netSendWorld; netSendWorld = function () { LK.strip = true; try { return _nsw.apply(this, arguments); } finally { LK.strip = false; } };
+  const _ng = newGame; newGame = function () { const r = _ng.apply(this, arguments); LK.codes.clear(); LK.flags.clear(); LK.rh.clear(); LK.ok.clear(); return r; };
+  const _td = toggleDoor; toggleDoor = function (i) { const r = _td.apply(this, arguments); try { if (LK.flags.has(i) && to[i] === O_DOOR && !(td[i] & 1)) td[i] |= 2; } catch (e) { } return r; };
+  const _hf = hintFor; hintFor = function (t) { const h = _hf.apply(this, arguments); return (t && (t.type === 'door' || t.type === 'cont') && LK.flags.has(t.i) && !(LK.ok.get(t.i) > Date.now())) ? 'Cerrado con código · USAR' : h; };
+  const _al = actLabel; actLabel = function (it) { return it.id === 'padlock' ? 'Instalar' : _al.apply(this, arguments); };
+  const _mu = mechUse; mechUse = function (it, d) { if (it.id === 'padlock') { lkInstall(); return true; } return _mu.apply(this, arguments); };
+  const _di = doInteract; doInteract = function () {
+    if (P.dead || P.sleep || P.act || BLD.on) return _di.apply(this, arguments); const t = findInteract();
+    if (t && (t.type === 'door' || t.type === 'cont') && LK.flags.has(t.i) && !(LK.ok.get(t.i) > Date.now())) { lkPrompt(t, _di); return; } return _di.apply(this, arguments);
+  };
+  const _rm = resolveMelee; resolveMelee = function () { const r = _rm.apply(this, arguments); try { lkRaid(); } catch (e) { typeof dbgc === 'function' && dbgc(e); } return r; };
+}
+/* ---- interfaz ---- */
+function lkModal(title, html, btns) { metaModal(title, html, btns.map(b => ({ t: b[0], cls: b[1], f: b[2] }))); setTimeout(() => { const el = $('lkIn'); if (el) { el.addEventListener('keydown', e => e.stopPropagation()); el.addEventListener('keyup', e => e.stopPropagation()); el.focus(); } }, 60); }
+const lkClose = () => { $('metam').hidden = true; };
+const lkInput = () => '<input id="lkIn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" autocomplete="off" style="width:140px;font-size:28px;letter-spacing:.3em;text-align:center;background:#0b120d;border:2px solid #2a3a2d;color:#fff3d6;padding:6px">';
+const lkSetMsg = (t, bad) => { const m = $('lkMsg'); if (m) { m.textContent = t; m.style.color = bad ? '#ff8a7a' : '#7dd36a'; } };
+function lkInstall() {
+  const t = findInteract(); if (!t || (t.type !== 'door' && t.type !== 'cont') || !lkLockable(t.i)) { say('Párate frente a una puerta o un mueble de almacenaje que hayas construido y pulsa USAR en el candado.', 'bad'); return; }
+  if (LK.flags.has(t.i)) { say('Ya tiene un candado.', 'bad'); return; }
+  lkModal('Instalar candado', '<p>Elige un código de 4 números. Quien lo sepa podrá abrirlo.</p>' + lkInput() + '<p id="lkMsg" class="hint"></p>', [
+    ['INSTALAR', 'mbp', async () => { const c = ($('lkIn').value || '').trim(); if (!/^\d{4}$/.test(c)) { lkSetMsg('Escribe 4 números.', true); return; } const r = await lkCall({ t: 'LKS', i: t.i, c }); if (r.ok) { const it = hasItem('padlock'); if (it) removeItem(it, 1); LK.flags.add(t.i); if (to[t.i] === O_DOOR && !(td[t.i] & 1)) td[t.i] |= 2; lkClose(); say(r.m, 'good'); sfx('click', 0); } else lkSetMsg(r.m || 'No se pudo.', true); }],
+    ['CANCELAR', 'mbs', lkClose]]);
+}
+function lkPrompt(t, cont) {
+  const i = t.i, raid = lkRaidOn(), tool = hasItem('lockpick') ? 'lockpick' : hasTool('crowbar') ? 'crowbar' : null;
+  lkModal('Cerrado con código', '<p>Escribe el código de 4 números.</p>' + lkInput() + '<p id="lkMsg" class="hint"></p>' + (raid ? '<p class="hint">¿No lo sabes? Puedes forzarlo' + (tool ? ' (' + (tool === 'lockpick' ? 'ganzúa: lenta y silenciosa' : 'palanca: rápida y ruidosa') + ')' : ' con una ganzúa o una palanca, o romperlo a golpes') + '. El dueño recibe un aviso.</p>' : ''), [
+    ['ABRIR', 'mbp', async () => { const r = await lkCall({ t: 'LKT', i, c: ($('lkIn').value || '').trim() }); if (r.ok) { LK.ok.set(i, Date.now() + 25000); if (to[i] === O_DOOR) td[i] &= ~2; lkClose(); sfx('door', 0); cont.call(null); } else lkSetMsg(r.m || 'Código incorrecto.', true); }],
+    ['QUITAR CANDADO', 'mbs', async () => { const r = await lkCall({ t: 'LKR', i, c: ($('lkIn').value || '').trim() }); if (r.ok) { LK.flags.delete(i); if (to[i] === O_DOOR) td[i] &= ~2; addItem(mkItem('padlock', 1)); lkClose(); say('Recuperas el candado.', 'good'); } else lkSetMsg(r.m || 'Código incorrecto.', true); }]]
+      .concat(raid ? [['FORZAR', 'mbs', () => { lkClose(); lkForce(i); }]] : []).concat([['CANCELAR', 'mbs', lkClose]]));
+}
+function lkForce(i) {
+  const how = hasItem('lockpick') ? 'lockpick' : hasTool('crowbar') ? 'crowbar' : null; if (!how) { say('Necesitas una ganzúa o una palanca; o rompe la puerta o el mueble a golpes con un arma.', 'bad'); return; }
+  const dur = how === 'crowbar' ? 4.2 : 11.5, x = (i % W) + .5, y = ((i / W) | 0) + .5;
+  if (NET.role === 'guest') netSend({ t: 'LKX0', i, how }); else lkForceStartH(i, how, lkWho());
+  startAct(how === 'crowbar' ? 'Forzando el candado con la palanca…' : 'Forzando el candado con la ganzúa…', dur, async () => {
+    const r = await lkCall({ t: 'LKX', i, how }); say(r.m || '', r.ok ? 'good' : 'bad');
+    if (r.ok) { LK.flags.delete(i); if (to[i] === O_DOOR) td[i] &= ~2; addXP('mech', 5); sfx('door', 0); } else if (r.broke) { const lp = hasItem('lockpick'); if (lp) removeItem(lp, 1); }
+  }, { noise: how === 'crowbar' ? 14 : 2 });
+}
+function lkRaid() {
+  if (!lkRaidOn() || P.dead) return; const w = wpnOf(), id = P.eq && P.eq.id, mul = { fireaxe: 2.4, axe: 2.2, sledge: 2.6, crowbar: 1.7, pickaxe: 2.2, shovel: 1.3, bat: 1.1, nbat: 1.3 }[id] || 1, d = Math.round((w ? w.dmg : 7) * mul);
+  for (const rr of [1.0, 1.5]) { const tx = Math.floor(P.x + Math.cos(P.dir) * rr), ty = Math.floor(P.y + Math.sin(P.dir) * rr); if (!inb(tx, ty)) continue; const i = idx(tx, ty); if (!lkRaidable(i)) continue;
+    if (NET.role === 'guest') { netSend({ t: 'RD', i, d }); sfx('bash', 0); spawnPart('chip', tx + .5, ty + .5, 1, 3); } else lkDamageH(i, d, lkWho()); return; }
 }
 
 /* ===================== AUDIO (sintetizado) ===================== */
@@ -23484,7 +23676,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23525,7 +23717,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23548,7 +23740,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+  if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23577,7 +23769,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23611,7 +23803,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+  if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23642,7 +23834,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -23675,7 +23867,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -23704,12 +23896,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 13.8') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 13.9') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 13.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

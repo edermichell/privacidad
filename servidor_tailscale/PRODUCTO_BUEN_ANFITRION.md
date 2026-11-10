@@ -4,8 +4,8 @@
 
 ## Ya funciona (probado en Chromium)
 - Licencias con **código** (`BA-XXXX-XXXX`), duración y número de salas; se generan con `GENERAR_LICENCIA.bat`.
-- El jugador las canjea en *MULTIJUGADOR → Buen anfitrión → CANJEAR*; el servidor activa sus salas 24/7 y las baja a gratis cuando vence.
-- Tarjeta «Buen anfitrión» en **Tienda** y en el menú MULTIJUGADOR (el precio es un texto: busca `const UR_HOST_PRICE = ''` en `index.html` y escribe, por ejemplo, `'$49 MXN al mes'`).
+- El jugador las canjea en la **Tienda → «Buen anfitrión» → CANJEAR**; el servidor activa sus salas 24/7 y las baja a gratis cuando vence. **El producto vive solo en la Tienda** (no aparece en las salas ni en el lobby; allí solo se ve, para quien lo tiene, el interruptor de sala siempre abierta).
+- El precio es un texto: busca `const UR_HOST_PRICE = ''` en `index.html` y escribe, por ejemplo, `'$49 MXN al mes'`.
 - Límites por servidor (`salas247Max`, `salasActivasMax`) para no saturar tu PC.
 
 ## Falta para cobrarlo dentro de la app (no está hecho)

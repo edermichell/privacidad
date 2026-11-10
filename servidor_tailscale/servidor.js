@@ -13,7 +13,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
+  simularSinJugadores: false, fpsServidor: 30, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -46,8 +46,27 @@ function auth(uid, tok, register) {
   if (!UIDRE.test(uid || '') || !TOKRE.test(tok || '')) return { ok: false, error: 'identidad no válida' };
   const O = ownersAll(), th = sha(tok), o = O[uid];
   if (o) return o.th === th ? { ok: true, uid } : { ok: false, error: 'identidad no válida' };
-  if (!register) return { ok: false, unknown: true };
+  if (typeof register === 'function' ? !register() : !register) return { ok: false, unknown: true };
   O[uid] = { th, lic: null, creado: Date.now() }; writeJson('duenos.json', O); return { ok: true, uid };
+}
+/* ---- baneos, reportes y verificación de identidad al unirse ---- */
+const bansAll = () => readJson('bans.json', { global: {}, salas: {} });
+const saveBans = b => writeJson('bans.json', b);
+const reportsAll = () => readJson('reportes.json', []);
+const saveReports = r => writeJson('reportes.json', r.slice(-500));
+function banInfo(uid, roomId) { const b = bansAll(); return (b.global && b.global[uid]) ? Object.assign({ ambito: 'servidor' }, b.global[uid]) : (b.salas && b.salas[roomId] && b.salas[roomId][uid]) ? Object.assign({ ambito: 'sala' }, b.salas[roomId][uid]) : null; }
+function addBan(roomId, uid, nombre, motivo) { const b = bansAll(); const rec = { nombre: String(nombre || '').slice(0, 20), motivo: String(motivo || '').slice(0, 60), fecha: Date.now() }; if (roomId) { b.salas[roomId] = b.salas[roomId] || {}; b.salas[roomId][uid] = rec; } else b.global[uid] = rec; saveBans(b); }
+function delBan(roomId, uid) { const b = bansAll(); if (roomId) { if (b.salas[roomId]) delete b.salas[roomId][uid]; } else delete b.global[uid]; saveBans(b); }
+const usedNonce = new Map();
+function verifyJoin(roomId, uid, n, sig) {
+  if (!uid && !CFG.exigirIdentidad) return { ok: true, uid: '' };
+  if (!UIDRE.test(uid || '') || !n || !/^[a-f0-9]{64}$/.test(sig || '')) return { ok: false, error: 'Actualiza el juego para entrar a esta sala (identidad no válida).' };
+  const o = ownersAll()[uid]; if (!o) return { ok: false, error: 'Identidad no registrada. Vuelve a abrir MULTIJUGADOR e intenta de nuevo.' };
+  const k = uid + ':' + n; const now = Date.now(); for (const [kk, t] of usedNonce) if (now - t > 600000) usedNonce.delete(kk); if (usedNonce.has(k)) return { ok: false, error: 'Intento repetido. Vuelve a intentarlo.' };
+  if (sha(o.th + ':' + n + ':' + roomId) !== sig) return { ok: false, error: 'No se pudo verificar tu identidad.' };
+  usedNonce.set(k, now);
+  const b = banInfo(uid, roomId); if (b) return { ok: false, error: 'Estás baneado' + (b.ambito === 'servidor' ? ' de este servidor' : ' de esta sala') + (b.motivo ? ': ' + b.motivo : '') + '.' };
+  return { ok: true, uid };
 }
 const hits = new Map(); function limited(key, max, ms) { const n = Date.now(), a = (hits.get(key) || []).filter(t => n - t < ms); a.push(n); hits.set(key, a); if (hits.size > 5000) hits.clear(); return a.length > max; }
 
@@ -112,8 +131,12 @@ class Room {
     this.dynamic = !!cfg.dynamic; this.owner = cfg.owner || null; this.publica = cfg.publica !== false; this.plan247 = !!cfg.plan247; this.creada = cfg.creada || Date.now(); this.lastPlayers = cfg.lastPlayers || Date.now();
   }
   get nunca() { return this.plan247; }
+  async players() { if (!this.page || this.status !== 'activa') return []; try { return await Promise.race([this.page.evaluate(() => SRV.players()), new Promise((_, j) => setTimeout(() => j(new Error('t')), 6000))]); } catch (e) { return []; } }
+  async kick(slot, msg) { if (!this.page || this.status !== 'activa') return false; try { return await this.page.evaluate(([a, b]) => SRV.kick(a, b), [slot, msg]); } catch (e) { return false; } }
+  async restart() { if (this.promise) await this.promise.catch(() => { }); this.stopping = true; try { await this.saveWorld('cierre'); await this._close(true); } finally { this.stopping = false; } this.status = 'dormida'; this.nextTry = 0; this.wanted = true; this.state = null; log('[' + this.id + '] reiniciada'); await this.start(); }
+  async newWorld() { await this.sleep(); try { if (this.hasSave()) fs.renameSync(this.save, path.join(this.dir, 'copias', 'anterior_' + Date.now() + '.json')); } catch (e) { } this.nextSeed = this.id.toLowerCase() + '-' + Date.now().toString(36); this.nextTry = 0; this.wanted = true; log('[' + this.id + '] nuevo mundo'); await this.start(); }
   record() { return { id: this.id, nombre: this.nombre, owner: this.owner, publica: this.publica, plan247: this.plan247, creada: this.creada, lastPlayers: this.lastPlayers, dynamic: true }; }
-  world() { const w = {}; for (const k of WORLDKEYS) w[k] = this.cfg[k] !== undefined ? this.cfg[k] : CFG[k]; return w; }
+  world() { const w = {}; for (const k of WORLDKEYS) w[k] = this.cfg[k] !== undefined ? this.cfg[k] : CFG[k]; if (this.nextSeed) { w.semilla = this.nextSeed; this.nextSeed = null; } return w; }
   hasSave() { try { return fs.statSync(this.save).size > 1000; } catch (e) { return false; } }
   async start() {
     if (this.promise) return this.promise; if (this.status === 'activa') return;
@@ -189,15 +212,15 @@ function planOf(uid) { const l = licOf(uid), own = userRooms(uid); return { anfi
 function createRoom(uid, nombre, publica, want247) {
   if (!CFG.salasUsuario) return { ok: false, error: 'Este servidor no permite crear salas.' };
   nombre = String(nombre || '').replace(/[<>&"\u0000-\u001f]/g, '').trim().slice(0, 24); if (nombre.length < 3) return { ok: false, error: 'Ponle un nombre de 3 a 24 letras.' };
-  const pl = planOf(uid); if (want247 && !pl.anfitrion) return { ok: false, error: 'Las salas 24/7 son para «Buen anfitrión».' };
-  if (pl.salasUsadas >= pl.salasMax) return { ok: false, error: pl.anfitrion ? 'Ya tienes ' + pl.salasMax + ' salas (tu límite). Borra una para crear otra.' : 'Ya tienes tu sala gratis. Con «Buen anfitrión» puedes tener más y 24/7.' };
+  const pl = planOf(uid); if (want247 && !pl.anfitrion) return { ok: false, error: 'Las salas 24/7 requieren una licencia activa.' };
+  if (pl.salasUsadas >= pl.salasMax) return { ok: false, error: pl.anfitrion ? 'Ya tienes ' + pl.salasMax + ' salas (tu límite). Borra una para crear otra.' : 'Ya tienes tu sala gratis. Borra la tuya para crear otra.' };
   if ([...rooms.values()].filter(r => r.dynamic).length >= CFG.salasUsuarioMax) return { ok: false, error: 'El servidor llegó a su máximo de salas de jugadores.' };
-  if (want247) { if (!pl.anfitrion) return { ok: false, error: 'Las salas 24/7 son para «Buen anfitrión».' }; if (pl.salas247 >= pl.salasMax) return { ok: false, error: 'Ya usas todas tus salas 24/7.' }; if (pl.activas247 >= pl.max247) return { ok: false, error: 'El servidor no tiene cupo para más salas 24/7 ahora mismo.' }; }
+  if (want247) { if (!pl.anfitrion) return { ok: false, error: 'Las salas 24/7 requieren una licencia activa.' }; if (pl.salas247 >= pl.salasMax) return { ok: false, error: 'Ya usas todas tus salas 24/7.' }; if (pl.activas247 >= pl.max247) return { ok: false, error: 'El servidor no tiene cupo para más salas 24/7 ahora mismo.' }; }
   let id; do { id = newCode(6); } while (rooms.has(id));
   const r = new Room({ id, nombre, owner: uid, publica: !!publica, plan247: !!want247, dynamic: true }); rooms.set(id, r); saveUserRooms(); if (want247) { r.wanted = true; } log('[salas] nueva sala ' + id + ' «' + nombre + '» (' + (publica ? 'pública' : 'privada') + (want247 ? ', 24/7' : '') + ')');
   return { ok: true, id, sala: r.info() };
 }
-async function deleteRoom(r) { try { await r.sleep(); } catch (e) { } rooms.delete(r.id); saveUserRooms(); try { fs.rmSync(r.dir, { recursive: true, force: true }); } catch (e) { } log('[salas] sala ' + r.id + ' borrada'); }
+async function deleteRoom(r) { try { await r.sleep(); } catch (e) { } rooms.delete(r.id); saveUserRooms(); try { const b = bansAll(); delete b.salas[r.id]; saveBans(b); saveReports(reportsAll().filter(x => x.sala !== r.id)); } catch (e) { } try { fs.rmSync(r.dir, { recursive: true, force: true }); } catch (e) { } log('[salas] sala ' + r.id + ' borrada'); }
 function maintenance() {
   for (const r of [...rooms.values()]) {
     if (!r.dynamic) continue;
@@ -225,6 +248,29 @@ function landing() {
     + rs + '<div class="c"><a class="btn" href="/juego/">JUGAR</a><br><br><small>Dirección para los móviles (con Tailscale activo):<br><b>' + esc(url) + '</b><br>En el juego: MULTIJUGADOR → escribe <b>' + esc((ip || os.hostname()) + ':' + CFG.puerto) + '</b> → ACTUALIZAR → elige una sala.</small></div>'
     + (ip ? '' : '<div class="c no">No se detecta Tailscale en este equipo: solo se puede entrar desde aquí. Inicia Tailscale; se detecta solo en unos segundos.</div>') + '</main><script>setTimeout(()=>location.reload(),15000)</script></body></html>';
 }
+const MOTIVOS = { trampas: 'Trampas', toxico: 'Tóxico o insultos', griefing: 'Molestar / destruir sin motivo', otro: 'Otro' };
+async function manage(r, act, Q, admin) {
+  const pls = await r.players();
+  if (act === 'jugadores') {
+    const rep = reportsAll().filter(x => x.sala === r.id && x.estado === 'nuevo'), b = bansAll().salas[r.id] || {};
+    return { ok: true, estado: r.status, jugadores: pls.map(p => ({ slot: p.slot, nombre: p.nombre, id: String(p.uid || '').slice(0, 6), reportes: new Set(rep.filter(x => x.contra === p.uid).map(x => x.de)).size })),
+      reportes: rep.slice(-30).map(x => ({ id: x.id, nombre: x.nombreContra, motivo: MOTIVOS[x.motivo] || x.motivo, fecha: x.fecha, contra: String(x.contra).slice(0, 6) })), baneados: Object.entries(b).map(([uid, v]) => ({ uid, nombre: v.nombre, motivo: v.motivo })) };
+  }
+  if (act === 'expulsar') { const ok = await r.kick(+Q('slot'), 'El dueño de la sala te expulsó.'); return { ok, error: ok ? undefined : 'Ese jugador ya no está.' }; }
+  if (act === 'banear') {
+    const slot = +Q('slot'), pl = pls.find(p => p.slot === slot), uid = (pl && pl.uid) || Q('uid'); if (!uid) return { ok: false, error: 'No se pudo identificar a ese jugador.' };
+    addBan(r.id, uid, pl ? pl.nombre : Q('nombre'), Q('motivo') || 'Baneado por el dueño'); if (pl) await r.kick(slot, 'Fuiste baneado de esta sala.');
+    const R = reportsAll(); for (const x of R) if (x.sala === r.id && x.contra === uid && x.estado === 'nuevo') x.estado = 'baneado'; saveReports(R); log('[' + r.id + '] baneado ' + String(uid).slice(0, 6)); return { ok: true };
+  }
+  if (act === 'desbanear') { delBan(r.id, Q('uid')); return { ok: true }; }
+  if (act === 'ignorar') { const R = reportsAll(); const x = R.find(y => y.id === Q('rid') && y.sala === r.id); if (x) x.estado = 'ignorado'; saveReports(R); return { ok: true }; }
+  if (act === 'reiniciar') { await r.restart(); return { ok: true }; }
+  if (act === 'nuevomundo') { await r.newWorld(); return { ok: true }; }
+  if (admin && act === 'dormir') { await r.sleep('admin'); return { ok: true }; }
+  if (admin && act === 'banglobal') { const slot = +Q('slot'), pl = pls.find(p => p.slot === slot), uid = (pl && pl.uid) || Q('uid'); if (!uid) return { ok: false, error: 'No se pudo identificar.' }; addBan(null, uid, pl ? pl.nombre : '', Q('motivo') || 'Baneado del servidor'); if (pl) await r.kick(slot, 'Fuiste baneado de este servidor.'); return { ok: true }; }
+  return { ok: false, error: 'acción desconocida' };
+}
+function adminPage() { return fs.readFileSync(path.join(ROOT, 'admin.html'), 'utf8'); }
 function handler(req, res) {
   const u = new URL(req.url, 'http://x'), p = u.pathname;
   try {
@@ -234,7 +280,7 @@ function handler(req, res) {
     if (p === '/juego' || p === '/juego/' || p === '/juego/index.html') { const b = gameHtml(); res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }); return res.end(b); }
     const ip = req.socket.remoteAddress || '?', Q = k => u.searchParams.get(k); let m;
     if (p === '/salas') {
-      const a = auth(Q('uid'), Q('tok'), false), uid = a.ok ? a.uid : null;
+      const a = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)), uid = a.ok ? a.uid : null;
       freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
         list.sort((x, y) => (x.usuario ? 1 : 0) - (y.usuario ? 1 : 0) || (y.jugadores - x.jugadores)); json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), crear: CFG.salasUsuario, plan: uid ? planOf(uid) : { anfitrion: false, salasMax: CFG.gratisSalasMax, salasUsadas: 0, salas247: 0, gratisMax: CFG.gratisSalasMax, max247: max247() }, salas: list }); }); return; }
     if (p === '/sala/crear') {
@@ -250,7 +296,33 @@ function handler(req, res) {
       if (!l.uid) { l.uid = a.uid; l.vence = Date.now() + l.dias * 86400000; writeJson('licencias.json', L); }
       const O = ownersAll(); O[a.uid].lic = code; writeJson('duenos.json', O); log('[licencia] ' + code + ' canjeada'); return json(res, 200, { ok: true, plan: planOf(a.uid) }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/info$/);
-    if (m) { const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: r.info() })); return; }
+    if (m) { const au = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: Object.assign(r.info(), { mia: !!(au.ok && r.owner === au.uid) }) })); return; }
+    m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/verificar$/);
+    if (m) { if (!isLocal(req)) return json(res, 403, { ok: false }); return json(res, 200, verifyJoin(m[1].toUpperCase(), Q('uid'), Q('n'), Q('s'))); }
+    m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/(jugadores|reportar)$/);
+    if (m) {
+      const r = rooms.get(m[1].toUpperCase()); if (!r) return json(res, 404, { ok: false, error: 'No existe esa sala.' });
+      const a = auth(Q('uid'), Q('tok'), false); if (!a.ok) return json(res, 403, { ok: false, error: 'identidad no válida' });
+      (async () => {
+        const pls = await r.players(), me = pls.find(x => x.uid === a.uid); if (!me) return json(res, 403, { ok: false, error: 'Solo quien está en la sala puede hacer eso.' });
+        if (m[2] === 'jugadores') return json(res, 200, { ok: true, yo: me.slot, jugadores: pls.map(x => ({ slot: x.slot, nombre: x.nombre })) });
+        const slot = +Q('slot'), tg = pls.find(x => x.slot === slot), motivo = MOTIVOS[Q('motivo')] ? Q('motivo') : 'otro';
+        if (!tg || tg.uid === a.uid) return json(res, 400, { ok: false, error: 'Elige a otro jugador de la sala.' });
+        if (limited('rep:' + a.uid, 10, 86400000)) return json(res, 429, { ok: false, error: 'Demasiados reportes hoy.' });
+        const R = reportsAll(), dup = R.find(x => x.de === a.uid && x.contra === tg.uid && Date.now() - x.fecha < 1800000); if (dup) return json(res, 200, { ok: true, mensaje: 'Ya reportaste a este jugador hace poco. Gracias.' });
+        R.push({ id: newCode(6), sala: r.id, de: a.uid, contra: tg.uid, nombreContra: tg.nombre, motivo, fecha: Date.now(), estado: 'nuevo' });
+        const distinct = new Set(R.filter(x => x.sala === r.id && x.contra === tg.uid && x.estado === 'nuevo' && Date.now() - x.fecha < 86400000).map(x => x.de)).size; let msg = 'Reporte enviado. Gracias por avisar.';
+        if (CFG.reportesParaExpulsar > 0 && distinct >= CFG.reportesParaExpulsar) { await r.kick(tg.slot, 'Te expulsaron por reportes de otros jugadores.'); for (const x of R) if (x.sala === r.id && x.contra === tg.uid && x.estado === 'nuevo') x.estado = 'expulsado'; msg = 'Reporte enviado. El jugador fue expulsado por varios reportes.'; log('[' + r.id + '] auto-expulsión por reportes de ' + String(tg.uid).slice(0, 6)); }
+        saveReports(R); log('[' + r.id + '] reporte (' + motivo + ') contra ' + String(tg.uid).slice(0, 6)); return json(res, 200, { ok: true, mensaje: msg });
+      })().catch(e => json(res, 500, { ok: false, error: e.message })); return;
+    }
+    if (p === '/admin' && isLocal(req)) { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(adminPage()); }
+    if (p === '/admin/api/estado' && isLocal(req)) {
+      (async () => { const salas = []; for (const r of rooms.values()) { await r.fresh(); const i = r.info(); const rep = reportsAll().filter(x => x.sala === r.id && x.estado === 'nuevo'); const pl = await r.players(); i.jug = pl.map(x => ({ slot: x.slot, nombre: x.nombre, id: String(x.uid || '').slice(0, 6), reportes: new Set(rep.filter(y => y.contra === x.uid).map(y => y.de)).size })); salas.push(i); }
+        const b = bansAll(), bans = Object.entries(b.global || {}).map(([uid, v]) => Object.assign({ uid, ambito: 'servidor', sala: '' }, v)); for (const [sid, o] of Object.entries(b.salas || {})) for (const [uid, v] of Object.entries(o)) bans.push(Object.assign({ uid, ambito: 'sala ' + sid, sala: sid }, v));
+        json(res, 200, { salas, reportes: reportsAll().filter(x => x.estado === 'nuevo').slice(-50).map(x => ({ id: x.id, sala: x.sala, nombre: x.nombreContra, contra: String(x.contra).slice(0, 6), motivo: MOTIVOS[x.motivo] || x.motivo, fecha: x.fecha })), bans, licencias: Object.keys(readJson('licencias.json', {})).length }); })().catch(e => json(res, 500, { error: e.message })); return; }
+    if (p === '/admin/api/sala' && isLocal(req)) { const r = rooms.get((Q('id') || '').toUpperCase()); if (!r) return json(res, 404, { ok: false, error: 'sala desconocida' }); if (Q('accion') === 'borrar') { if (!r.dynamic) return json(res, 400, { ok: false, error: 'Las salas oficiales se quitan en config.json.' }); deleteRoom(r).then(() => json(res, 200, { ok: true })); return; } manage(r, Q('accion'), Q, true).then(o => json(res, 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
+    if (p === '/admin/api/desbanear' && isLocal(req)) { delBan(Q('sala') || null, Q('uid')); return json(res, 200, { ok: true }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/gestionar$/);
     if (m) {
       const r = rooms.get(m[1].toUpperCase()); if (!r || !r.dynamic) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'sala desconocida' }); }
@@ -258,10 +330,10 @@ function handler(req, res) {
       const act = Q('accion');
       if (act === 'borrar') { deleteRoom(r).then(() => json(res, 200, { ok: true })); return; }
       if (act === 'publica' || act === 'privada') { r.publica = act === 'publica'; saveUserRooms(); return json(res, 200, { ok: true }); }
-      return json(res, 400, { ok: false, error: 'acción desconocida' }); }
+      manage(r, act, Q, false).then(o => json(res, o.ok === false ? 400 : 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
     if (p === '/admin/licencia' && isLocal(req)) { const c = genLicense(+Q('dias') || 30, +Q('salas') || 0, Q('nota')); return json(res, 200, { codigo: c }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/despertar$/);
-    if (m) { const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
+    if (m) { auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
     if (p === '/estado') { freshAll().then(() => json(res, 200, { activo: [...rooms.values()].some(r => r.status === 'activa'), tailscale: tailscaleIp(), url: urlJuego(), salasActivas: activeCount(), salas: [...rooms.values()].map(r => r.info()) })); return; }
     if (p === '/admin/guardar' && isLocal(req)) { Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
     m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m && isLocal(req)) { const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }

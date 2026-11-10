@@ -34,7 +34,24 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 - **«Buen anfitrión»** (licencia con vencimiento): más salas (según la licencia) y **salas 24/7**: no se duermen, no caducan y están siempre listas (sin esperar a que despierten). Cupo en el servidor: `salas247Max` (y siempre queda un hueco libre de `salasActivasMax`).
 - **Dueño sin cuentas:** cada dispositivo genera una identidad (id + clave) y el servidor guarda solo el *hash* de la clave. Si el jugador reinstala o cambia de móvil, pierde el control de sus salas y su licencia (limitación actual).
 - **Dar una licencia:** `GENERAR_LICENCIA.bat` (o `node servidor.js --licencia 30 3` = 30 días, 3 salas) imprime un código `BA-XXXX-XXXX`; el jugador lo escribe en *MULTIJUGADOR → Buen anfitrión → CANJEAR* (cuenta los días desde que lo canjea; un código sirve para un solo jugador). Funciona con el servidor encendido. Si la licencia vence, sus salas 24/7 pasan a gratis.
-- **Venderlo dentro de la app:** ver `PRODUCTO_BUEN_ANFITRION.md`. **Hoy no cobra nada**: la tarjeta de la Tienda y del lobby dice «Precio por definir» y se canjea con códigos que tú entregas.
+- **Venderlo dentro de la app:** ver `PRODUCTO_BUEN_ANFITRION.md`. **Hoy no cobra nada**: el producto está **solo en la Tienda** (no aparece en las salas); dice «Precio por definir» y se canjea allí con códigos que tú entregas. Quien tiene la licencia ve el interruptor «sala siempre abierta» al crear una sala.
+
+## Moderación: reportes, expulsión, baneos y reiniciar la sala
+- **Identidad verificada:** al entrar a una sala del servidor el juego demuestra la identidad del dispositivo (sin enviar la clave); así los baneos y reportes se pueden asociar a un jugador y no se puede suplantar a otro. **Los clientes anteriores a la v13.9 no pueden entrar a las salas** (`exigirIdentidad: false` lo desactiva, pero entonces no hay baneos fiables).
+- **Reportar:** *Pausa → MULTIJUGADOR → «Reportar un jugador»* (trampas, tóxico, molestar, otro). Solo puede reportar quien está en la sala. Con `reportesParaExpulsar` (3) reportes de jugadores distintos en 24 h, el jugador es **expulsado** automáticamente (no baneado).
+- **Dueño de la sala:** *Pausa → MULTIJUGADOR → ADMINISTRAR MI SALA* (o desde la lista): **expulsar**, **banear/quitar baneo**, ver **reportes** (ignorar), **REINICIAR SALA** (recarga con su mundo guardado y desconecta a todos) y **NUEVO MUNDO** (archiva el actual en `copias\anterior_*.json` y empieza otro).
+- **Administrador (tú, en el PC):** `http://127.0.0.1:8080/admin` (solo abre desde el propio PC): todas las salas con sus jugadores, reiniciar/dormir/nuevo mundo/borrar, reportes de todas las salas, **baneo en todo el servidor**, quitar baneos y generar licencias. Las salas oficiales solo las gestionas tú desde ahí.
+- Los reportes y baneos se guardan en `datos\reportes.json` y `datos\bans.json`.
+
+## ¿Qué se conserva en el servidor? (probado)
+- **Sí se conserva** al dormir/despertar la sala y al apagar/encender el servidor: lo que construyen los jugadores con el sistema de construcción (paredes, puertas, casas, muebles), el **contenido de las cajas y muebles de almacenaje**, los objetos soltados en el suelo, los candados y sus códigos, y lo destruido sigue destruido.
+- **Loot finito:** el juego no tiene reaparición de botín: lo que un jugador saca de un contenedor o gasta **no vuelve** (el contenedor queda vacío para todos).
+- **Límite importante:** la **mochila de cada jugador vive en su dispositivo**. Un cliente modificado podría duplicar objetos; el servidor no lo detecta. Por eso existen los reportes/baneos. Un inventario controlado por el servidor es un cambio grande (no hecho).
+
+## Candados de código, almacenaje y robos
+- **Candado de código** (se fabrica: 6 clavos + cinta, con martillo): en puertas y muebles de almacenaje **que construyas**. Eliges 4 números y los compartes. El anfitrión de la sala guarda el código (los demás jugadores solo saben que está cerrado) y limita los intentos (5 fallos = 60 s de espera); el dueño recibe avisos.
+- **Robar (solo en salas del servidor):** forzar el candado con **ganzúa** (~11 s, silenciosa, puede romperse, 42 %) o **palanca** (~4 s, muy ruidosa, 85 %), o **romper a golpes** paredes, puertas, ventanas y almacenaje construidos (el hacha rinde más); al romper un mueble su contenido cae al suelo. El ruido atrae zombis. El anfitrión valida distancia y tiempos.
+- **Limitación:** la protección frente a un cliente modificado es parcial (los contenidos viajan a los jugadores cercanos). Las casas del mundo original (no construidas por jugadores) conservan sus cerraduras de siempre.
 
 ## Ajustes (`config.json`)
 | Clave | Qué hace |
@@ -43,6 +60,7 @@ Máquina **Servidor** (`HPDERUBI`, Windows 11), IPv4 `100.70.104.87`, nombre com
 | `salas` | Lista de salas: `id` (4–6 letras/números, único), `nombre`, y opcionalmente `semilla`, `modo`, `tamano`… propios de esa sala. Añadir una sala = añadir una línea. |
 | `maxJugadores` | Jugadores por sala (1–10). |
 | `salasActivasMax` | Salas despiertas a la vez (incluye las 24/7). Cada una usa ~0,5–1 GB de RAM y CPU (ver «Rendimiento»). |
+| `reportesParaExpulsar`, `exigirIdentidad` | Reportes distintos para expulsar automáticamente (3; 0 = nunca) y exigir identidad verificada para entrar (true). |
 | `salasUsuario`, `salasUsuarioMax` | Permitir que los jugadores creen salas (true/false) y máximo de salas de jugadores (40). |
 | `gratisSalasMax`, `gratisCaducaDias` | Salas gratis por jugador (1) y días sin jugadores antes de borrarla (14). |
 | `salas247Max`, `simular247`, `licenciaSalasPorDefecto` | Cupo de salas 24/7; `simular247: true` hace que el mundo siga corriendo sin jugadores; salas por licencia (3). |
