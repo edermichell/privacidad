@@ -1,0 +1,10 @@
+{
+  "name": "ultimo-refugio-servidor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Servidor cooperativo de Último Refugio para usar con Tailscale",
+  "main": "servidor.js",
+  "scripts": { "start": "node servidor.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "playwright-core": "^1.50.0" }
+}

@@ -1,0 +1,21 @@
+{
+  "puerto": 8080,
+  "sala": "REFUGI",
+  "semilla": "",
+  "modo": "casual",
+  "dificultad": "normal",
+  "tamano": "huge",
+  "zombis": 1,
+  "botin": 1,
+  "lluvia": 1,
+  "mundo": "region",
+  "maxJugadores": 3,
+  "simularSinJugadores": false,
+  "guardarCadaSeg": 120,
+  "copias": 12,
+  "escuchar": "tailscale",
+  "usarStunTurn": false,
+  "navegador": "",
+  "canal": "",
+  "carpetaDatos": "datos"
+}

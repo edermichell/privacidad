@@ -1,0 +1,16 @@
+[Unit]
+Description=Ultimo Refugio - servidor cooperativo
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+User=USUARIO
+WorkingDirectory=RUTA/servidor_tailscale
+ExecStart=/usr/bin/env node servidor.js
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
