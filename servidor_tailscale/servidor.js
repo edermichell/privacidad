@@ -113,7 +113,7 @@ function gameHtml() {
 /* ---------------- navegador y salas ---------------- */
 let browser = null, browserStarting = null;
 function launchOpts() {
-  const o = { headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, args: ['--disable-features=WebRtcHideLocalIpsWithMdns', '--autoplay-policy=no-user-gesture-required', '--mute-audio', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--no-first-run', '--no-default-browser-check'] };
+  const o = { headless: true, handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false, args: ['--disable-features=WebRtcHideLocalIpsWithMdns,IntensiveWakeUpThrottling,CalculateNativeWinOcclusion,BackForwardCache,AudioServiceOutOfProcess', '--autoplay-policy=no-user-gesture-required', '--mute-audio', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--no-first-run', '--no-default-browser-check'] };
   if (process.platform === 'linux' && process.getuid && process.getuid() === 0) o.args.push('--no-sandbox');
   if (CFG.navegador) o.executablePath = CFG.navegador; else if (CFG.canal) o.channel = CFG.canal; else if (process.platform === 'win32') o.channel = 'msedge';
   return o;
@@ -154,6 +154,9 @@ class Room {
       let saved = null; try { saved = fs.readFileSync(this.save, 'utf8'); } catch (e) { }
       if (saved) await ctx.addInitScript(([k, v]) => { try { if (!localStorage.getItem(k)) localStorage.setItem(k, v); } catch (e) { } }, ['ultimo_refugio_v3', saved]);
       await ctx.addInitScript(id => { window.__ROOM = id; }, this.id);
+      /* el anfitrión es un navegador oculto: si el sistema deja de disparar requestAnimationFrame (ventana oculta/minimizada, ahorro de energía…) el mundo y los envíos de posiciones se paran. Se sustituye por un temporizador propio. */
+      const rafMode = process.env.URSRV_RAF || 'timer';
+      await ctx.addInitScript(mode => { if (!/[?&]srv=1/.test(location.search)) return; if (mode === 'parado') { window.requestAnimationFrame = () => 0; } else if (mode === 'timer') { window.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 33); window.cancelAnimationFrame = id => clearTimeout(id); } }, rafMode);
       const page = await ctx.newPage(); this.page = page;
       page.on('pageerror', e => { this.lastErr = e.message; log('[' + this.id + '] error de página:', e.message); });
       page.on('crash', () => log('[' + this.id + '] la página se cerró de forma inesperada'));
@@ -191,7 +194,7 @@ class Room {
     if (!this.page || this.status !== 'activa') return null;
     try {
       return await Promise.race([this.page.evaluate(() => ({ st: STATE, role: NET.role, es: NET.es ? NET.es.readyState : -1, peers: (NET.peers || []).filter(p => p.ready).length, connecting: (NET.peers || []).filter(p => !p.ready).length, names: (NET.peers || []).filter(p => p.ready).map(p => (p.rp && p.rp.name) || 'Jugador'),
-        day: typeof GT !== 'undefined' ? Math.floor(GT.min / 1440) + 1 : undefined, paused: SRV.paused ? 1 : 0, z: Z.filter(z => z.st !== 'dead').length, npcs: NPCS.length, err: (typeof E80 !== 'undefined' ? E80.n : 0) + (typeof DBGC !== 'undefined' ? DBGC.n : 0) })), new Promise((_, rej) => setTimeout(() => rej(new Error('sin respuesta')), 8000))]);
+        day: typeof GT !== 'undefined' ? Math.floor(GT.min / 1440) + 1 : undefined, paused: SRV.paused ? 1 : 0, fr: SRV.frames | 0, z: Z.filter(z => z.st !== 'dead').length, npcs: NPCS.length, err: (typeof E80 !== 'undefined' ? E80.n : 0) + (typeof DBGC !== 'undefined' ? DBGC.n : 0) })), new Promise((_, rej) => setTimeout(() => rej(new Error('sin respuesta')), 8000))]);
     } catch (e) { return { bad: e.message }; }
   }
   async fresh() { if (this.status !== 'activa' || Date.now() - this.freshAt < 1500) return; this.freshAt = Date.now(); const s = await this.poll(); if (s && !s.bad) this.state = s; }
@@ -202,6 +205,8 @@ class Room {
     const s = await this.poll(); this.state = s;
     if (!this.page || !s || s.bad || s.st !== 'play' || !(browser && browser.isConnected())) { this.badCount++; if (this.badCount >= 2 || !this.page) { log('[' + this.id + '] anfitrión caído (' + ((s && (s.bad || s.st)) || 'sin página') + '), reiniciando'); this.badCount = 0; this.restarts++; this.status = 'dormida'; this.wanted = true; this.nextTry = 0; await this._close(true); await this.start(); } return; }
     this.badCount = 0;
+    /* latido del anfitrión: si hay jugadores y el mundo no avanza (navegador oculto que dejó de dibujar fotogramas), se reinicia la sala */
+    if (s.peers > 0 && s.fr === this.lastFr) { this.frStall = (this.frStall || 0) + 1; if (this.frStall >= 3) { log('[' + this.id + '] el anfitrión no avanza (sin fotogramas desde hace ~15 s): reiniciando la sala'); this.frStall = 0; this.restarts++; await this.restart(); return; } } else this.frStall = 0; this.lastFr = s.fr;
     if (s.peers + s.connecting > 0) { this.lastBusy = Date.now(); if (this.dynamic && Date.now() - this.lastPlayers > 60000) { this.lastPlayers = Date.now(); saveUserRooms(); } }
     else if (!this.nunca && CFG.dormirTrasMin > 0 && Date.now() - this.lastBusy > CFG.dormirTrasMin * 60000) { await this.sleep('sin jugadores ' + CFG.dormirTrasMin + ' min'); return; }
     if ((s.role !== 'host' || s.es === 2) && !s.peers && !s.connecting) { log('[' + this.id + '] la sala no estaba abierta, reabriendo'); try { await this.page.evaluate(() => { if (NET.role) netClose(); netHost(); }); } catch (e) { } }
