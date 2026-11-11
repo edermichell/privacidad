@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -1504,6 +1504,72 @@ function setWorldSize(n) {
   mapCvs.width = n; mapCvs.height = n; cityCvs.width = n; cityCvs.height = n; cityOK = false; fieldP = null; chunks.clear();
 }
 
+/* ===== v14.2 · PLAN DE DISTRITOS (solo mundos mayores de 512 casillas; los demás tamaños no cambian) =====
+   El mapa 960² se divide en regiones de bloques (cada bloque = 24×24 casillas). Una vez por mundo se calcula un plano macro
+   (centro, industrial, puerto, parques, residencial y campo) con la semilla; el generador de bloques lo usa para decidir
+   qué lugar va en cada bloque, cuánto se construye, cuántos árboles y zombis hay. Es determinista: se reconstruye igual al cargar. */
+const S142 = { plan: null, last: -1, on: true };
+const D142 = { RES: 0, CEN: 1, IND: 2, POR: 3, PAR: 4, RUR: 5 };
+const D142_NAMES = ['Barrio residencial', 'Centro', 'Zona industrial', 'Puerto', 'Parques', 'Campo'];
+function s142Plan(seed, NB, SB) {
+  const Lp = mkrng(((seed ^ 0x142a9e37) >>> 0) || 5), sd = seed & 1023, N = NB * NB, rot = (Lp() * 4) | 0;
+  const d = new Uint8Array(N), skip = new Float32Array(N), AA = new Int16Array(N), BB = new Int16Array(N);
+  const ix = (bi, bj) => bj * NB + bi;
+  for (let bj = 0; bj < NB; bj++) for (let bi = 0; bi < NB; bi++) {
+    let a = bi - SB[0], b = bj - SB[1];
+    for (let k = 0; k < rot; k++) { const t = a; a = -b; b = t; }
+    AA[ix(bi, bj)] = a; BB[ix(bi, bj)] = b;
+    const wa = a + (vnoise(bi * .21 + 3, bj * .21 + 7, sd) - .5) * 4, wb = b + (vnoise(bi * .21 + 9, bj * .21 + 1, sd + 3) - .5) * 4;
+    let id = D142.RES;
+    if (wa >= 14 && Math.abs(wb - 3) <= 9) id = D142.POR;
+    else if (Math.abs(wa - 7) <= 5.5 && Math.abs(wb) <= 5.5) id = D142.CEN;
+    else if (wa <= -2 && wa >= -13 && wb <= -6 && wb >= -15) id = D142.IND;
+    else if (wa <= -13 || Math.abs(wb) >= 16 || wa >= 17) id = D142.RUR;
+    d[ix(bi, bj)] = id;
+  }
+  /* parques grandes (3×3 bloques) en el cinturón residencial + parques sueltos */
+  const parkC = [[-3, 7], [8, 10], [-8, -2], [2, -9]];
+  for (let bj = 0; bj < NB; bj++) for (let bi = 0; bi < NB; bi++) {
+    const i = ix(bi, bj); if (d[i] !== D142.RES && d[i] !== D142.CEN) continue; if (bi === SB[0] && bj === SB[1]) continue;
+    for (const [pa, pb] of parkC) if (Math.abs(AA[i] - pa) <= 1 && Math.abs(BB[i] - pb) <= 1) { if (d[i] === D142.RES) d[i] = D142.PAR; }
+  }
+  const by = [[], [], [], [], [], []];
+  for (let bj = 0; bj < NB; bj++) for (let bi = 0; bi < NB; bi++) { const i = ix(bi, bj); if (bi === SB[0] && bj === SB[1]) continue; by[d[i]].push([bi, bj]); }
+  const sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Lp() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; } return a; };
+  const specials = {}, kq = q => q[0] + ',' + q[1];
+  const chosen = {};   /* por tipo: bloques ya usados (para separarlos) */
+  const put = (q, k) => { specials[kq(q)] = k; (chosen[k] = chosen[k] || []).push(q); };
+  const scatter = (list, k, count, minD) => {
+    let n = 0; for (const q of list) { if (n >= count) break; if (specials[kq(q)]) continue;
+      if ((chosen[k] || []).some(o => Math.max(Math.abs(o[0] - q[0]), Math.abs(o[1] - q[1])) < minD)) continue; put(q, k); n++; }
+    return n;
+  };
+  const fillPct = (list, k, pct) => { for (const q of list) if (!specials[kq(q)] && Lp() < pct) put(q, k); };
+  /* centro: servicios por todas partes, muchas tiendas, casi todo construido */
+  const cen = sh(by[D142.CEN].slice());
+  scatter(cen, 'hospital', 2, 5); scatter(cen, 'police', 3, 4); scatter(cen, 'school', 1, 5); scatter(cen, 'church', 2, 4); scatter(cen, 'gas', 4, 4); scatter(cen, 'garage', 3, 4);
+  scatter(cen, 'park', 2, 4); fillPct(cen, 'market', .14); fillPct(cen, 'shops', .32);
+  /* residencial: servicios espaciados */
+  const res = sh(by[D142.RES].slice()), nr = res.length;
+  scatter(res, 'hospital', 1, 8); scatter(res, 'police', 2 + (nr / 260 | 0), 6);
+  scatter(res, 'market', Math.round(nr / 15), 3); scatter(res, 'shops', Math.round(nr / 13), 3); scatter(res, 'gas', Math.round(nr / 22), 4);
+  scatter(res, 'school', Math.round(nr / 28), 4); scatter(res, 'church', Math.round(nr / 26), 4); scatter(res, 'garage', Math.round(nr / 40), 5); scatter(res, 'park', Math.round(nr / 20), 3);
+  /* industrial y puerto: almacenes y talleres */
+  const ind = sh(by[D142.IND].slice()); scatter(ind, 'gas', 2, 5); fillPct(ind, 'ware', .55); fillPct(ind, 'garage', .25);
+  const por = sh(by[D142.POR].slice()); scatter(por, 'gas', 1, 6); fillPct(por, 'ware', .62); fillPct(por, 'garage', .16);
+  for (const q of by[D142.PAR]) specials[kq(q)] = 'park';
+  /* densidad (probabilidad de dejar un solar vacío) */
+  const SK = [.1, .02, .45, .6, .1, .5];
+  for (let i = 0; i < N; i++) skip[i] = SK[d[i]];
+  /* base militar: en el campo, lejos del inicio */
+  let base = null; { const rur = sh(by[D142.RUR].filter(q => { const a = AA[ix(q[0], q[1])], b = BB[ix(q[0], q[1])]; return Math.max(Math.abs(a), Math.abs(b)) >= 8; })); if (rur.length) base = rur[0]; }
+  const TREE = [1, .2, .15, .1, 1.4, 1], ZOM = [1, 1.6, 1.1, 1.1, .7, .8];
+  const bidx = v => Math.max(0, Math.min(NB - 1, ((v - 10) / 24) | 0));
+  const P = { d, NB, skip, specials, base, rot, nb: ix,
+    at: (x, y) => d[ix(bidx(x), bidx(y))], treeAt: (x, y) => TREE[d[ix(bidx(x), bidx(y))]], zAt: (x, y) => ZOM[d[ix(bidx(x), bidx(y))]] };
+  const cnt = [0, 0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) cnt[d[i]]++; P.cnt = cnt;
+  return P;
+}
 const LANDMARKS = [];
 function genWorld(seed) {
   const R = mkrng(seed); const N = W * H;
@@ -1815,10 +1881,12 @@ function genWorld(seed) {
   const WGp = WGKINDS[WG.kind] || WGKINDS.classic;
   let SPECIALS = { '1,1': 'market', '2,2': 'park', '1,2': 'police', '2,1': 'shops', '3,1': 'gas', '4,1': 'church', '3,3': 'hospital', '4,4': 'school', '2,4': 'ware', '4,2': 'garage', '1,4': 'park', '5,3': 'park' };
   const AK = (W / 168) * (W / 168), BIG = W > 168;
-  const SB = BIG ? [NB >> 1, NB >> 1] : [0, 1];      /* manzana de inicio: en mundos grandes, el centro */
-  const WILD = (WG.gv >= 2 && BIG && WGp.wild) ? WGp.wild + (W < 300 ? .1 : 0) : 0, wildAt = (bi, bj) => WILD > 0 && Math.max(Math.abs(bi - SB[0]), Math.abs(bj - SB[1])) / (NB / 2) > WILD;
+  const SB = BIG ? [NB >> 1, NB >> 1] : [0, 1];
+  const DP = (W > 512) ? s142Plan(seed, NB, SB) : null; S142.plan = DP; S142.last = -1;   /* v14.2: plano de distritos (solo 960²) */      /* manzana de inicio: en mundos grandes, el centro */
+  const WILD = DP ? 1 : ((WG.gv >= 2 && BIG && WGp.wild) ? WGp.wild + (W < 300 ? .1 : 0) : 0), wildAt = (bi, bj) => DP ? DP.d[bj * NB + bi] === 5 : WILD > 0 && Math.max(Math.abs(bi - SB[0]), Math.abs(bj - SB[1])) / (NB / 2) > WILD;
   const useSet = WGp.set || (BIG ? WGKINDS.town.set : null);
-  if (useSet) { /* distritos al azar según la semilla (no afecta la secuencia R del mundo clásico) */
+  if (DP) SPECIALS = DP.specials;
+  else if (useSet) { /* distritos al azar según la semilla (no afecta la secuencia R del mundo clásico) */
     const Lr = mkrng(((seed ^ 0x5bd1e995) >>> 0) || 7), pos = bpos.filter(q => (BIG || q[0] >= 1) && !(q[0] === SB[0] && q[1] === SB[1]) && !wildAt(q[0], q[1]));
     for (let i = pos.length - 1; i > 0; i--) { const j = Math.floor(Lr() * (i + 1)); const t = pos[i]; pos[i] = pos[j]; pos[j] = t; }
     const reps = BIG ? Math.max(1, Math.round(AK * .85)) : 1, list = []; for (let r = 0; r < reps; r++) for (const k of useSet) list.push(k);
@@ -1839,7 +1907,7 @@ function genWorld(seed) {
   }
   if (WG.gv >= 3 && BIG) { /* base militar: a 2+ manzanas del inicio, en un bloque sin lugar especial */
     const dist = q => Math.max(Math.abs(q[0] - SB[0]), Math.abs(q[1] - SB[1])), kq = q => q[0] + ',' + q[1];
-    let cand = bpos.filter(q => dist(q) >= 2 && dist(q) <= Math.max(3, (NB >> 1) - 1) && !SPECIALS[kq(q)] && BIOME[kq(q)] !== 'lake' && BIOME[kq(q)] !== 'swamp');
+    let cand = DP ? (DP.base ? [DP.base] : []) : bpos.filter(q => dist(q) >= 2 && dist(q) <= Math.max(3, (NB >> 1) - 1) && !SPECIALS[kq(q)] && BIOME[kq(q)] !== 'lake' && BIOME[kq(q)] !== 'swamp');
     if (!cand.length) cand = bpos.filter(q => dist(q) >= 2 && !SPECIALS[kq(q)]);
     if (cand.length) { const q = cand[(Lb() * cand.length) | 0]; BIOME[kq(q)] = 'base'; MILFALL = Lb() < .3; }
   }
@@ -1871,7 +1939,7 @@ function genWorld(seed) {
       if (special === 'gas' && lj === 0) { if (li === 0) buildSpecial(bx0 + 1, by0 + 1, 10, 6, 'gas', 'S'); continue; }
       if (special === 'police' && lj === 0) { if (li === 0) buildStore(bx0 + 3, by0 + 1, 13, 9, 'police', 'S'); continue; }
       if (special === 'shops' && lj === 0) { buildStore(lx, ly, li === 0 ? 9 : 9, 8, li === 0 ? 'pharm' : 'hard', 'S'); continue; }
-      if (R() < WGp.skip && !(bi === SB[0] && bj === SB[1] && li === 1 && lj === 0)) continue;
+      if (R() < (DP ? DP.skip[bj * NB + bi] : WGp.skip) && !(bi === SB[0] && bj === SB[1] && li === 1 && lj === 0)) continue;
       const w = rint(R, 6, 8), h = rint(R, 6, 8);
       const ox = rint(R, 0, 9 - w), oy = rint(R, 0, 9 - h);
       const sides = []; sides.push(li === 0 ? 'W' : 'E'); sides.push(lj === 0 ? 'N' : 'S');
@@ -1893,7 +1961,7 @@ function genWorld(seed) {
     if (tg[i] !== G_GRASS || to[i] !== O_NONE || tb[i]) continue;
     if (nearAnyDoor(x, y, 2)) continue;
     const forest = x < 8 || y < 8 || x > W - 9 || y > H - 9;
-    const p = forest ? .34 : .028 * WGp.tree;
+    const p = forest ? .34 : .028 * WGp.tree * (DP ? DP.treeAt(x, y) : 1);
     if (R() < p) { to[i] = R() < .1 && forest ? O_ROCK : O_TREE; tv[i] = (R() * 4) | 0; }
   }
   /* ---- autos abandonados ---- */
@@ -1944,9 +2012,9 @@ function genWorld(seed) {
   for (const b of buildings) { const d = (b.x + b.w - 1) + (b.y + b.h - 1); b.maxDiag = d; if (!roofDiag.has(d)) roofDiag.set(d, []); roofDiag.get(d).push(b); }
   /* ---- zombis al aire libre ---- */
   const sx = startHouse.x + startHouse.w / 2, sy = startHouse.y + startHouse.h / 2;
-  for (let k = 0, nk = Math.round(240 * Math.pow(AK, .8)); k < nk; k++) {
+  for (let k = 0, nk = Math.round(240 * Math.pow(AK, .8) * (DP ? 1.6 : 1)); k < nk; k++) {
     const x = rint(R, 4, W - 5), y = rint(R, 4, H - 5); const i = idx(x, y);
-    if (to[i] !== O_NONE || tb[i]) continue; if (Math.hypot(x - sx, y - sy) < 24) continue; if (typeof milIn === 'function' && milIn(x, y)) continue;
+    if (to[i] !== O_NONE || tb[i]) continue; if (DP && R() > DP.zAt(x, y) / 1.6) continue; if (Math.hypot(x - sx, y - sy) < 24) continue; if (typeof milIn === 'function' && milIn(x, y)) continue;
     spawns.push({ x: x + .5, y: y + .5, n: R() < .25 ? rint(R, 2, 4) : 1, spread: 2 });
   }
   // lugar de inicio
@@ -7806,6 +7874,15 @@ function questWin() {
   metaModal('¡SOBREVIVISTE!', '<p><b>Cumpliste la meta final.</b> Pasaron ' + fmtMins(mins) + ' desde que cayó la ciudad y sigues de pie.</p><p>Zombis eliminados: <b>' + GT.kills + '</b> · Puntuación: <b>' + runScore() + '</b></p><p>Puedes seguir jugando: tu partida continúa, sin más objetivos.</p>',
     [{ t: 'SEGUIR JUGANDO', cls: 'mbp', f: () => { $('metam').hidden = true; } }, { t: 'COMPARTIR', f: () => { LASTRUN = { mins, kills: GT.kills, score: runScore(), daily: null }; doShare(); } }]);
   try { sfx('coin', 0); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+}
+/* aviso al cruzar de un distrito a otro (solo mundos con plan; se consulta unas 3 veces por segundo) */
+{
+  const _qv = qVisit;
+  qVisit = function () {
+    _qv.apply(this, arguments);
+    const pl = S142.plan; if (!pl || !P || !S142.on) return; const t = performance.now(); if (t - (S142.t || 0) < 400) return; S142.t = t;
+    const k = pl.at(P.x | 0, P.y | 0); if (k !== S142.last) { if (S142.last >= 0 && !P.dead) say('Entras a: ' + D142_NAMES[k], 'tip'); S142.last = k; }
+  };
 }
 function questTick() {
   qVisit();
@@ -23702,7 +23779,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23743,7 +23820,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23766,7 +23843,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23795,7 +23872,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23829,7 +23906,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23860,7 +23937,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -23893,7 +23970,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -23922,12 +23999,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.1') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.2') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
