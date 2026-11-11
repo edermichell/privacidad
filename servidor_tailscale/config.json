@@ -39,5 +39,7 @@
   "licenciaSalasPorDefecto": 3,
   "maxConexionesPorIp": 20,
   "urlPublica": "https://server.tail12bbaa.ts.net",
-  "claveAdmin": ""
+  "claveAdmin": "",
+  "conexionesPorMinutoIp": 40,
+  "registrosPorDiezMinIp": 60
 }

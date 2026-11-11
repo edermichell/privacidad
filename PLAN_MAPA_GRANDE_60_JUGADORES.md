@@ -1,75 +1,54 @@
-# Plan: mapa grande, diverso y con callejones — objetivo ~60 jugadores
+# Plan v2: mapa 960², diverso y con callejones — 3 salas oficiales de 20 jugadores
 
-Es un **plan**, no está implementado. Los números salen de mediciones reales del motor actual (Chromium de escritorio) y de las pruebas de 10 jugadores; lo marcado como *estimación* no está medido.
+Es un **plan con una primera medición real (Fase 0 hecha)**; el mapa nuevo aún no está implementado. Lo marcado como *estimación* no está medido.
 
-## 1. Punto de partida (medido)
-| Mundo | Casillas | Edificios | Autos | Contenedores | Generar | Guardado (gz) | ms por paso |
-|---|---|---|---|---|---|---|---|
-| Chico 168² | 28 k | 101 | 72 | 594 | 0,7 s | 6 KB | 0,5 |
-| Grande 264² | 70 k | 163 | 164 | 1 041 | 0,7 s | 12 KB | 0,7 |
-| Enorme 360² | 130 k | 268 | 312 | 1 767 | 0,7 s | 18 KB | 0,8 |
-| Épico 480² | 230 k | 586 | 570 | 3 563 | 1,0 s | 27 KB | 0,7 |
+## Decisiones tomadas
+1. **60 jugadores repartidos**: 3 salas oficiales × 20.
+2. **Servidor: PC de casa.**
+3. **Tamaño del mapa: 960 × 960.**
+4. **Distritos:** centro denso, industrial, puerto, parques y más.
+5. **Los mundos nuevos sustituyen a los actuales** (supuesto mío: las partidas ya guardadas se siguen pudiendo cargar; las salas oficiales y las partidas nuevas usan el mundo nuevo).
 
-- **El mundo en sí escala bien**: la población (zombis, civiles) es local al jugador, así que el coste por paso casi no crece con el tamaño. Un mundo de 960² costaría ~4× en generación y memoria de mapa (*estimación*: unos 4 s y decenas de MB): factible.
-- **El techo no es el mapa, son los jugadores.** Con 10 jugadores y ~50–70 zombis el anfitrión gasta ≈ 45 % de un núcleo (a 30 pasos/s, sin dibujar). El anfitrión es **un solo hilo de JavaScript**: *estimación* ≈ 20–25 jugadores por sala antes de saturar ese hilo; 60 en una sola sala **no caben** con la arquitectura actual.
-- **Puntos que se rompen al crecer** (vistos en el código):
-  1. Cada jugador remoto tiene dos mapas de rutas del tamaño de **todo el mundo** (`Uint16Array(W·H)` ×2). En 480² son ~0,9 MB por jugador; en 960² con 60 jugadores serían ~440 MB.
-  2. Cada instantánea de red lleva a los demás jugadores: coste **cuadrático** con el número de jugadores, y en JSON (no binario).
-  3. Las calles son una **cuadrícula rígida** (una carretera cada 24 casillas): no hay callejones ni variedad de trazado.
-  4. El guardado y el envío del mundo al entrar son completos (hoy pequeños, crecerán con el mapa y con lo construido).
+## Fase 0 — Resultados medidos (simulador de jugadores por WebSocket)
+Herramienta: `herramientas_pruebas/bots_carga.js` (jugadores simulados que entran por el servidor real, caminan al azar y envían su posición). Entorno: contenedor Linux de **4 núcleos**, mundo 360², Chromium; jugadores **simulados** (caminan, no disparan, no construyen).
 
-## 2. Qué significa «60 jugadores»: tres caminos
-| Opción | Qué es | Pros | Contras |
-|---|---|---|---|
-| **A. 3–4 salas grandes** (60 en total) | Varias salas de 15–20 jugadores, cada una un mundo grande | Muy cercano a lo que ya existe; usa varios núcleos (un navegador por sala); riesgo bajo | No es un único mundo compartido de 60 |
-| **B. Una sala de 60 con simulación en Node** | Sacar la simulación del navegador a un servidor sin interfaz | Un solo mundo de 60; mejor rendimiento | Reescritura grande del motor (la lógica está mezclada con el dibujo, ~23 000 líneas); meses |
-| **C. Mundo único dividido en zonas** | Varios anfitriones, cada uno dueño de una región, con traspasos en las fronteras | Un mundo compartido sin reescribir todo | Muy complejo (entidades que cruzan fronteras, coches, hordas, guardado coherente) |
+| Prueba | CPU del anfitrión (navegador) | Pasos/s | Bajada por jugador | Subida total del servidor |
+|---|---|---|---|---|
+| 1 sala × 10 jugadores | 32 % de un núcleo | 27→30* | 16 KB/s | 1,3 Mbit/s |
+| 1 sala × 20 jugadores | 48 % | 29,8 | 20–30 KB/s | 3,3–5,0 Mbit/s |
+| 1 sala × 30 jugadores | 61 % | 21,6 | 34 KB/s | 8,3 Mbit/s |
+| 1 sala × 40 jugadores | 66 % | 21,2 | 42 KB/s | 13,9 Mbit/s |
+| **3 salas × 20 jugadores a la vez (el objetivo)** | **129 % de un núcleo en total** (+16 % del relé) | **30 en cada sala** | **21–22 KB/s** | **10,7 Mbit/s** |
 
-**Recomendación:** empezar por **A** (mapa grande + salas de ~20 con las técnicas de la sección 4) y decidir B solo si el juego demuestra demanda real. C no lo recomiendo.
+\* Se corrigió el bucle del anfitrión (descontaba mal el tiempo de trabajo: iba a 24–27 pasos/s con la misma carga).
+Memoria: ≈ 2,2 GB entre las 3 salas. **El objetivo (3 × 20) funciona hoy en el laboratorio** y deja holgura de CPU en 4 núcleos.
 
-## 3. Mapa: más grande, diverso y con callejones
-**Tamaño.** Añadir tamaños 720² y 960² (generación por regiones, sin tocar los existentes). Primero los arreglos de memoria de la sección 4.
+**Lo que esto NO demuestra:** los bots no luchan, no disparan, no construyen ni abren cajas; los zombis activos eran pocos (20–70 por sala). El juego real cuesta más. Y el PC de casa tiene que dar **~11 Mbit/s de SUBIDA sostenidos** (haz un test de velocidad y mira la *subida*, no la bajada) más margen. La bajada por jugador crece con el número de jugadores (cada actualización lleva a los demás): por eso la gestión de interés (abajo) es prioritaria.
 
-**Callejones y trazado** (generador de manzanas nuevo, por distrito):
-- Dentro de cada manzana: **callejones de servicio** de 1–2 casillas entre edificios, **pasajes cubiertos**, patios interiores con vallas y portones, callejones sin salida, escaleras de incendios.
-- Calles que no sean todas rectas: **avenidas anchas**, calles estrechas, diagonales y rotondas ocasionales, un **anillo/autopista** perimetral.
-- Los zombis y civiles ya navegan por la «transitabilidad» de cada casilla, así que los callejones funcionan con su IA actual; hay que vigilar que no se atasquen en dead-ends (cuadrícula de pruebas).
+## Qué se rompe al pasar a 960² (visto en el código)
+- Cada jugador remoto reserva **2 mapas de rutas del tamaño de todo el mundo** (`Uint16Array(W·H)`): a 960² son 3,7 MB por jugador ×2 → **~150 MB por sala (20 jugadores), ~450 MB entre las 3 salas** (*estimación*) solo en eso. Se cambia por ventanas locales compartidas.
+- Las calles son una cuadrícula rígida (cada 24 casillas): sin callejones ni variedad.
+- Generación, guardado y envío de mundo al entrar: hoy 1 s / 27 KB a 480²; a 960² ≈ 4 s y ≈ 100 KB (*estimación*), aceptable, pero la generación pasará a ser por regiones.
 
-**Diversidad por distritos** (cada uno con su suelo, edificios, botín y música/ambiente):
-centro denso (muchos callejones, botín alto, muchos zombis), residencial, industrial/almacenes, puerto o vías de tren, rural/granjas, parque/lago con puentes, zona militar (ya existe), hospital/campus, barrio abandonado/en ruinas. Más puntos de interés (como los campamentos de la 13.5) repartidos por tipo de distrito.
-
-**Arte:** todo lo estático sigue **dibujándose una vez por bloque y guardándose** (como en la 13.5), así que más variedad visual no cuesta fotogramas.
-
-## 4. Técnicas de rendimiento (por orden de rentabilidad)
-1. **Mapas de rutas por zona, no por jugador y no del tamaño del mundo**: ventanas de ~64×64 compartidas por los jugadores cercanos. Quita cientos de MB y CPU.
-2. **Gestión de interés**: cada jugador recibe solo lo que está en su radio (cuadrícula espacial). Baja el coste cuadrático a casi lineal.
-3. **Nivel de detalle en el tiempo**: cerca 20–30 Hz, lejos 5 Hz, muy lejos 1 Hz o dormido. Los zombis fuera del radio de cualquier jugador no se simulan (se «materializan» al acercarse, con densidad por distrito).
-4. **Red binaria y diferencial**: posiciones cuantizadas en bytes en vez de JSON; envío por prioridad con presupuesto por jugador.
-5. **Generación por regiones y en segundo plano** (Web Worker) para mapas grandes; guardado **incremental** (solo lo cambiado) y mundo enviado al entrar por zonas.
-6. **Límites dinámicos**: tope de zombis por jugador y global, hordas escaladas al número de jugadores en la zona.
-7. **Un navegador (proceso) por sala** para aprovechar varios núcleos; **servidor aparte (VPS)** en vez del PC de casa cuando haya muchos jugadores (subida de internet: ~30–60 KB/s por jugador; 60 jugadores ≈ 15 Mbit/s sin gestión de interés, bastante menos con ella — *estimación*).
-8. **Pruebas con bots**: simulador de N jugadores por WebSocket para medir de verdad (CPU, red, memoria) antes de prometer una cifra.
-
-## 5. Fases propuestas (esfuerzo orientativo)
+## Plan de trabajo (orden recomendado)
 | Fase | Qué | Esfuerzo (*estimación*) |
 |---|---|---|
-| 0 | Banco de bots + métricas: medir 10/20/30 jugadores y dónde se va la CPU | 2–4 días |
-| 1 | Arreglos de escala: rutas por zona, interés, red binaria básica | 1–2 semanas |
-| 2 | Tamaños 720²/960² + generación por regiones | 3–5 días |
-| 3 | Generador de manzanas: callejones, pasajes, patios | 1–2 semanas |
-| 4 | Distritos y puntos de interés nuevos (arte, botín, ambiente) | 2–3 semanas (el arte manda) |
-| 5 | Salas de ~20 en servidor propio/VPS + pruebas reales con teléfonos | 1 semana + pruebas |
-| 6 | Decidir B (simulación en Node) según resultados | proyecto grande, aparte |
+| 1 | **Escala del anfitrión:** rutas por zona (ventanas compartidas), **gestión de interés** (cada jugador recibe solo lo cercano), snapshots **binarios/diferenciales**, límites de zombis. Meta: bajar a ≤ 8 KB/s por jugador (≈ 4 Mbit/s en total para 60) y bajar el coste cuadrático de CPU | 1–2 semanas |
+| 2 | **Tamaño 960²** (generación por regiones, sin romper los tamaños actuales) | 3–5 días |
+| 3 | **Generador de manzanas con callejones:** callejones de servicio de 1–2 casillas, pasajes, patios con vallas y portones, dead-ends; calles estrechas, avenidas, rotondas y un anillo perimetral | 1–2 semanas |
+| 4 | **Distritos** con suelo, edificios, botín y ambiente propios: **centro denso** (callejones, botín alto, muchos zombis), **industrial** (almacenes, patios, contenedores), **puerto** (muelles, grúas, contenedores apilados, almacenes), **parques** (arbolado, lagos, puentes), y además: residencial, rural/granjas, zona militar, hospital/campus, barrio en ruinas. Más puntos de interés por distrito | 2–4 semanas (el arte manda) |
+| 5 | **3 salas oficiales** en `config.json` con el mundo nuevo (`salasActivasMax: 3`, 20 jugadores cada una; sustituyen a Refugio 1/2) | 2–3 días |
+| 6 | **Pruebas reales:** bots con comportamiento más duro (pelea, construcción, hordas), tu PC de casa, teléfonos reales y test de subida de internet | 1 semana + pruebas |
 
-## 6. Riesgos y límites
-- Sin medir en teléfonos reales no hay garantía de fluidez: el mundo grande también pesa en el dispositivo (memoria de bloques en caché, ahora ~70 MB).
-- Más callejones = más lugares donde atascarse y emboscadas: hace falta balance y pruebas de IA.
-- Las partidas guardadas actuales no tendrán callejones (mundos nuevos únicamente, o migración opcional).
-- 60 jugadores en **una** sala solo con la opción B. Con A son 60 repartidos en varias salas.
+Técnicas que se aplican en las fases (resumen): arte estático dibujado una vez por bloque (sin coste por fotograma, como en la 13.5) · zombis fuera del radio de cualquier jugador no se simulan (se materializan al acercarse) · simulación a menos frecuencia con la distancia · generación en segundo plano y guardado incremental · un navegador por sala (aprovecha varios núcleos) · el relé (Node) ya es ligero (16 % de un núcleo para 60 jugadores).
 
-## 7. Decisiones que necesito de ti
-1. ¿60 jugadores **en un mismo mundo** (B, caro) o **repartidos en salas** (A, recomendado)?
-2. ¿Dónde correrá: PC de casa o un **VPS**? (con 60 jugadores el PC de casa no basta)
-3. ¿Qué tamaño máximo de mapa quieres: 720² o 960²?
-4. ¿Qué distritos te importan más? (centro con callejones, industrial, puerto, rural…)
-5. ¿Los mundos nuevos grandes conviven con los actuales (modo «ÉPICO» ya existe) o los sustituyen?
+## Riesgos y límites
+- **Subida de internet** del PC de casa: es el primer cuello (≈ 11 Mbit/s hoy para 60; la Fase 1 debe bajarlo).
+- **CPU/RAM de tu PC** (portátil HP): no conozco sus especificaciones; lo medimos en la Fase 6 y, si no alcanza, 2 salas oficiales o un VPS.
+- Más callejones = más sitios donde se atascan zombis/civiles y más emboscadas: hace falta balance y pruebas de IA.
+- Un mundo 960² en el teléfono pesa más (memoria de bloques en caché): probar en gama baja.
+- Las partidas viejas no tendrán callejones ni distritos.
+
+## Qué necesito de ti para empezar la Fase 1
+- Las **especificaciones del PC servidor** (modelo, CPU, RAM) y el resultado de un **test de velocidad** (subida en Mbit/s).
+- Confirmar el **supuesto 5** (partidas guardadas viejas siguen cargando).

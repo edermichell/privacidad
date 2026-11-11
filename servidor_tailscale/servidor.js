@@ -14,7 +14,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -156,7 +156,7 @@ class Room {
       await ctx.addInitScript(id => { window.__ROOM = id; }, this.id);
       /* el anfitrión es un navegador oculto: si el sistema deja de disparar requestAnimationFrame (ventana oculta/minimizada, ahorro de energía…) el mundo y los envíos de posiciones se paran. Se sustituye por un temporizador propio. */
       const rafMode = process.env.URSRV_RAF || 'timer';
-      await ctx.addInitScript(mode => { if (!/[?&]srv=1/.test(location.search)) return; if (mode === 'parado') { window.requestAnimationFrame = () => 0; } else if (mode === 'timer') { window.requestAnimationFrame = cb => setTimeout(() => cb(performance.now()), 33); window.cancelAnimationFrame = id => clearTimeout(id); } }, rafMode);
+      await ctx.addInitScript(mode => { if (!/[?&]srv=1/.test(location.search)) return; if (mode === 'parado') { window.requestAnimationFrame = () => 0; } else if (mode === 'timer') { let last = 0; window.requestAnimationFrame = cb => setTimeout(() => { last = performance.now(); cb(last); }, Math.max(0, 33 - (performance.now() - last))); window.cancelAnimationFrame = id => clearTimeout(id); } }, rafMode);
       const page = await ctx.newPage(); this.page = page;
       page.on('pageerror', e => { this.lastErr = e.message; log('[' + this.id + '] error de página:', e.message); });
       page.on('crash', () => log('[' + this.id + '] la página se cerró de forma inesperada'));
@@ -313,7 +313,7 @@ function handler(req, res) {
     if (p === '/juego' || p === '/juego/' || p === '/juego/index.html') { const b = gameHtml(); res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }); return res.end(b); }
     const ip = clientIp(req), Q = k => u.searchParams.get(k); let m;
     if (p === '/salas') {
-      const a = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)), uid = a.ok ? a.uid : null;
+      const a = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000)), uid = a.ok ? a.uid : null;
       freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
         list.sort((x, y) => (x.usuario ? 1 : 0) - (y.usuario ? 1 : 0) || (y.jugadores - x.jugadores)); json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), crear: CFG.salasUsuario, plan: uid ? planOf(uid) : { anfitrion: false, salasMax: CFG.gratisSalasMax, salasUsadas: 0, salas247: 0, gratisMax: CFG.gratisSalasMax, max247: max247() }, salas: list }); }); return; }
     if (p === '/sala/crear') {
@@ -329,7 +329,7 @@ function handler(req, res) {
       if (!l.uid) { l.uid = a.uid; l.vence = Date.now() + l.dias * 86400000; writeJson('licencias.json', L); }
       const O = ownersAll(); O[a.uid].lic = code; writeJson('duenos.json', O); log('[licencia] ' + code + ' canjeada'); return json(res, 200, { ok: true, plan: planOf(a.uid) }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/info$/);
-    if (m) { const au = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: Object.assign(r.info(), { mia: !!(au.ok && r.owner === au.uid) }) })); return; }
+    if (m) { const au = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: Object.assign(r.info(), { mia: !!(au.ok && r.owner === au.uid) }) })); return; }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/verificar$/);
     if (m) { if (!isLocal(req)) return json(res, 403, { ok: false }); return json(res, 200, verifyJoin(m[1].toUpperCase(), Q('uid'), Q('n'), Q('s'))); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/(jugadores|reportar)$/);
@@ -366,7 +366,7 @@ function handler(req, res) {
       manage(r, act, Q, false).then(o => json(res, o.ok === false ? 400 : 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
     if (p === '/admin/licencia') { if (!adminOk(req)) return adminDenied(req, res, false);  const c = genLicense(+Q('dias') || 30, +Q('salas') || 0, Q('nota')); return json(res, 200, { codigo: c }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/despertar$/);
-    if (m) { auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, 60, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
+    if (m) { auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
     if (p === '/estado') { freshAll().then(() => json(res, 200, { activo: [...rooms.values()].some(r => r.status === 'activa'), tailscale: tailscaleIp(), url: urlJuego(), salasActivas: activeCount(), salas: [...rooms.values()].map(r => r.info()) })); return; }
     if (p === '/admin/guardar') { if (!adminOk(req)) return adminDenied(req, res, false);  Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
     m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m) { if (!adminOk(req)) return adminDenied(req, res, false); const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }
@@ -385,7 +385,7 @@ function onUpgrade(req, socket, head) {
   let u; try { u = new URL(req.url, 'http://x'); } catch (e) { return socket.destroy(); } if (u.pathname !== '/ws') return socket.destroy();
   const role = u.searchParams.get('role') || 'guest', room = rooms.get(String(u.searchParams.get('room') || '').toUpperCase().slice(0, 6)), ip = clientIp(req);
   if ((role === 'host' || role === 'peer') && !isLocal(req)) { socket.write('HTTP/1.1 403 Forbidden\r\n\r\n'); return socket.destroy(); }
-  if (role === 'guest' && limited('ws:' + ip, 40, 60000)) { socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n'); return socket.destroy(); }
+  if (role === 'guest' && limited('ws:' + ip, CFG.conexionesPorMinutoIp, 60000)) { socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n'); return socket.destroy(); }
   wss.handleUpgrade(req, socket, head, ws => {
     ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; }); ws.on('error', () => { });
     if (!room) return wsClose(ws, 4404, 'No existe esa sala.');
