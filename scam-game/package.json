@@ -1,0 +1,14 @@
+{
+  "name": "scam-call-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scam Call: juego de fiesta de estafas telefónicas ficticias contra víctimas con IA por voz.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0"
+  }
+}

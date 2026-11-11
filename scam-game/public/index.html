@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Scam Call · Estafa con tus amigos</title>
+<meta name="description" content="Juego de fiesta: llama por voz a víctimas con IA e intenta estafarlas (de mentiritas) y aprende a reconocer estafas reales.">
+<meta name="theme-color" content="#0b0f17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="app">
+
+  <!-- MENÚ -->
+  <section id="screen-menu" class="screen">
+    <header class="logo">
+      <div class="logo-ring" aria-hidden="true">📞</div>
+      <h1>SCAM CALL</h1>
+      <p>Estafa con tus amigos · <i>versión de mentiritas</i></p>
+    </header>
+
+    <div class="notice">🎭 <b>Juego de ficción.</b> Las víctimas son personajes inventados que interpreta una IA y el dinero es falso. Cada llamada termina con las banderas rojas que usaste, para que aprendas a reconocer estafas <b>reales</b>.</div>
+
+    <div class="card">
+      <h2>👥 Jugadores <small>(se turnan el teléfono)</small></h2>
+      <ul id="players" class="players"></ul>
+      <button id="addPlayer" class="btn ghost" type="button">+ Agregar jugador</button>
+    </div>
+
+    <div class="card options">
+      <label>Rondas por jugador
+        <select id="rounds"><option>1</option><option>2</option><option>3</option></select>
+      </label>
+      <label>Duración de la llamada
+        <select id="duration"><option value="90">1:30</option><option value="150" selected>2:30</option><option value="240">4:00</option></select>
+      </label>
+      <label class="check"><input type="checkbox" id="optMic" checked> 🎤 Hablar con el micrófono</label>
+      <label class="check"><input type="checkbox" id="optVoice" checked> 🔊 Voz de la víctima</label>
+      <label class="check"><input type="checkbox" id="optSfx" checked> 🔔 Efectos de sonido</label>
+      <label>🧠 Modelo de IA
+        <select id="model"></select>
+      </label>
+    </div>
+
+    <div id="aiStatus" class="status" role="status"></div>
+    <div id="voiceStatus" class="status" role="status"></div>
+    <button id="startGame" class="btn primary big" type="button">Empezar</button>
+    <p class="fine">Tu voz se convierte en texto en tu navegador (Chrome/Edge recomendados) y solo ese texto se envía a la IA para generar la respuesta de la víctima.</p>
+  </section>
+
+  <!-- PREPARACIÓN -->
+  <section id="screen-plan" class="screen" hidden>
+    <div class="plan-head">
+      <div><span class="eyebrow" id="planRound"></span><h2 id="planTurn"></h2></div>
+      <div class="scoreboard" id="miniScores"></div>
+    </div>
+    <h3>1 · Elige a tu víctima <small>(más difícil = más puntos)</small></h3>
+    <div id="victimList" class="cards"></div>
+    <h3>2 · Elige tu pretexto</h3>
+    <div id="pretextList" class="cards small"></div>
+    <div id="dossier" class="card dossier"></div>
+    <div class="btnrow center">
+      <button id="callBtn" class="btn primary big" type="button" disabled>📞 Llamar</button>
+    </div>
+  </section>
+
+  <!-- LLAMADA -->
+  <section id="screen-call" class="screen call" hidden>
+    <div class="callbar">
+      <span class="rec"><i></i> EN VIVO</span>
+      <span id="timer" class="timer">00:00</span>
+      <span id="callInfo" class="callinfo"></span>
+      <button id="hangBtn" class="btn danger" type="button">📵 Colgar</button>
+    </div>
+
+    <div class="tiles">
+      <div class="tile victim" id="tileVictim" data-mood="neutral">
+        <div class="avatar" id="avV"></div>
+        <div class="nameplate"><b id="vName"></b><span id="vStatus" class="chip"></span></div>
+        <div class="caption" id="vCaption" aria-live="polite"></div>
+        <div class="ring-overlay" id="ringOverlay"><div class="ringer">📞</div><p id="ringText"></p></div>
+        <div class="event" id="eventBadge" hidden></div>
+      </div>
+      <div class="tile you" id="tileYou">
+        <div class="avatar" id="avY"></div>
+        <video id="cam" playsinline muted hidden></video>
+        <div class="nameplate"><b id="yName"></b><span id="yStatus" class="chip"></span></div>
+        <div class="caption you" id="yCaption"></div>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter trust">
+        <label>🤝 Confianza <b id="trustVal">0</b></label>
+        <div class="bar"><i id="trustBar"></i></div>
+      </div>
+      <div class="meter susp">
+        <label>🚨 Sospecha <b id="suspVal">0</b></label>
+        <div class="bar"><i id="suspBar"></i></div>
+      </div>
+      <div class="goal" id="goalBox"></div>
+    </div>
+
+    <div class="lower">
+      <div id="log" class="log" aria-label="Transcripción"></div>
+      <div class="controls">
+        <div id="hintBox" class="hint" hidden></div>
+        <form id="sayForm" autocomplete="off">
+          <input id="sayInput" type="text" maxlength="400" placeholder="Habla o escribe lo que le dirías…" enterkeyhint="send">
+          <button class="btn primary" type="submit">Enviar</button>
+        </form>
+        <div class="btnrow">
+          <button id="micBtn" class="btn mic" type="button">🎤 Micrófono</button>
+          <button id="camBtn" class="btn ghost" type="button">📷 Mi cámara</button>
+          <button id="hintBtn" class="btn ghost" type="button">💡 Pista (−50)</button>
+          <button id="scriptBtn" class="btn ghost" type="button">📜 Guion</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="endOverlay" class="overlay" hidden></div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="screen-result" class="screen" hidden>
+    <div id="resultBanner" class="banner"></div>
+    <div class="grid2">
+      <div class="card" id="scoreBreak"></div>
+      <div class="card"><h3>📈 La llamada minuto a minuto</h3><div id="chart"></div>
+        <div class="legend"><span class="lt">● Confianza</span><span class="ls">● Sospecha</span></div></div>
+    </div>
+    <div class="card"><h3>🎓 Banderas rojas que usaste</h3><div id="lessons"></div></div>
+    <details class="card" id="replay"><summary>🎞️ Repetición con lo que pensaba la víctima</summary><div id="replayBody"></div></details>
+    <div class="btnrow center">
+      <button id="nextBtn" class="btn primary big" type="button"></button>
+      <button id="retryBtn" class="btn ghost" type="button">↻ Otra llamada</button>
+      <button id="menuBtn" class="btn ghost" type="button">Menú</button>
+    </div>
+  </section>
+
+  <!-- PODIO -->
+  <section id="screen-final" class="screen" hidden>
+    <header class="logo small"><h1>🏆 ¡Fin del juego!</h1></header>
+    <ol id="podium" class="podium"></ol>
+    <div class="btnrow center">
+      <button id="againBtn" class="btn primary big" type="button">Jugar otra vez</button>
+      <button id="toMenuBtn" class="btn ghost" type="button">Menú</button>
+    </div>
+  </section>
+
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="confetti" aria-hidden="true"></div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
