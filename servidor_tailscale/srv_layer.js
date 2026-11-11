@@ -7,7 +7,7 @@ const SRV = { on: false, spawn: null, ticks: 0 };
 SRV.boot = function (opt) {
   if (SRV.on) return; SRV.on = true; opt = opt || {}; SRV.pauseEmpty = !!opt.pausar; SRV.park = null;
   /* la sala usa el relé de este mismo servidor, conexiones directas (Tailscale) y hasta «max» jugadores reales */
-  window.__SRV_HOST = 1; NET.sig = location.origin + '/sig'; NET.ice = opt.ice || []; NET.srv = 1; NET.max = Math.max(1, Math.min(10, opt.max | 0 || 10)); NET.cap = NET.max;
+  window.__SRV_HOST = 1; NET.sig = location.origin + '/sig'; NET.ice = opt.ice || []; NET.srv = 1; NET.max = Math.max(1, Math.min(40, opt.max | 0 || 10)); NET.cap = NET.max;
   if (opt.code) { netCode = () => String(opt.code); }
   /* entrada de jugadores por WebSocket (sin WebRTC): el servidor avisa de cada invitado y aquí se abre su canal */
   { const base = location.origin.replace(/^http/, 'ws'), room = window.__ROOM || '';

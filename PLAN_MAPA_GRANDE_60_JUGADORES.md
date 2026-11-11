@@ -49,6 +49,18 @@ Técnicas que se aplican en las fases (resumen): arte estático dibujado una vez
 - Un mundo 960² en el teléfono pesa más (memoria de bloques en caché): probar en gama baja.
 - Las partidas viejas no tendrán callejones ni distritos.
 
+## Tu PC y tu internet (datos recibidos)
+- **HP Laptop 14-ep0xxx**: Intel Core **i3-N305** (8 núcleos de bajo consumo, 1,8 GHz base), **8 GB de RAM** (7,66 utilizables), Windows 11.
+- **Internet: 208 Mbps de subida** → el ancho de banda **ya no es un problema** (necesitamos ~11 Mbit/s para 60 jugadores). Se reduce la prioridad de la gestión de interés/snapshots binarios.
+- **Lo que preocupa ahora es la CPU y la RAM del portátil:** cada sala corre en un solo hilo y ese procesador es más lento por núcleo que el de mi laboratorio (*estimación*: entre 0,5× y 0,8×), y las 3 salas usaban ~2,2 GB (con 960² será más) sobre 7,66 GB, con Windows y Edge aparte. **No lo sabremos hasta medirlo en ese portátil**: `PROBAR_CARGA.bat` (en el kit) lo hace en ~3 minutos.
+
+## Calendario: seguir con el servidor actual y lanzar el mapa nuevo en ~10 días
+Es una buena idea: el servidor y el mapa actuales siguen funcionando mientras se desarrolla. Pero el plan completo (Fases 1–6) son **6–10 semanas**; en 10 días cabe una **primera entrega acotada**:
+- **Entrega 1 (10 días, ambiciosa):** mapa 960² + arreglo de memoria (mapas de rutas por zona) + callejones **básicos** + **4 distritos** (centro denso, industrial, puerto, parques) construidos con las plantillas de edificios y el arte actuales (variando disposición, densidad, suelo y botín), salas oficiales con el mundo nuevo y el tope de jugadores que resulte de la medición. Sin arte nuevo ni rediseño de red.
+- **Entrega 2 (después):** más distritos, arte propio por distrito, gestión de interés/red binaria si hace falta, y más callejones/variedad.
+Riesgo: 10 días es justo; si algo se atrasa, recortamos distritos antes que estabilidad. La APK nueva también debe pasar por Play Console (revisión) antes de la fecha.
+
 ## Qué necesito de ti para empezar la Fase 1
-- Las **especificaciones del PC servidor** (modelo, CPU, RAM) y el resultado de un **test de velocidad** (subida en Mbit/s).
+- ✔ Especificaciones y velocidad (recibidas).
+- Resultado de **`PROBAR_CARGA.bat`** en el portátil servidor (con el mapa actual).
 - Confirmar el **supuesto 5** (partidas guardadas viejas siguen cargando).

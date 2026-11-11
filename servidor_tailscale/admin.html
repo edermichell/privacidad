@@ -26,7 +26,7 @@ function btn(label, id, a, q, cls) { return `<button class="${cls || ''}" data-i
 function render(d) {
   let h = '<h2>Salas</h2>';
   for (const r of (d.salas || [])) {
-    h += `<div class="c"><b>${E(r.nombre)}</b> <small>(${E(r.id)}${r.usuario ? (r.publica ? ', pública' : ', privada') : ', oficial'}${r.plan247 ? ', 24/7' : ''})</small> · ${r.estado === 'activa' ? `<span class="ok">activa</span> ${r.jugadores}/${r.max}` : `<span class="no">${E(r.estado)}</span>`}<br>`;
+    h += `<div class="c"><b>${E(r.nombre)}</b> <small>(${E(r.id)}${r.usuario ? (r.publica ? ', pública' : ', privada') : ', oficial'}${r.plan247 ? ', 24/7' : ''})</small> · ${r.estado === 'activa' ? `<span class="ok">activa</span> ${r.jugadores}/${r.max}${r.pps ? ' · ' + r.pps + ' pasos/s' : ''}` : `<span class="no">${E(r.estado)}</span>`}<br>`;
     h += btn('Reiniciar', r.id, 'reiniciar') + btn('Nuevo mundo', r.id, 'nuevomundo') + btn('Dormir', r.id, 'dormir') + (r.usuario ? btn('Borrar', r.id, 'borrar', {}, 'r') : '');
     for (const p of (r.jug || [])) h += `<div class="p">• ${E(p.nombre)} <small>id ${E(p.id)} · reportes ${p.reportes}</small> ${btn('Expulsar', r.id, 'expulsar', { slot: p.slot })}${btn('Banear sala', r.id, 'banear', { slot: p.slot })}${btn('Banear servidor', r.id, 'banglobal', { slot: p.slot }, 'r')}</div>`;
     h += '</div>';

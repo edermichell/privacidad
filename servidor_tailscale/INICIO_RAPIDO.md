@@ -33,3 +33,9 @@
 | La ventana se cierra sola | Ábrela desde una ventana de símbolo del sistema (`cmd`) en esa carpeta con `node servidor.js` y mira el error. |
 
 Todos los jugadores deben usar la **misma versión** del juego (v14.0).
+
+## Probar cuánta carga aguanta tu PC (opcional, 3 minutos)
+1. Con el servidor encendido, pon en `config.json` `"maxJugadores": 20` y reinícialo.
+2. Cierra otros programas y haz doble clic en **`PROBAR_CARGA.bat`** (ENTER, ENTER: prueba 3 salas × 20 jugadores simulados).
+3. Al final copia todo el texto de la ventana y mándalo. «OK» = aguanta; «JUSTO» o «NO ALCANZA» = hay que bajar jugadores por sala.
+(Los jugadores simulados solo caminan: el juego real cuesta algo más.)

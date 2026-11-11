@@ -20,7 +20,7 @@ try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || 
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
 if (process.env.ESCUCHAR) CFG.escuchar = process.env.ESCUCHAR;
 if (process.env.NAVEGADOR) CFG.navegador = process.env.NAVEGADOR;
-CFG.maxJugadores = Math.max(1, Math.min(10, CFG.maxJugadores | 0 || 10));
+CFG.maxJugadores = Math.max(1, Math.min(40, CFG.maxJugadores | 0 || 10));   /* por defecto 10; probado con hasta 40 jugadores simulados */
 const seen = new Set(); CFG.salas = (CFG.salas || []).map((r, i) => { const id = String(r.id || ('SALA' + (i + 1))).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6); if (id.length < 4 || seen.has(id)) { console.error('Cada sala necesita un «id» único de 4 a 6 letras o números (' + id + ').'); process.exit(1); } seen.add(id); return Object.assign({}, r, { id, nombre: String(r.nombre || id).slice(0, 30) }); });
 if (!CFG.salas.length) { console.error('Define al menos una sala en config.json'); process.exit(1); }
 const DATA = path.resolve(ROOT, CFG.carpetaDatos); fs.mkdirSync(DATA, { recursive: true });
@@ -206,6 +206,7 @@ class Room {
     if (!this.page || !s || s.bad || s.st !== 'play' || !(browser && browser.isConnected())) { this.badCount++; if (this.badCount >= 2 || !this.page) { log('[' + this.id + '] anfitrión caído (' + ((s && (s.bad || s.st)) || 'sin página') + '), reiniciando'); this.badCount = 0; this.restarts++; this.status = 'dormida'; this.wanted = true; this.nextTry = 0; await this._close(true); await this.start(); } return; }
     this.badCount = 0;
     /* latido del anfitrión: si hay jugadores y el mundo no avanza (navegador oculto que dejó de dibujar fotogramas), se reinicia la sala */
+    { const tn = Date.now(); if (this.lastPollT && s.fr >= this.lastFrP) this.pps = (s.fr - this.lastFrP) / ((tn - this.lastPollT) / 1000); this.lastPollT = tn; this.lastFrP = s.fr; }
     if (s.peers > 0 && s.fr === this.lastFr) { this.frStall = (this.frStall || 0) + 1; if (this.frStall >= 3) { log('[' + this.id + '] el anfitrión no avanza (sin fotogramas desde hace ~15 s): reiniciando la sala'); this.frStall = 0; this.restarts++; await this.restart(); return; } } else this.frStall = 0; this.lastFr = s.fr;
     if (s.peers + s.connecting > 0) { this.lastBusy = Date.now(); if (this.dynamic && Date.now() - this.lastPlayers > 60000) { this.lastPlayers = Date.now(); saveUserRooms(); } }
     else if (!this.nunca && CFG.dormirTrasMin > 0 && Date.now() - this.lastBusy > CFG.dormirTrasMin * 60000) { await this.sleep('sin jugadores ' + CFG.dormirTrasMin + ' min'); return; }
@@ -313,7 +314,7 @@ function handler(req, res) {
     if (p === '/juego' || p === '/juego/' || p === '/juego/index.html') { const b = gameHtml(); res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }); return res.end(b); }
     const ip = clientIp(req), Q = k => u.searchParams.get(k); let m;
     if (p === '/salas') {
-      const a = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000)), uid = a.ok ? a.uid : null;
+      const a = auth(Q('uid'), Q('tok'), () => (ip === '127.0.0.1' || ip === '::1' || !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000))), uid = a.ok ? a.uid : null;
       freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
         list.sort((x, y) => (x.usuario ? 1 : 0) - (y.usuario ? 1 : 0) || (y.jugadores - x.jugadores)); json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), crear: CFG.salasUsuario, plan: uid ? planOf(uid) : { anfitrion: false, salasMax: CFG.gratisSalasMax, salasUsadas: 0, salas247: 0, gratisMax: CFG.gratisSalasMax, max247: max247() }, salas: list }); }); return; }
     if (p === '/sala/crear') {
@@ -329,7 +330,7 @@ function handler(req, res) {
       if (!l.uid) { l.uid = a.uid; l.vence = Date.now() + l.dias * 86400000; writeJson('licencias.json', L); }
       const O = ownersAll(); O[a.uid].lic = code; writeJson('duenos.json', O); log('[licencia] ' + code + ' canjeada'); return json(res, 200, { ok: true, plan: planOf(a.uid) }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/info$/);
-    if (m) { const au = auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: Object.assign(r.info(), { mia: !!(au.ok && r.owner === au.uid) }) })); return; }
+    if (m) { const au = auth(Q('uid'), Q('tok'), () => (ip === '127.0.0.1' || ip === '::1' || !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000))); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } r.fresh().then(() => json(res, 200, { ok: true, sala: Object.assign(r.info(), { mia: !!(au.ok && r.owner === au.uid) }) })); return; }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/verificar$/);
     if (m) { if (!isLocal(req)) return json(res, 403, { ok: false }); return json(res, 200, verifyJoin(m[1].toUpperCase(), Q('uid'), Q('n'), Q('s'))); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/(jugadores|reportar)$/);
@@ -351,7 +352,7 @@ function handler(req, res) {
     }
     if (p === '/admin') { if (!adminOk(req)) return adminDenied(req, res, true);  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(adminPage()); }
     if (p === '/admin/api/estado') { if (!adminOk(req)) return adminDenied(req, res, false); 
-      (async () => { const salas = []; for (const r of rooms.values()) { await r.fresh(); const i = r.info(); const rep = reportsAll().filter(x => x.sala === r.id && x.estado === 'nuevo'); const pl = await r.players(); i.jug = pl.map(x => ({ slot: x.slot, nombre: x.nombre, id: String(x.uid || '').slice(0, 6), reportes: new Set(rep.filter(y => y.contra === x.uid).map(y => y.de)).size })); salas.push(i); }
+      (async () => { const salas = []; for (const r of rooms.values()) { await r.fresh(); const i = r.info(); i.pps = r.pps ? +r.pps.toFixed(1) : null; const rep = reportsAll().filter(x => x.sala === r.id && x.estado === 'nuevo'); const pl = await r.players(); i.jug = pl.map(x => ({ slot: x.slot, nombre: x.nombre, id: String(x.uid || '').slice(0, 6), reportes: new Set(rep.filter(y => y.contra === x.uid).map(y => y.de)).size })); salas.push(i); }
         const b = bansAll(), bans = Object.entries(b.global || {}).map(([uid, v]) => Object.assign({ uid, ambito: 'servidor', sala: '' }, v)); for (const [sid, o] of Object.entries(b.salas || {})) for (const [uid, v] of Object.entries(o)) bans.push(Object.assign({ uid, ambito: 'sala ' + sid, sala: sid }, v));
         json(res, 200, { salas, reportes: reportsAll().filter(x => x.estado === 'nuevo').slice(-50).map(x => ({ id: x.id, sala: x.sala, nombre: x.nombreContra, contra: String(x.contra).slice(0, 6), motivo: MOTIVOS[x.motivo] || x.motivo, fecha: x.fecha })), bans, licencias: Object.keys(readJson('licencias.json', {})).length }); })().catch(e => json(res, 500, { error: e.message })); return; }
     if (p === '/admin/api/sala') { if (!adminOk(req)) return adminDenied(req, res, false);  const r = rooms.get((Q('id') || '').toUpperCase()); if (!r) return json(res, 404, { ok: false, error: 'sala desconocida' }); if (Q('accion') === 'borrar') { if (!r.dynamic) return json(res, 400, { ok: false, error: 'Las salas oficiales se quitan en config.json.' }); deleteRoom(r).then(() => json(res, 200, { ok: true })); return; } manage(r, Q('accion'), Q, true).then(o => json(res, 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
@@ -366,7 +367,7 @@ function handler(req, res) {
       manage(r, act, Q, false).then(o => json(res, o.ok === false ? 400 : 200, o)).catch(e => json(res, 500, { ok: false, error: e.message })); return; }
     if (p === '/admin/licencia') { if (!adminOk(req)) return adminDenied(req, res, false);  const c = genLicense(+Q('dias') || 30, +Q('salas') || 0, Q('nota')); return json(res, 200, { codigo: c }); }
     m = p.match(/^\/sala\/([A-Za-z0-9]{4,6})\/despertar$/);
-    if (m) { auth(Q('uid'), Q('tok'), () => !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000)); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
+    if (m) { auth(Q('uid'), Q('tok'), () => (ip === '127.0.0.1' || ip === '::1' || !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000))); const r = rooms.get(m[1].toUpperCase()); if (!r) { if (limited('nf:' + ip, 40, 60000)) return json(res, 429, { ok: false, error: 'Demasiados intentos.' }); return json(res, 404, { ok: false, error: 'No existe una sala con ese código.' }); } wake(r).then(o => json(res, o.ok ? 200 : 503, o)); return; }
     if (p === '/estado') { freshAll().then(() => json(res, 200, { activo: [...rooms.values()].some(r => r.status === 'activa'), tailscale: tailscaleIp(), url: urlJuego(), salasActivas: activeCount(), salas: [...rooms.values()].map(r => r.info()) })); return; }
     if (p === '/admin/guardar') { if (!adminOk(req)) return adminDenied(req, res, false);  Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
     m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m) { if (!adminOk(req)) return adminDenied(req, res, false); const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }
@@ -385,7 +386,7 @@ function onUpgrade(req, socket, head) {
   let u; try { u = new URL(req.url, 'http://x'); } catch (e) { return socket.destroy(); } if (u.pathname !== '/ws') return socket.destroy();
   const role = u.searchParams.get('role') || 'guest', room = rooms.get(String(u.searchParams.get('room') || '').toUpperCase().slice(0, 6)), ip = clientIp(req);
   if ((role === 'host' || role === 'peer') && !isLocal(req)) { socket.write('HTTP/1.1 403 Forbidden\r\n\r\n'); return socket.destroy(); }
-  if (role === 'guest' && limited('ws:' + ip, CFG.conexionesPorMinutoIp, 60000)) { socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n'); return socket.destroy(); }
+  if (role === 'guest' && !isLocal(req) && limited('ws:' + ip, CFG.conexionesPorMinutoIp, 60000)) { socket.write('HTTP/1.1 429 Too Many Requests\r\n\r\n'); return socket.destroy(); }
   wss.handleUpgrade(req, socket, head, ws => {
     ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; }); ws.on('error', () => { });
     if (!room) return wsClose(ws, 4404, 'No existe esa sala.');
@@ -397,7 +398,7 @@ function wsHost(ws, room) {
   ws.on('message', d => { let m; try { m = JSON.parse(d.toString()); } catch (e) { return; } if (m.k === 'deny') { const b = room.bridges.get(m.pid); if (b) { room.bridges.delete(m.pid); clearTimeout(b.timer); wsClose(b.guest, 4409, m.m || 'No puedes entrar.'); } } });
 }
 function wsGuest(ws, room, u, ip) {
-  const n = ipConns(ip, +1); ws.on('close', () => ipConns(ip, -1)); if (n > CFG.maxConexionesPorIp) return wsClose(ws, 4429, 'Demasiadas conexiones desde tu red.');
+  const n = ipConns(ip, +1); ws.on('close', () => ipConns(ip, -1)); if (n > CFG.maxConexionesPorIp && ip !== '127.0.0.1' && ip !== '::1') return wsClose(ws, 4429, 'Demasiadas conexiones desde tu red.');
   if (room.status !== 'activa' || !room.ctl || room.ctl.readyState !== 1) return wsClose(ws, 4503, 'La sala no está lista. Intenta de nuevo en unos segundos.');
   const v = verifyJoin(room.id, u.searchParams.get('uid'), u.searchParams.get('n'), u.searchParams.get('s')); if (!v.ok) return wsClose(ws, 4403, v.error);
   const pid = newCode(10), b = { guest: ws, peer: null, buf: [], bytes: 0, timer: null, rate: { t: Date.now(), n: 0 } }; room.bridges.set(pid, b);
