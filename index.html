@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -1558,6 +1558,14 @@ function s142Plan(seed, NB, SB) {
   const ind = sh(by[D142.IND].slice()); scatter(ind, 'gas', 2, 5); fillPct(ind, 'ware', .55); fillPct(ind, 'garage', .25);
   const por = sh(by[D142.POR].slice()); scatter(por, 'gas', 1, 6); fillPct(por, 'ware', .62); fillPct(por, 'garage', .16);
   for (const q of by[D142.PAR]) specials[kq(q)] = 'park';
+  /* v14.3: callejones. k: 1 vertical, 2 horizontal, 3 cruz, 4-7 sin salida (desde N, S, O, E); w: ancho 1 o 2 */
+  const alk = new Uint8Array(N), alw = new Uint8Array(N), PA = [.4, .85, .5, .45, 0, 0];
+  for (let bj = 0; bj < NB; bj++) for (let bi = 0; bi < NB; bi++) {
+    const i = ix(bi, bj); if (specials[kq([bi, bj])] || (bi === SB[0] && bj === SB[1]) || !PA[d[i]]) continue; if (Lp() >= PA[d[i]]) continue;
+    const r = Lp(), cen = d[i] === D142.CEN; let k;
+    if (cen) k = r < .25 ? 1 : r < .5 ? 2 : r < .8 ? 3 : 4 + ((Lp() * 4) | 0); else k = r < .2 ? 1 : r < .4 ? 2 : r < .5 ? 3 : 4 + ((Lp() * 4) | 0);
+    alk[i] = k; alw[i] = (cen ? Lp() < .7 : d[i] === D142.RES ? Lp() < .5 : true) ? 2 : 1;
+  }
   /* densidad (probabilidad de dejar un solar vacío) */
   const SK = [.1, .02, .45, .6, .1, .5];
   for (let i = 0; i < N; i++) skip[i] = SK[d[i]];
@@ -1565,7 +1573,7 @@ function s142Plan(seed, NB, SB) {
   let base = null; { const rur = sh(by[D142.RUR].filter(q => { const a = AA[ix(q[0], q[1])], b = BB[ix(q[0], q[1])]; return Math.max(Math.abs(a), Math.abs(b)) >= 8; })); if (rur.length) base = rur[0]; }
   const TREE = [1, .2, .15, .1, 1.4, 1], ZOM = [1, 1.6, 1.1, 1.1, .7, .8];
   const bidx = v => Math.max(0, Math.min(NB - 1, ((v - 10) / 24) | 0));
-  const P = { d, NB, skip, specials, base, rot, nb: ix,
+  const P = { d, NB, skip, specials, base, rot, nb: ix, alk, alley: (bi, bj) => { const i = ix(bi, bj); return alk[i] ? { k: alk[i], w: alw[i] } : null; },
     at: (x, y) => d[ix(bidx(x), bidx(y))], treeAt: (x, y) => TREE[d[ix(bidx(x), bidx(y))]], zAt: (x, y) => ZOM[d[ix(bidx(x), bidx(y))]] };
   const cnt = [0, 0, 0, 0, 0, 0]; for (let i = 0; i < N; i++) cnt[d[i]]++; P.cnt = cnt;
   return P;
@@ -1875,6 +1883,32 @@ function genWorld(seed) {
   }
   const BIOFN = { forest: biomeForest, swamp: biomeSwamp, lake: biomeLake, cabins: biomeCabins, farm: biomeFarm, cemetery: biomeCemetery, base: (bx0, by0) => (WG.gv >= 7 ? biomeBase7 : biomeBase)(bx0, by0) };
 
+  /* v14.3: callejones de servicio. Franja de acera de 1-2 casillas entre las dos columnas de solares, con valla a ambos lados (donde no hay
+     edificio) y, en los sin salida, caja de botín, contenedor y un grupo de zombis. Se traza ANTES de las casas, que respetan el hueco. */
+  const ALT = new Set();
+  function s142Alley(A, bx0, by0) {
+    const k = A.k, wd = A.w, Hx = bx0 + 8 + wd, Hy = by0 + 8 + wd;
+    const strip = (x0, y0, x1, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { if (!inb(x, y)) continue; const i = idx(x, y); if (tb[i] || tg[i] === G_ROAD) continue; tg[i] = G_SIDE; to[i] = O_NONE; ALT.add(i); } };
+    const fen = (x, y) => { if (!inb(x, y)) return; const i = idx(x, y); if (tb[i] || tg[i] !== G_GRASS || to[i] !== O_NONE) return; to[i] = O_FENCE; tv[i] = 1; tbh[i] = 0; };
+    const V = (y0, y1) => { strip(bx0 + 9, y0, Hx, y1); for (let y = y0; y <= y1; y++) { fen(bx0 + 8, y); fen(Hx + 1, y); } };
+    const Hz = (x0, x1) => { strip(x0, by0 + 9, x1, Hy); for (let x = x0; x <= x1; x++) { fen(x, by0 + 8); fen(x, Hy + 1); } };
+    const cache = (x, y, kind) => { const i = idx(x, y); if (!inb(x, y) || to[i] !== O_NONE) return; to[i] = kind; tv[i] = (R() * 4) | 0; containers.set(i, { k: kind, bk: kind === O_CRATE ? 'ware' : 'bin', items: null, bonus: kind === O_CRATE ? 1 : 0 }); };
+    if (k === 1 || k === 3) V(by0 - 1, by0 + 19);
+    if (k === 2 || k === 3) Hz(bx0 - 1, bx0 + 19);
+    if (k >= 4) {
+      let ex, ey, cx, cy, ox2, oy2, hz = false;
+      if (k === 4) { V(by0 - 1, by0 + 11); ey = by0 + 12; cx = bx0 + 9; cy = by0 + 11; ox2 = bx0 + 10; oy2 = cy; }
+      else if (k === 5) { V(by0 + 7, by0 + 19); ey = by0 + 6; cx = bx0 + 9; cy = by0 + 7; ox2 = bx0 + 10; oy2 = cy; }
+      else if (k === 6) { hz = true; Hz(bx0 - 1, bx0 + 11); ex = bx0 + 12; cx = bx0 + 11; cy = by0 + 9; ox2 = cx; oy2 = by0 + 10; }
+      else { hz = true; Hz(bx0 + 7, bx0 + 19); ex = bx0 + 6; cx = bx0 + 7; cy = by0 + 9; ox2 = cx; oy2 = by0 + 10; }
+      if (!hz) for (let x = bx0 + 9; x <= Hx; x++) { const i = idx(x, ey); if (inb(x, ey) && !tb[i]) { tg[i] = G_GRASS; to[i] = O_FENCE; tv[i] = 1; tbh[i] = 0; ALT.delete(i); } }
+      else for (let y = by0 + 9; y <= Hy; y++) { const i = idx(ex, y); if (inb(ex, y) && !tb[i]) { tg[i] = G_GRASS; to[i] = O_FENCE; tv[i] = 1; tbh[i] = 0; ALT.delete(i); } }
+      cache(cx, cy, O_CRATE); if (wd === 2) cache(ox2, oy2, O_BIN);
+      const mx = hz ? (k === 6 ? bx0 + 5 : bx0 + 13) : bx0 + 9.5, my = hz ? by0 + 9.5 : (k === 4 ? by0 + 5 : by0 + 13);
+      spawns.push({ x: mx + .5, y: my + .5, n: 2 + (R() < .5 ? 1 : 0), spread: 1.5 });
+    } else if (wd === 2 && k !== 3) { const px = bx0 + 9, py = by0 + (k === 2 ? 9 : 5); /* contenedor al borde de la franja (deja 1 casilla libre) */ if (R() < .6) cache(k === 2 ? bx0 + 4 : px, k === 2 ? by0 + 9 : py, O_BIN); }
+    if (k === 3) spawns.push({ x: bx0 + 10, y: by0 + 10, n: 2, spread: 1.5 });
+  }
   /* ---- bloques ---- */
   const bpos = [];
   for (let bi = 0; bi < NB; bi++) for (let bj = 0; bj < NB; bj++) bpos.push([bi, bj]);
@@ -1934,6 +1968,8 @@ function genWorld(seed) {
     if (special === 'school') { buildSpecial(bx0 + 1, by0 + 3, 17, 11, 'school', 'S'); continue; }
     if (special === 'ware') { buildSpecial(bx0 + 1, by0 + 3, 17, 12, 'ware', 'S'); continue; }
     if (special === 'garage') { buildSpecial(bx0 + 2, by0 + 2, 13, 9, 'garage', 'S'); continue; }
+    const AL = DP ? DP.alley(bi, bj) : null; if (AL) s142Alley(AL, bx0, by0);
+    const ALV = AL && AL.w === 2 && (AL.k === 1 || AL.k === 3 || AL.k === 4 || AL.k === 5), ALH = AL && AL.w === 2 && (AL.k === 2 || AL.k === 3 || AL.k === 6 || AL.k === 7);
     for (let li = 0; li < 2; li++) for (let lj = 0; lj < 2; lj++) {
       const lx = bx0 + li * 10, ly = by0 + lj * 10;
       if (special === 'gas' && lj === 0) { if (li === 0) buildSpecial(bx0 + 1, by0 + 1, 10, 6, 'gas', 'S'); continue; }
@@ -1941,7 +1977,7 @@ function genWorld(seed) {
       if (special === 'shops' && lj === 0) { buildStore(lx, ly, li === 0 ? 9 : 9, 8, li === 0 ? 'pharm' : 'hard', 'S'); continue; }
       if (R() < (DP ? DP.skip[bj * NB + bi] : WGp.skip) && !(bi === SB[0] && bj === SB[1] && li === 1 && lj === 0)) continue;
       const w = rint(R, 6, 8), h = rint(R, 6, 8);
-      const ox = rint(R, 0, 9 - w), oy = rint(R, 0, 9 - h);
+      let ox = rint(R, 0, 9 - w), oy = rint(R, 0, 9 - h); if (ALV && li === 1) ox = Math.max(ox, 1); if (ALH && lj === 1) oy = Math.max(oy, 1);   /* v14.3: respeta el callejón de 2 casillas */
       const sides = []; sides.push(li === 0 ? 'W' : 'E'); sides.push(lj === 0 ? 'N' : 'S');
       const b = buildHouse(lx + ox, ly + oy, w, h, pick(R, sides));
       if (!startHouse && bi === SB[0] && bj === SB[1] && li === 1 && lj === 0) startHouse = b;
@@ -1953,6 +1989,11 @@ function genWorld(seed) {
       }
     }
   }
+  /* v14.3: mini-rotondas (isla central de 3×3) en cruces del centro y algunos del barrio residencial */
+  if (DP) { let nr = 0; for (let ri = 0; ri < ROADS.length; ri++) for (let rj = 0; rj < ROADS.length; rj++) {
+    const cx = ROADS[ri] + 1, cy = ROADS[rj] + 1, kd = DP.at(cx, cy); if (!(kd === 1 ? ((ri + rj) & 1) === 0 : kd === 0 ? ((ri * 7 + rj * 13) % 11) === 0 : false)) continue;
+    const i = idx(cx, cy); if (to[i] !== O_NONE || tb[i]) continue; tg[i] = G_GRASS; to[i] = O_TREE; tv[i] = 3; nr++; }
+    S142.alt = ALT; S142.rounds = nr; }
   if (!startHouse) startHouse = buildings.find(b => b.kind === 'house');
 
   /* ---- árboles y rocas ---- */
@@ -1994,7 +2035,7 @@ function genWorld(seed) {
   /* ---- mobiliario urbano y arbustos ---- */
   const props = [];
   const farFromProps = (x, y, r) => !props.some(q => Math.abs(q[0] - x) < r && Math.abs(q[1] - y) < r);
-  const putProp = (x, y, type, bk) => { const i = idx(x, y); to[i] = type; tv[i] = (R() * 4) | 0; props.push([x, y]); if (CONTAINER.has(type)) containers.set(i, { k: type, bk, items: null }); };
+  const putProp = (x, y, type, bk) => { const i = idx(x, y); if (ALT.size && ALT.has(i)) return; to[i] = type; tv[i] = (R() * 4) | 0; props.push([x, y]); if (CONTAINER.has(type)) containers.set(i, { k: type, bk, items: null }); };
   for (let y = 4; y < H - 4; y++) for (let x = 4; x < W - 4; x++) {
     const i = idx(x, y); if (to[i] !== O_NONE || tb[i]) continue;
     if (tg[i] === G_SIDE) {
@@ -23779,7 +23820,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23820,7 +23861,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23843,7 +23884,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23872,7 +23913,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23906,7 +23947,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23937,7 +23978,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -23970,7 +24011,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -23999,12 +24040,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.2') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.3') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
