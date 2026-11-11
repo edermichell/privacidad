@@ -69,4 +69,5 @@ Riesgo: 10 días es justo; si algo se atrasa, recortamos distritos antes que est
 - **Fase 1 (v14.1) hecha** (con tope de 10 jugadores por sala): claves de bloque para 960, arreglo de guardado de contenedores, escaneo de cambios por ventana (−47 % CPU).
 - **Fase 2 (v14.2) hecha:** plano de distritos por regiones para 960² (centro, industrial, puerto, parques, residencial, campo); mundos de otros tamaños idénticos. Ver `actualizacion_v142/CAMBIOS_v14.2.md`.
 - **Fase 3 (v14.3) hecha en parte:** callejones (pasantes, cruz, sin salida con botín y emboscada) y mini-rotondas. Sin avenidas/calles estrechas/anillo ni patios con portón. Ver `actualizacion_v143/CAMBIOS_v14.3.md`.
-- Siguiente: **Fase 4** (arte/suelo/ambiente por distrito, mar y muelles del puerto).
+- **Fase 4 (v14.4) hecha en parte:** mar y muelles, estanques con puentes, patios de carga, suelo por distrito y botín alto en el centro. Sin arte nuevo (grúas, contenedores apilados, barcos, rascacielos) ni ambiente propio. Ver `actualizacion_v144/CAMBIOS_v14.4.md`.
+- Siguiente: **Fase 5** (3 salas oficiales con el mundo nuevo) y **Fase 6** (pruebas reales en tu portátil y teléfonos).
