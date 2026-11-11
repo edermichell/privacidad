@@ -1,0 +1,42 @@
+Asunto: Último Refugio v14.0 — multijugador con salas: necesito su ayuda para probarlo
+
+Hola equipo:
+
+Ya está lista la v14.0 de Último Refugio. La novedad grande es el multijugador con salas en un servidor, y es lo que más necesito que prueben.
+
+QUÉ HAY DE NUEVO
+- MULTIJUGADOR con salas (hasta 10 jugadores): en el menú pulsen MULTIJUGADOR y las salas aparecen solas; elijan una y UNIRSE. No hace falta instalar Tailscale (solo la app). El COOP de misma red (hasta 4) sigue aparte.
+- Salas públicas y privadas: cada jugador puede crear su sala; las privadas se entran con un código de 6 letras.
+- El mundo se guarda en el servidor: lo que construyen y guardan en cajas sigue ahí al volver.
+- Candados de código y robos (solo en salas): candado de 4 números para su puerta o caja, que comparten con sus amigos… o fuerzan/rompen el de otro (ganzúa, palanca o a golpes). El dueño recibe un aviso.
+- Reportes y expulsión: reportar a un jugador tramposo o tóxico; el dueño puede expulsar, banear y reiniciar la sala.
+- Más detalles en el mapa (campamentos, tumbas, picnics con notas) y suelo más cuidado.
+
+(Adjuntar: lobby_salas.jpg, candado.jpg, paisaje.jpg)
+
+CÓMO PROBARLO
+1. Instalen la v14.0 (misma versión para todos).
+2. MULTIJUGADOR: deben aparecer «Refugio 1» y «Refugio 2». UNIRSE (la primera vez tarda hasta 30 s).
+3. Entren 2 o más personas a la misma sala: caminen y comprueben que se ven y se mueven en la pantalla de los demás.
+4. Prueben crear una sala (pública y privada) y entrar a la privada con el código.
+5. Fabriquen un candado de código (6 clavos + cinta, con martillo), pónganlo a una puerta o caja que construyan y vean si otro puede abrirla, forzarla o romperla.
+6. Prueben reportar a un jugador (Pausa → MULTIJUGADOR).
+7. Salgan, vuelvan a entrar y comprueben que sus construcciones y cajas siguen ahí.
+
+LO QUE MÁS ME PREOCUPA
+- Sincronización: antes algunos jugadores entraban pero no se veían moverse. Está corregido en el servidor, pero lo probé en mi entorno, no en teléfonos reales. Si lo ven, anoten la hora: la sala se reinicia sola en ~15 s.
+- Conexión con datos móviles: si el teléfono pasa de Wi-Fi a datos se corta y hay que volver a entrar. Díganme si pasa con frecuencia.
+- Calor y música: jueguen 15–20 min en una sala y avísenme si el teléfono se calienta o la música se traba.
+
+CÓMO REPORTAR
+Modelo de teléfono y versión de Android, qué hacían, hora aproximada, Wi-Fi o datos, y captura o video corto. Si es un jugador (trampas o insultos), usen el botón de reportar y avísenme también.
+
+DESCARGA Y HORARIO
+Descarga de la v14.0: [PEGAR AQUÍ EL ENLACE DE DESCARGA]
+El servidor estará encendido: [PONER HORARIO]
+(Si instalan encima de una versión anterior conservan su partida individual.)
+
+¡Muchas gracias por su tiempo y sus reportes!
+
+Saludos,
+[TU NOMBRE]
