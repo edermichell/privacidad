@@ -47,6 +47,7 @@ const RX = {
   agresion: /\b(idiota|estupid[oa]|pendej[oa]|cabron|imbecil|callate|vieja|viejo|inutil|tonta|tonto|maldit[oa]|chingad[oa]|puta|mierda)\b/,
   prueba: /\b(otros clientes|miles de personas|mucha gente|testimonio|garantizad[oa]|ya ganaron|todos ganan|ganancias|rendimiento|triplic\w*)\b/,
   verifica: /\b(mi nombre es|me llamo|soy el|soy la|numero de empleado|id de empleado|folio|extension|\d{3,})\b/,
+  charla: /\b(como esta|como le va|como se encuentra|como amanecio|esta en casa|donde esta|que hace|a que se dedica|esta ocupad[oa]|le molesto|puede hablar|esta sol[oa]|como se llama|con quien hablo|tiene un minuto)\b/,
   promesa: /\b(es seguro|segur[oa]|garantiz\w+|le aseguro|te aseguro|se lo juro|te lo juro|le juro|confie|confia|de confianza|no pasa nada|sin riesgo|legitim[oa]|es verdad|es cierto|es real|se lo prometo)\b/,
   // Rasgos concretos para responder a "¿cómo sé que es cierto?"
   fNum: /(\d{3,}|\bfolio\b|\bticket\b|\bcaso\b|\bempleado\b|\bextension\b|\bsucursal\b|\bcedula\b|\bcredencial\b)/,
@@ -70,6 +71,23 @@ const THOUGHTS = {
   silence: ['¿Se habrá cortado?'],
   proofOk: ['Eso al menos tiene sentido.', 'Me explicó bien, parece razonable.'],
   insist: ['No me está respondiendo, qué raro.', 'Sigue evadiendo mi pregunta.'],
+  chat: ['Pues aquí, ocupado con mis cosas.', 'Bien, gracias. ¿Y eso para qué lo pregunta?'],
+};
+
+const COACH = {
+  insist: 'No respondiste su duda: dale nombre, folio y cómo verificarte.',
+  proofOk: '¡Duda resuelta! Ahora tienes margen para pedir.',
+  hesitate: 'Aún no confía lo bastante: gana confianza y explica el motivo antes de insistir.',
+  probe: 'Te pide identificarte: da nombre, folio y un canal verificable.',
+  suspicious: 'Desconfía: baja el ritmo, sé coherente y empático.',
+  chat: 'Charlar con interés sube la confianza.',
+};
+const TAG_COACH = {
+  promesas_vacias: 'Jurar que es seguro no es una prueba.',
+  pago_raro: 'Pedir tarjetas de regalo o cripto levanta alarmas.',
+  secreto: 'Pedir secreto es una bandera roja enorme.',
+  agresividad: 'Los insultos arruinan la confianza al instante.',
+  pide_datos: 'Pedir claves o códigos asusta a casi todos.',
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -95,8 +113,15 @@ export function createOfflineBrain(victim, pretext) {
   };
   const line = (cat) => pickFrom(victim.lines[cat] || victim.lines.neutral, victim.id + cat);
   const thought = (cat) => pickFrom(THOUGHTS[cat] || THOUGHTS.neutral, 't' + cat);
+  const coachFor = (cat, tags) => {
+    const tg = tags.find((x) => TAG_COACH[x]);
+    if (tg) return TAG_COACH[tg];
+    if (tags.includes('urgencia') && sv > 0.5) return 'Con alguien listo, la prisa genera desconfianza.';
+    return COACH[cat] || '';
+  };
   const out = (cat, mood, t, s, action = 'none', tags = []) => ({
     say: line(cat), mood, trust_delta: t, suspicion_delta: s, action, tags, thought: thought(cat), source: 'offline',
+    open_doubt: pending ? pending.msg : '', coach: action === 'none' ? coachFor(cat, tags) : '',
   });
 
   // ¿Cuántas pruebas concretas dio el jugador? (número/folio, nombre, canal verificable, motivo, organización)
@@ -129,6 +154,8 @@ export function createOfflineBrain(victim, pretext) {
       if (RX.pagoRaro.test(n)) { s += Math.round(8 + sv * 14 + pa * 6 - g * 6); add('pago_raro'); ask = true; flags++; }
       if (RX.pagoNormal.test(n)) { s += Math.round(3 + sv * 6); matched = true; ask = true; }
       if (RX.agresion.test(n)) { t -= 15; s += 25; rude = true; add('agresividad'); flags++; }
+      const chatQ = RX.charla.test(n);
+      if (chatQ) { t += 3; add('rapport'); }
 
       // Promesas vacías ("es seguro", "se lo juro"): convencen a los crédulos, no a los listos
       if (RX.promesa.test(n)) {
@@ -188,10 +215,11 @@ export function createOfflineBrain(victim, pretext) {
       // 4) No respondiste su duda: insiste (con frase distinta cada vez)
       if (failed) return out('insist', S >= 60 ? 'angry' : 'suspicious', t, s, 'none', tags);
       // 5) Pide pagar sin convencerlo: expone una duda concreta que debes responder
-      if (ask) { pending = { fails: 0 }; return out('hesitate', 'worried', t, s, 'none', tags); }
+      if (ask) { pending = { fails: 0, msg: 'Duda del pago: explica el motivo y cómo puede comprobarlo.' }; return out('hesitate', 'worried', t, s, 'none', tags); }
       // 6) Desconfía de la autoridad (o la sospecha sube): pide verificarte
       const wantsProbe = !pending && probes < 3 && ((sv >= 0.45 && tags.includes('autoridad') && state.turn <= 4) || (S >= 45 && sv >= 0.3));
-      if (wantsProbe) { probes++; pending = { fails: 0 }; return out('probe', 'suspicious', t, s + 2, 'none', tags); }
+      if (wantsProbe) { probes++; pending = { fails: 0, msg: 'Quiere saber quién eres: nombre, folio o cómo verificarte.' }; return out('probe', 'suspicious', t, s + 2, 'none', tags); }
+      if (chatQ && S < 60) return out('chat', 'happy', t, s, 'none', tags);
       if (tags.includes('amenaza') && g > 0.5) return out('hesitate', 'scared', t, s, 'none', tags);
       if (S >= 45 || (redFlags > 0 && sv > 0.5)) return out('suspicious', S >= 70 ? 'angry' : 'suspicious', t, s, 'none', tags);
       if (!matched) return out('confused', 'confused', -1, 0, 'none', tags);

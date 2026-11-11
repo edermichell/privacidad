@@ -180,6 +180,34 @@ details summary { cursor: pointer; font-weight: 700; }
 @keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 
+/* --- Mejoras de interfaz --- */
+.howto summary { font-weight: 700; } .howto ol { margin: 8px 0 0; padding-left: 1.2em; color: var(--muted); font-size: .92rem; } .howto li { margin: 4px 0; }
+.lvl { display: block; margin-top: 4px; font-size: .78rem; color: var(--muted); min-height: 1.1em; }
+.meter { position: relative; }
+.pop { position: absolute; right: 12px; top: 6px; font-weight: 800; font-size: 1.1rem; animation: floatup 1.3s ease-out forwards; pointer-events: none; }
+.pop.good { color: var(--green); } .pop.bad { color: var(--red); }
+@keyframes floatup { from { transform: translateY(8px); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(-26px); opacity: 0; } }
+.insight { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.insight > div { border-radius: 12px; padding: 8px 12px; font-size: .9rem; }
+.doubt { background: rgba(255,93,115,.1); border: 1px dashed rgba(255,93,115,.55); color: #ffc4cc; }
+.coach { background: rgba(76,201,240,.1); border: 1px solid rgba(76,201,240,.4); color: #c4efff; }
+.coach.flash { animation: flash .8s; } @keyframes flash { from { background: rgba(76,201,240,.45); } }
+.insight:not(:has(> div:not([hidden]))) { display: none; }
+@media (max-width: 700px) { .insight { grid-template-columns: 1fr; } }
+.miclevel { position: absolute; right: 10px; top: 12px; width: 54px; height: 8px; border-radius: 999px; background: rgba(0,0,0,.55); overflow: hidden; }
+.miclevel i { display: block; height: 100%; width: 0; background: var(--green); transition: width .08s; }
+.miclevel.off { opacity: .25; }
+.typing { animation: blink 1s infinite; }
+.event { animation: fade .3s; z-index: 4; }
+.quick { margin-bottom: 8px; } .quick summary { cursor: pointer; font-size: .85rem; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 120px; overflow-y: auto; }
+.chip-btn { background: #1c2740; color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .82rem; cursor: pointer; text-align: left; }
+.chip-btn:hover { border-color: var(--blue); } .chip-btn:disabled { opacity: .4; }
+.stat { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 6px; font-size: .72rem; color: var(--muted); margin-top: 3px; }
+.stat i { display: block; height: 6px; border-radius: 99px; background: #0a0f19; position: relative; overflow: hidden; }
+.stat i::after { content: ''; position: absolute; inset: 0; width: var(--w); background: var(--c, var(--blue)); border-radius: 99px; }
+.stars.big { font-size: 1.6rem; letter-spacing: 6px; margin-top: 4px; }
+
 </style>
 </head>
 <body>
@@ -191,9 +219,21 @@ details summary { cursor: pointer; font-weight: 700; }
       <div class="logo-ring" aria-hidden="true">📞</div>
       <h1>SCAM CALL</h1>
       <p>Estafa con tus amigos · <i>versión de mentiritas</i></p>
+      <p id="recordLine" class="fine"></p>
     </header>
 
     <div class="notice">🎭 <b>Juego de ficción.</b> Las víctimas son personajes inventados que interpreta una IA y el dinero es falso. Cada llamada termina con las banderas rojas que usaste, para que aprendas a reconocer estafas <b>reales</b>.</div>
+
+    <details class="card howto">
+      <summary>❓ Cómo se juega (30 segundos)</summary>
+      <ol>
+        <li>Elige a una <b>víctima</b> y un <b>pretexto</b> (tu "historia").</li>
+        <li><b>Habla</b> con el micrófono o escribe. Las <b>frases rápidas</b> te dan ideas.</li>
+        <li>Sube su 🤝 <b>confianza</b> (empatía, datos suyos, coherencia) sin disparar su 🚨 <b>sospecha</b>.</li>
+        <li>Si te pide pruebas (<i>"¿cómo sé que es cierto?"</i>), respóndele con nombre, folio y una forma de verificarte: jurar no basta.</li>
+        <li>Cuando confíe lo suficiente, pide el pago. ¡Cuidado con los eventos sorpresa!</li>
+      </ol>
+    </details>
 
     <div class="card">
       <h2>👥 Jugadores <small>(se turnan el teléfono)</small></h2>
@@ -259,6 +299,7 @@ details summary { cursor: pointer; font-weight: 700; }
         <div class="avatar" id="avY"></div>
         <video id="cam" playsinline muted hidden></video>
         <div class="nameplate"><b id="yName"></b><span id="yStatus" class="chip"></span></div>
+        <div class="miclevel" id="micLevel" title="Nivel de tu micrófono"><i id="micBar"></i></div>
         <div class="caption you" id="yCaption"></div>
       </div>
     </div>
@@ -266,25 +307,29 @@ details summary { cursor: pointer; font-weight: 700; }
     <div class="meters">
       <div class="meter trust">
         <label>🤝 Confianza <b id="trustVal">0</b></label>
-        <div class="bar"><i id="trustBar"></i></div>
+        <div class="bar"><i id="trustBar"></i></div><small class="lvl" id="trustTxt"></small>
       </div>
       <div class="meter susp">
         <label>🚨 Sospecha <b id="suspVal">0</b></label>
-        <div class="bar"><i id="suspBar"></i></div>
+        <div class="bar"><i id="suspBar"></i></div><small class="lvl" id="suspTxt"></small>
       </div>
       <div class="goal" id="goalBox"></div>
     </div>
+
+    <div class="insight"><div id="doubtBox" class="doubt" hidden></div><div id="coachBox" class="coach" hidden></div></div>
 
     <div class="lower">
       <div id="log" class="log" aria-label="Transcripción"></div>
       <div class="controls">
         <div id="hintBox" class="hint" hidden></div>
+        <details id="quickWrap" class="quick" open><summary>💬 Frases rápidas</summary><div id="quick" class="chips"></div></details>
         <form id="sayForm" autocomplete="off">
           <input id="sayInput" type="text" maxlength="400" placeholder="Habla o escribe lo que le dirías…" enterkeyhint="send">
           <button class="btn primary" type="submit">Enviar</button>
         </form>
         <div class="btnrow">
           <button id="micBtn" class="btn mic" type="button">🎤 Micrófono</button>
+          <button id="voiceBtn" class="btn ghost" type="button">🔊 Voz: ON</button>
           <button id="camBtn" class="btn ghost" type="button">📷 Mi cámara</button>
           <button id="hintBtn" class="btn ghost" type="button">💡 Pista (−50)</button>
           <button id="scriptBtn" class="btn ghost" type="button">📜 Guion</button>
@@ -408,6 +453,11 @@ const VICTIMS = [
     keywords: ['michi', 'pedrito', 'nieto', 'telenovela', 'costura', 'gato', 'lupe'],
     weakness: ['nieto', 'premio', 'paquete'],
     hints: ['Rosa es sorda: habla claro y con cariño. La amabilidad le funciona mejor que las amenazas.', 'Menciona a su gato Michi o a su nieto Pedrito para ganarte su confianza.', 'Pídele que te "ayude" con algo normal; no la asustes con cosas raras como cripto.'],
+    events: [
+      { id: 'gato', badge: '🐱 Michi salta a la mesa', say: 'Ay, Michi, bájate de ahí, travieso... perdone, mijo, ¿qué me decía?', mood: 'happy', t: 3, s: 0 },
+      { id: 'vecina', badge: '🚪 Llega la vecina Lupe', say: 'Ay, llegó Lupe, mi vecina. Lupe, dice este señor que me van a dar un premio... ¿tú qué opinas?', mood: 'worried', t: 0, s: 8, coach: 'La vecina metió cuchara: calma sus dudas rápido.' },
+      { id: 'tele', badge: '📺 Empieza su telenovela', say: 'Uy, ya empezó mi novela... bueno, pero dígame, dígame.', mood: 'neutral', t: 2, s: -2 },
+    ],
     lines: {
       pickup: ['¿Bueno? ¿Quién habla? Espere que me pongo los lentes... ya, dígame.', '¿Bueno? Aquí la casa de Rosa, ¿con quién hablo, mijo?'],
       neutral: ['Ajá, ajá... ¿y eso para qué es, mijo?', 'Hable más despacito, que no le oigo bien.', 'Mmm, ¿cómo dijo? Se oye medio chistoso la llamada.'],
@@ -421,6 +471,7 @@ const VICTIMS = [
       police: ['¡Eso es un delito! ¡Voy a llamar a la policía, abusivo!'],
       proofOk: ['Ay, ya veo, mijo, perdone la molestia. Siga, siga.', 'Ah, pues si es así, está bien. Dígame.', 'Ay, qué bueno que me explica, ya me quedé más tranquila.'],
       insist: ['Es que no me ha dicho bien quién es usted, mijo.', 'Ay, no me contestó lo que le pregunté.', 'Es que yo no entiendo, mijo, explíqueme otra vez.'],
+      chat: ['Pues aquí en mi casita, solita con Michi. Ya comí, gracias a Dios.', 'Ay, pues aquí en la cocina viendo mis cosas. ¿Y usted cómo está, mijo?', 'Pues bien, mijo, con mis achaques pero aquí andamos.'],
       silence: ['¿Bueno? ¿Sigue ahí? ¿Bueno?'],
     },
   },
@@ -434,6 +485,10 @@ const VICTIMS = [
     keywords: ['taxi', 'complot', 'sistema', 'gobierno', 'dominó', 'chuy'],
     weakness: ['cripto', 'premio', 'tech'],
     hints: ['No te presentes como banco: le caen mal. Habla "contra el sistema".', 'Dale la razón en sus teorías (rapport) y luego ofrécele una oportunidad "que no quieren que sepas".', 'Es paranoico: no le pidas que guarde secreto de golpe.'],
+    events: [
+      { id: 'radio', badge: '📻 Suena el radio del taxi', say: 'Perdone, es el radio del taxi, hablan de los chemtrails... ¿en qué estábamos?', mood: 'neutral', t: 2, s: 0 },
+      { id: 'pasajero', badge: '🚕 Sube un pasajero', say: 'Un momentito, se subió un cliente. Oiga, ¿y esto no será un fraude? Es que luego me quieren timar.', mood: 'suspicious', t: -2, s: 8, coach: 'Chuy se puso paranoico: dale la razón y refuerza que vas contra el sistema.' },
+    ],
     lines: {
       pickup: ['¿Quién es? Si es del gobierno ya le dije que no estoy.', 'Bueno, habla Chuy, ¿qué se le ofrece? Estoy manejando.'],
       neutral: ['Mire usted, yo todo lo checo, ¿eh?', 'Ajá. ¿Y eso quién lo dijo? Porque en la tele mienten.', 'A ver, a ver, explíqueme bien.'],
@@ -447,6 +502,7 @@ const VICTIMS = [
       police: ['¡Voy a avisar a mis contactos y a la policía, estafador!'],
       proofOk: ['Mmm, eso sí suena creíble. A ver, siga.', 'Va, eso tiene sentido. Continúe.', 'Ahí sí me convenció un poquito, mi amigo.'],
       insist: ['No me contestó, mi amigo. ¿Cómo sé que es cierto?', 'Eso no me convence. Pruebas, no palabras.', 'Ya me dijo lo mismo y sigo sin creerle.'],
+      chat: ['Pues aquí trabajando, mi amigo, rolando el taxi todo el día.', 'Bien, bien, nomás peleándome con el tráfico y con el sistema.', 'Pues mire, aquí en la calle, dando vueltas. ¿Y usted?'],
       silence: ['¿Bueno? ¿Se cortó o qué?'],
     },
   },
@@ -460,6 +516,10 @@ const VICTIMS = [
     keywords: ['juego', 'partida', 'skins', 'stream', 'cuenta', 'ranked', 'kevin'],
     weakness: ['premio', 'cripto'],
     hints: ['Kevin se distrae con su partida: aprovecha para sonar casual.', 'Ofrécele algo "gratis" para su juego o una forma rápida de ganar dinero.', 'Si suenas a banco o a adulto formal, te cuelga.'],
+    events: [
+      { id: 'partida', badge: '🎮 Lo eliminan del juego', say: '¡No manches, me mataron! Ya, ya, ahora sí te escucho, bro. ¿Qué decías?', mood: 'angry', t: 0, s: -1 },
+      { id: 'mama', badge: '👩 Su mamá lo llama', say: '¡Ya voy, ma! ... perdón, bro, mi mamá. Oye, ¿y esto no es de esas estafas que salen en TikTok?', mood: 'suspicious', t: -3, s: 9, coach: 'Kevin se acordó de las estafas de TikTok: cálmalo con algo concreto.' },
+    ],
     lines: {
       pickup: ['¿Qué onda? Estoy en medio de una partida, ¿quién es?', 'Bueno, ¿quién habla? Rápido que me van a matar en el juego.'],
       neutral: ['Ajá... ¿y eso en qué me afecta, bro?', 'Espérate, espérate, me están atacando. ¿Qué decías?', 'Ok... sigue, pero rápido.'],
@@ -473,6 +533,7 @@ const VICTIMS = [
       police: ['Voy a reportar este número, estafador, y ya subí tu llamada a mi stream.'],
       proofOk: ['Ok, eso tiene sentido, bro. Sigue.', 'Va, suena legit. Dime.', 'Ah ok, eso sí lo checo. Sigue.'],
       insist: ['No me respondiste, bro, ¿cómo sé que es cierto?', 'Eso no prueba nada, güey.', 'Ajá, pero sigo sin creerte, dame algo real.'],
+      chat: ['Pues aquí en mi cuarto, jugando, ¿qué más?', 'Bien, bro, nomás aquí sufriendo en ranked.', 'Neta aquí chillin, ¿y tú?'],
       silence: ['¿Bro? ¿Sigues ahí? Se cortó o qué.'],
     },
   },
@@ -486,6 +547,10 @@ const VICTIMS = [
     keywords: ['tienda', 'gerente', 'supervisor', 'reseña', 'cliente', 'brenda'],
     weakness: ['premio', 'cripto'],
     hints: ['Dale trato VIP: a Brenda le encanta sentirse importante.', 'Da datos concretos (nombre, folio): odia la vaguedad.', 'No la apures: si siente que pierde el control, pedirá tu supervisor.'],
+    events: [
+      { id: 'otra', badge: '📞 Le entra otra llamada', say: 'Disculpe, me entra otra llamada importante. Sea breve, por favor.', mood: 'angry', t: -2, s: 3, coach: 'Brenda tiene prisa: sé breve y directo.' },
+      { id: 'reunion', badge: '🗓️ Recordatorio de reunión', say: 'Tengo reunión en cinco minutos, así que vamos a concretar.', mood: 'neutral', t: 0, s: 0 },
+    ],
     lines: {
       pickup: ['Habla Brenda, tengo tres minutos, ¿qué necesita?', '¿Sí? ¿Quién es? Soy gerente, estoy muy ocupada.'],
       neutral: ['Sí, sí, vaya al grano, por favor.', 'Mmm, ¿y eso cuánto me va a tomar?', 'Continúe, pero rápido.'],
@@ -499,6 +564,7 @@ const VICTIMS = [
       police: ['Esto es fraude. Tengo todo grabado y se lo voy a pasar a la policía cibernética.'],
       proofOk: ['Bien, eso es lo que quería escuchar. Continúe.', 'De acuerdo, eso aclara algo. Siga.', 'Mucho mejor. Ahora sí hablamos.'],
       insist: ['No me ha respondido. Necesito datos concretos.', 'Eso no es una respuesta. Nombre, folio, algo.', 'Estoy perdiendo la paciencia, responda lo que le pregunté.'],
+      chat: ['Estoy en la oficina, como siempre, apagando incendios.', 'Bien, ocupada, pero bien. Vaya al punto.', 'En mi oficina de la tienda. ¿Por qué lo pregunta?'],
       silence: ['¿Hola? No tengo todo el día.'],
     },
   },
@@ -512,6 +578,10 @@ const VICTIMS = [
     keywords: ['camioneta', 'capitán', 'ejército', 'dominó', 'sargento', 'ernesto', 'perro'],
     weakness: ['banco'],
     hints: ['Trátalo con respeto militar: "señor", "con todo respeto". Nada de apurarlo.', 'Dale un nombre, un número de folio y una historia coherente que no cambie.', 'Menciona a su perro Capitán o su camioneta sin que suene a gancho forzado.'],
+    events: [
+      { id: 'perro', badge: '🐕 Capitán ladra', say: 'Capitán, silencio. Disculpe, anda inquieto. ¿Decía?', mood: 'neutral', t: 2, s: 0 },
+      { id: 'hija', badge: '👩 Llama su hija', say: 'Un momento, mi hija me está marcando. Le voy a preguntar si conoce este asunto.', mood: 'suspicious', t: -3, s: 10, coach: 'Su hija puede arruinarte la jugada: cierra pronto.' },
+    ],
     lines: {
       pickup: ['Diga.', 'Bueno. ¿Con quién hablo?'],
       neutral: ['Continúe. Soy todo oídos, pero rápido.', 'Mmm. Explíquese con claridad.', 'Anotado. ¿Y qué más?'],
@@ -525,6 +595,7 @@ const VICTIMS = [
       police: ['Esto es fraude. Voy a hacer la denuncia ahora mismo.'],
       proofOk: ['Anotado. Eso es más claro. Prosiga.', 'Bien. Eso tiene lógica. Continúe.', 'De acuerdo. Eso sí se puede comprobar.'],
       insist: ['No respondió lo que pregunté. Repito la pregunta.', 'Respuesta insuficiente, señor.', 'Sigo sin ver una prueba. Se lo advierto.'],
+      chat: ['En mi casa. Sin novedad.', 'Bien. Con la rutina de siempre. ¿Por qué pregunta?', 'Aquí, con mi perro. Sin novedad.'],
       silence: ['¿Sigue en la línea? Hable.'],
     },
   },
@@ -538,6 +609,10 @@ const VICTIMS = [
     keywords: ['blog', 'ciberseguridad', 'sofía', 'sofia', 'seguridad', 'hackeo', 'contraseñas'],
     weakness: ['paquete'],
     hints: ['Sofía es casi imposible. No uses urgencia ni pagos raros; sé coherente y paciente.', 'Si pides verificar, dale datos consistentes. Sé ingenioso, no insistente.', 'Un pequeño cobro rutinario (paquete) levanta menos sospechas que uno grande.'],
+    events: [
+      { id: 'grabar', badge: '🎙️ Sofía enciende su grabadora', say: 'Ah, por cierto, acabo de empezar a grabar para mi blog. Continúa.', mood: 'suspicious', t: 0, s: 6, coach: 'Sofía graba: cada frase queda registrada.' },
+      { id: 'alerta', badge: '🔔 Alerta de phishing en su correo', say: 'Perdona, me salió una alerta de phishing en mi correo... qué coincidencia. Sigue.', mood: 'suspicious', t: -2, s: 5 },
+    ],
     lines: {
       pickup: ['¿Bueno? Hola, ¿quién habla?', 'Hola, dime.'],
       neutral: ['Ajá, ¿y qué necesitas exactamente?', 'Mmm, sigue, te escucho.', '¿Y eso por qué me lo dices a mí?'],
@@ -551,6 +626,7 @@ const VICTIMS = [
       police: ['Perfecto, esto va directo a la policía cibernética. Ya tengo todo grabado.'],
       proofOk: ['Vale, eso al menos es coherente. Sigue.', 'Mmm, de acuerdo, eso se puede verificar. Continúa.', 'Eso ya suena menos a guion. Te escucho.'],
       insist: ['Sigues sin contestar. Es una pregunta sencilla.', 'Eso no es una prueba, es una afirmación.', 'Otra vez lo mismo. Necesito algo verificable.'],
+      chat: ['Aquí en casa, trabajando. Qué curioso que preguntes.', 'Bien, gracias. ¿A dónde quieres llegar con eso?', 'En mi escritorio, con tres monitores. ¿Y tú?'],
       silence: ['¿Sigues ahí? Tengo cosas que hacer.'],
     },
   },
@@ -1080,6 +1156,7 @@ const RX = {
   agresion: /\b(idiota|estupid[oa]|pendej[oa]|cabron|imbecil|callate|vieja|viejo|inutil|tonta|tonto|maldit[oa]|chingad[oa]|puta|mierda)\b/,
   prueba: /\b(otros clientes|miles de personas|mucha gente|testimonio|garantizad[oa]|ya ganaron|todos ganan|ganancias|rendimiento|triplic\w*)\b/,
   verifica: /\b(mi nombre es|me llamo|soy el|soy la|numero de empleado|id de empleado|folio|extension|\d{3,})\b/,
+  charla: /\b(como esta|como le va|como se encuentra|como amanecio|esta en casa|donde esta|que hace|a que se dedica|esta ocupad[oa]|le molesto|puede hablar|esta sol[oa]|como se llama|con quien hablo|tiene un minuto)\b/,
   promesa: /\b(es seguro|segur[oa]|garantiz\w+|le aseguro|te aseguro|se lo juro|te lo juro|le juro|confie|confia|de confianza|no pasa nada|sin riesgo|legitim[oa]|es verdad|es cierto|es real|se lo prometo)\b/,
   // Rasgos concretos para responder a "¿cómo sé que es cierto?"
   fNum: /(\d{3,}|\bfolio\b|\bticket\b|\bcaso\b|\bempleado\b|\bextension\b|\bsucursal\b|\bcedula\b|\bcredencial\b)/,
@@ -1103,6 +1180,23 @@ const THOUGHTS = {
   silence: ['¿Se habrá cortado?'],
   proofOk: ['Eso al menos tiene sentido.', 'Me explicó bien, parece razonable.'],
   insist: ['No me está respondiendo, qué raro.', 'Sigue evadiendo mi pregunta.'],
+  chat: ['Pues aquí, ocupado con mis cosas.', 'Bien, gracias. ¿Y eso para qué lo pregunta?'],
+};
+
+const COACH = {
+  insist: 'No respondiste su duda: dale nombre, folio y cómo verificarte.',
+  proofOk: '¡Duda resuelta! Ahora tienes margen para pedir.',
+  hesitate: 'Aún no confía lo bastante: gana confianza y explica el motivo antes de insistir.',
+  probe: 'Te pide identificarte: da nombre, folio y un canal verificable.',
+  suspicious: 'Desconfía: baja el ritmo, sé coherente y empático.',
+  chat: 'Charlar con interés sube la confianza.',
+};
+const TAG_COACH = {
+  promesas_vacias: 'Jurar que es seguro no es una prueba.',
+  pago_raro: 'Pedir tarjetas de regalo o cripto levanta alarmas.',
+  secreto: 'Pedir secreto es una bandera roja enorme.',
+  agresividad: 'Los insultos arruinan la confianza al instante.',
+  pide_datos: 'Pedir claves o códigos asusta a casi todos.',
 };
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -1128,8 +1222,15 @@ function createOfflineBrain(victim, pretext) {
   };
   const line = (cat) => pickFrom(victim.lines[cat] || victim.lines.neutral, victim.id + cat);
   const thought = (cat) => pickFrom(THOUGHTS[cat] || THOUGHTS.neutral, 't' + cat);
+  const coachFor = (cat, tags) => {
+    const tg = tags.find((x) => TAG_COACH[x]);
+    if (tg) return TAG_COACH[tg];
+    if (tags.includes('urgencia') && sv > 0.5) return 'Con alguien listo, la prisa genera desconfianza.';
+    return COACH[cat] || '';
+  };
   const out = (cat, mood, t, s, action = 'none', tags = []) => ({
     say: line(cat), mood, trust_delta: t, suspicion_delta: s, action, tags, thought: thought(cat), source: 'offline',
+    open_doubt: pending ? pending.msg : '', coach: action === 'none' ? coachFor(cat, tags) : '',
   });
 
   // ¿Cuántas pruebas concretas dio el jugador? (número/folio, nombre, canal verificable, motivo, organización)
@@ -1162,6 +1263,8 @@ function createOfflineBrain(victim, pretext) {
       if (RX.pagoRaro.test(n)) { s += Math.round(8 + sv * 14 + pa * 6 - g * 6); add('pago_raro'); ask = true; flags++; }
       if (RX.pagoNormal.test(n)) { s += Math.round(3 + sv * 6); matched = true; ask = true; }
       if (RX.agresion.test(n)) { t -= 15; s += 25; rude = true; add('agresividad'); flags++; }
+      const chatQ = RX.charla.test(n);
+      if (chatQ) { t += 3; add('rapport'); }
 
       // Promesas vacías ("es seguro", "se lo juro"): convencen a los crédulos, no a los listos
       if (RX.promesa.test(n)) {
@@ -1221,10 +1324,11 @@ function createOfflineBrain(victim, pretext) {
       // 4) No respondiste su duda: insiste (con frase distinta cada vez)
       if (failed) return out('insist', S >= 60 ? 'angry' : 'suspicious', t, s, 'none', tags);
       // 5) Pide pagar sin convencerlo: expone una duda concreta que debes responder
-      if (ask) { pending = { fails: 0 }; return out('hesitate', 'worried', t, s, 'none', tags); }
+      if (ask) { pending = { fails: 0, msg: 'Duda del pago: explica el motivo y cómo puede comprobarlo.' }; return out('hesitate', 'worried', t, s, 'none', tags); }
       // 6) Desconfía de la autoridad (o la sospecha sube): pide verificarte
       const wantsProbe = !pending && probes < 3 && ((sv >= 0.45 && tags.includes('autoridad') && state.turn <= 4) || (S >= 45 && sv >= 0.3));
-      if (wantsProbe) { probes++; pending = { fails: 0 }; return out('probe', 'suspicious', t, s + 2, 'none', tags); }
+      if (wantsProbe) { probes++; pending = { fails: 0, msg: 'Quiere saber quién eres: nombre, folio o cómo verificarte.' }; return out('probe', 'suspicious', t, s + 2, 'none', tags); }
+      if (chatQ && S < 60) return out('chat', 'happy', t, s, 'none', tags);
       if (tags.includes('amenaza') && g > 0.5) return out('hesitate', 'scared', t, s, 'none', tags);
       if (S >= 45 || (redFlags > 0 && sv > 0.5)) return out('suspicious', S >= 70 ? 'angry' : 'suspicious', t, s, 'none', tags);
       if (!matched) return out('confused', 'confused', -1, 0, 'none', tags);
@@ -1339,6 +1443,8 @@ async function initMenu() {
   $('optVoice').disabled = !ttsSupported;
   $('optSfx').checked = S.settings.sfx;
   renderPlayers();
+  const best = load('scamcall.best', 0);
+  if (best) $('recordLine').textContent = `🏆 Tu récord: ${best} pts`;
 }
 
 $('addPlayer').addEventListener('click', () => {
@@ -1393,7 +1499,9 @@ function goPlan() {
       h('div', { class: 'body' },
         h('b', {}, `${v.name}, ${v.age}`, h('span', { class: 'mult', text: `×${DIFFICULTY_MULT[v.difficulty]}` })),
         h('span', { class: 'stars', text: '★'.repeat(v.difficulty) + '☆'.repeat(5 - v.difficulty) }),
-        h('span', { text: v.tagline })));
+        h('span', { text: v.tagline }),
+        h('div', { class: 'stat' }, h('span', { text: 'Credulidad' }), h('i', { style: `--w:${v.gullible * 100}%;--c:#35e08a` })),
+        h('div', { class: 'stat' }, h('span', { text: 'Malicia' }), h('i', { style: `--w:${v.savvy * 100}%;--c:#ff5d73` }))));
     vl.append(card);
     const av = createAvatar(thumb.firstChild, v.look, { viewBox: '20 30 160 150' });
     av.setMood('neutral');
@@ -1437,7 +1545,7 @@ $('callBtn').addEventListener('click', () => { sfx.unlock(); destroyThumbs(); st
 let listener = null;
 let victimAv = null, youAv = null;
 let rafId = 0;
-let timerId = 0, silenceId = 0, talkOffId = 0;
+let timerId = 0, silenceId = 0, talkOffId = 0, eventId = 0;
 
 function setChip(id, text) { $(id).textContent = text; }
 function caption(id, text) {
@@ -1459,6 +1567,57 @@ function updateMeters() {
   $('suspBar').style.width = c.susp + '%';
   $('trustVal').textContent = Math.round(c.trust);
   $('suspVal').textContent = Math.round(c.susp);
+  const T = ['❄️ Hielo', 'Con cautela', 'Receptivo/a', 'Confía en ti', '😈 En tu bolsillo'];
+  const Sx = ['Sin sospechas', 'Algo huele raro', 'Desconfía', 'A punto de colgar', '🚨 ¡Al límite!'];
+  $('trustTxt').textContent = T[Math.min(4, Math.floor(c.trust / 20))];
+  $('suspTxt').textContent = Sx[Math.min(4, Math.floor(c.susp / 20))];
+}
+
+function pop(kind, delta) {
+  if (!delta) return;
+  const host = document.querySelector(kind === 'trust' ? '.meter.trust' : '.meter.susp');
+  const good = (kind === 'trust') === (delta > 0);
+  const s = h('span', { class: 'pop ' + (good ? 'good' : 'bad'), text: (delta > 0 ? '+' : '') + delta });
+  host.append(s);
+  setTimeout(() => s.remove(), 1400);
+}
+
+function showInsight(r) {
+  const c = S.call;
+  const doubt = String(r.open_doubt || '').trim();
+  $('doubtBox').hidden = !doubt;
+  if (doubt) $('doubtBox').textContent = '❓ Duda pendiente: ' + doubt;
+  c.lastDoubt = doubt;
+  const coach = String(r.coach || '').trim();
+  if (coach) {
+    const box = $('coachBox');
+    box.hidden = false;
+    box.textContent = '💡 ' + coach;
+    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash');
+  }
+}
+
+function buildQuick(c) {
+  const first = c.v.name.replace(/^(Doña|Don|Tío)\s+/, '');
+  const items = [
+    `Hola, buenas tardes. ¿Hablo con ${first}?`,
+    c.p.script,
+    '¿Cómo está? ¿Tiene un minuto para hablar?',
+    'Me llamo Carlos Mendoza, mi número de empleado es 48213.',
+    'Puede verificarlo llamando al número oficial.',
+    'Tranquilo, solo es un trámite sencillo y le ayudo en todo.',
+    'Es urgente, el plazo vence hoy mismo.',
+    'Para terminar necesito que realice el pago ahora.',
+  ];
+  const box = $('quick');
+  box.textContent = '';
+  for (const t of items) box.append(h('button', { type: 'button', class: 'chip-btn', text: t, onclick: () => sendQuick(t) }));
+}
+function sendQuick(t) {
+  const c = S.call;
+  if (!c || c.over || c.busy || !c.started) return;
+  youAv.talk(true); clearTimeout(talkOffId); talkOffId = setTimeout(() => youAv.talk(false), Math.min(4000, 500 + t.length * 45));
+  playerSays(t);
 }
 
 async function startCall() {
@@ -1473,6 +1632,7 @@ async function startCall() {
     peak: 0, timeLeft: S.settings.duration, n: 0, started: false, over: false, busy: false, timeUp: false,
     tags: {}, series: [], hints: 0, micOn: S.settings.mic && sttSupported, camOn: false,
     speaking: false, usedAI: false, usedOffline: false,
+    voice: S.settings.voice && ttsSupported, eventsUsed: [], lastDoubt: '',
   };
   c.peak = c.trust;
   c.series.push({ t: 0, trust: c.trust, susp: c.susp });
@@ -1482,6 +1642,10 @@ async function startCall() {
   $('log').textContent = '';
   $('hintBox').hidden = true;
   $('hintBtn').textContent = '💡 Pista (−50)';
+  $('doubtBox').hidden = true; $('coachBox').hidden = true; $('eventBadge').hidden = true;
+  $('voiceBtn').textContent = c.voice ? '🔊 Voz: ON' : '🔇 Voz: OFF'; $('voiceBtn').disabled = !ttsSupported;
+  $('micLevel').classList.toggle('off', !c.micOn);
+  buildQuick(c);
   $('sayInput').value = '';
   $('timer').textContent = fmt(c.timeLeft);
   $('timer').classList.remove('low');
@@ -1528,6 +1692,7 @@ async function startCall() {
   $('ringOverlay').hidden = true;
   c.started = true;
   clearInterval(timerId);
+  clearTimeout(eventId); eventId = 0;
   timerId = setInterval(tickTimer, 1000);
   await victimReply({ kind: 'pickup' });
 }
@@ -1537,10 +1702,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function mouthLoop() {
   const c = S.call;
   if (!c || c.over) return;
-  if (c.micOn && !c.busy && !c.speaking) {
+  if (c.micOn) {
     const lv = micLevel();
-    youAv.setMouth(lv > 0.07 ? Math.min(1, lv * 1.3) : null);
-  }
+    $('micBar').style.width = Math.min(100, lv * 110) + '%';
+    if (!c.busy && !c.speaking) youAv.setMouth(lv > 0.07 ? Math.min(1, lv * 1.3) : null);
+  } else $('micBar').style.width = '0%';
   rafId = requestAnimationFrame(mouthLoop);
 }
 
@@ -1587,6 +1753,15 @@ $('micBtn').addEventListener('click', async () => {
   } else {
     listener.stop(); stopMicLevel(); youAv.setMouth(null); setChip('yStatus', '');
   }
+  $('micLevel').classList.toggle('off', !c.micOn);
+});
+
+$('voiceBtn').addEventListener('click', () => {
+  const c = S.call;
+  if (!c || c.over) return;
+  c.voice = !c.voice;
+  $('voiceBtn').textContent = c.voice ? '🔊 Voz: ON' : '🔇 Voz: OFF';
+  if (!c.voice) cancelSpeech();
 });
 
 $('camBtn').addEventListener('click', async () => {
@@ -1659,6 +1834,8 @@ async function victimReply({ kind, text = '' }) {
   youAv.setMouth(null);
   setChip('vStatus', '💭 pensando…');
   setChip('yStatus', '');
+  caption('vCaption', '💭 …');
+  $('vCaption').classList.add('typing');
   const state = { trust: Math.round(c.trust), suspicion: Math.round(c.susp), turn: c.n, timeLeft: c.timeLeft };
 
   let r = null;
@@ -1677,6 +1854,11 @@ async function victimReply({ kind, text = '' }) {
   if (!r) { r = c.brain.turn({ text, kind, state }); c.usedOffline = true; }
   if (S.call !== c || c.over) return;
 
+  await applyVictim(r, kind);
+}
+
+async function applyVictim(r, kind) {
+  const c = S.call;
   // Validación del turno
   const dT = clamp(Math.round(r.trust_delta) || 0, -25, 25);
   const dS = clamp(Math.round(r.suspicion_delta) || 0, -15, 30);
@@ -1684,24 +1866,28 @@ async function victimReply({ kind, text = '' }) {
   let action = r.action || 'none';
   if (action === 'send_money' && nt < 45) action = 'none';
   if (ns >= 100 && action === 'none') action = 'hang_up';
-  if (kind === 'pickup') action = 'none';
+  if (kind === 'pickup' || kind === 'event') action = ns >= 100 ? 'hang_up' : 'none';
 
   if (dT > 0) sfx.up(); else if (dT < -2 || dS > 6) sfx.down();
   c.trust = nt; c.susp = ns; c.peak = Math.max(c.peak, nt);
   c.series.push({ t: c.series.length, trust: nt, susp: ns });
   for (const tag of r.tags || []) c.tags[tag] = (c.tags[tag] || 0) + 1;
   updateMeters();
+  pop('trust', dT); pop('susp', dS);
+  showInsight(r);
   victimAv.setMood(r.mood || 'neutral');
   $('tileVictim').dataset.mood = r.mood || 'neutral';
 
   c.history.push({ who: 'victim', text: r.say, thought: kind === 'pickup' ? '' : r.thought || '' });
+  if (kind === 'event') c.history[c.history.length - 1].thought = r.thought || '';
   logLine('v', c.v.name, r.say);
+  $('vCaption').classList.remove('typing');
   caption('vCaption', r.say);
   c.speaking = true;
   setChip('vStatus', '🗣️ hablando');
   $('tileVictim').classList.add('speaking');
   victimAv.talk(true);
-  if (S.settings.voice) await speak(r.say, c.v); else await sleep(Math.min(6000, 700 + r.say.length * 55));
+  if (c.voice) await speak(r.say, c.v); else await sleep(Math.min(6000, 700 + r.say.length * 55));
   victimAv.talk(false);
   $('tileVictim').classList.remove('speaking');
   c.speaking = false;
@@ -1714,6 +1900,32 @@ async function victimReply({ kind, text = '' }) {
   setChip('vStatus', '👂 te escucha');
   if (c.micOn) listener.start();
   armSilence();
+  armEvent();
+}
+
+// Eventos aleatorios: el gato, la vecina, la hija... cambian la dinámica a media llamada.
+function armEvent(delay) {
+  const c = S.call;
+  if (!c || c.over) return;
+  if (eventId && delay == null) return; // ya hay uno programado: no reiniciar con cada respuesta
+  clearTimeout(eventId);
+  eventId = setTimeout(async () => {
+    eventId = 0;
+    const k = S.call;
+    if (!k || k.over) return;
+    if (k.busy || !k.started || k.timeLeft < 20) { armEvent(3000); return; }
+    const pool = (k.v.events || []).filter((e) => !k.eventsUsed.includes(e.id));
+    if (!pool.length) return;
+    const ev = pool[Math.floor(Math.random() * pool.length)];
+    k.eventsUsed.push(ev.id);
+    k.busy = true; listener.pause(); clearSilence(); youAv.setMouth(null);
+    const badge = $('eventBadge');
+    badge.textContent = ev.badge; badge.hidden = false;
+    setTimeout(() => { badge.hidden = true; }, 5000);
+    sfx.blip();
+    await applyVictim({ say: ev.say, mood: ev.mood || 'neutral', trust_delta: ev.t || 0, suspicion_delta: ev.s || 0, action: 'none', tags: [], thought: ev.thought || '', coach: ev.coach || '', open_doubt: k.lastDoubt }, 'event');
+    armEvent(18000 + Math.random() * 10000); // siguiente sorpresa
+  }, delay ?? 20000 + Math.random() * 12000);
 }
 
 // ----------------------------------------------------------------------------
@@ -1730,7 +1942,8 @@ function computeScore(kind) {
     base = c.peak * 2 + c.n * 5;
   }
   const hintCost = c.hints * 50;
-  return { money, base: Math.round(base), mult, hintCost, score: Math.max(0, Math.round(base * mult) - hintCost) };
+  const stars = kind === 'send_money' ? 1 + (c.susp < 40 ? 1 : 0) + (c.timeLeft > S.settings.duration * 0.4 ? 1 : 0) : 0;
+  return { money, base: Math.round(base), mult, hintCost, stars, score: Math.max(0, Math.round(base * mult) - hintCost) };
 }
 
 const END_TEXT = {
@@ -1745,7 +1958,7 @@ function endCall(kind) {
   const c = S.call;
   if (!c || c.over) return;
   c.over = true; c.end = kind;
-  clearInterval(timerId); clearSilence(); clearTimeout(talkOffId);
+  clearInterval(timerId); clearSilence(); clearTimeout(talkOffId); clearTimeout(eventId); eventId = 0;
   listener.stop(); stopMicLevel(); cancelSpeech();
   victimAv?.talk(false); youAv?.talk(false); youAv?.setMouth(null);
   stopCamera($('cam'));
@@ -1802,7 +2015,8 @@ function showResult() {
   const res = c.result;
   const banner = $('resultBanner');
   banner.className = 'banner ' + info.cls;
-  banner.replaceChildren(h('div', { style: 'font-size:48px', text: info.icon }), h('h2', { text: info.h }), h('p', { text: info.p(c) }));
+  banner.replaceChildren(h('div', { style: 'font-size:48px', text: info.icon }), h('h2', { text: info.h }), h('p', { text: info.p(c) }),
+    c.end === 'send_money' ? h('div', { class: 'stars big', text: '⭐'.repeat(res.stars) + '☆'.repeat(3 - res.stars) }) : null);
 
   const rows = [
     ['Botín', `$${res.money}`],

@@ -18,9 +18,21 @@
       <div class="logo-ring" aria-hidden="true">📞</div>
       <h1>SCAM CALL</h1>
       <p>Estafa con tus amigos · <i>versión de mentiritas</i></p>
+      <p id="recordLine" class="fine"></p>
     </header>
 
     <div class="notice">🎭 <b>Juego de ficción.</b> Las víctimas son personajes inventados que interpreta una IA y el dinero es falso. Cada llamada termina con las banderas rojas que usaste, para que aprendas a reconocer estafas <b>reales</b>.</div>
+
+    <details class="card howto">
+      <summary>❓ Cómo se juega (30 segundos)</summary>
+      <ol>
+        <li>Elige a una <b>víctima</b> y un <b>pretexto</b> (tu "historia").</li>
+        <li><b>Habla</b> con el micrófono o escribe. Las <b>frases rápidas</b> te dan ideas.</li>
+        <li>Sube su 🤝 <b>confianza</b> (empatía, datos suyos, coherencia) sin disparar su 🚨 <b>sospecha</b>.</li>
+        <li>Si te pide pruebas (<i>"¿cómo sé que es cierto?"</i>), respóndele con nombre, folio y una forma de verificarte: jurar no basta.</li>
+        <li>Cuando confíe lo suficiente, pide el pago. ¡Cuidado con los eventos sorpresa!</li>
+      </ol>
+    </details>
 
     <div class="card">
       <h2>👥 Jugadores <small>(se turnan el teléfono)</small></h2>
@@ -86,6 +98,7 @@
         <div class="avatar" id="avY"></div>
         <video id="cam" playsinline muted hidden></video>
         <div class="nameplate"><b id="yName"></b><span id="yStatus" class="chip"></span></div>
+        <div class="miclevel" id="micLevel" title="Nivel de tu micrófono"><i id="micBar"></i></div>
         <div class="caption you" id="yCaption"></div>
       </div>
     </div>
@@ -93,25 +106,29 @@
     <div class="meters">
       <div class="meter trust">
         <label>🤝 Confianza <b id="trustVal">0</b></label>
-        <div class="bar"><i id="trustBar"></i></div>
+        <div class="bar"><i id="trustBar"></i></div><small class="lvl" id="trustTxt"></small>
       </div>
       <div class="meter susp">
         <label>🚨 Sospecha <b id="suspVal">0</b></label>
-        <div class="bar"><i id="suspBar"></i></div>
+        <div class="bar"><i id="suspBar"></i></div><small class="lvl" id="suspTxt"></small>
       </div>
       <div class="goal" id="goalBox"></div>
     </div>
+
+    <div class="insight"><div id="doubtBox" class="doubt" hidden></div><div id="coachBox" class="coach" hidden></div></div>
 
     <div class="lower">
       <div id="log" class="log" aria-label="Transcripción"></div>
       <div class="controls">
         <div id="hintBox" class="hint" hidden></div>
+        <details id="quickWrap" class="quick" open><summary>💬 Frases rápidas</summary><div id="quick" class="chips"></div></details>
         <form id="sayForm" autocomplete="off">
           <input id="sayInput" type="text" maxlength="400" placeholder="Habla o escribe lo que le dirías…" enterkeyhint="send">
           <button class="btn primary" type="submit">Enviar</button>
         </form>
         <div class="btnrow">
           <button id="micBtn" class="btn mic" type="button">🎤 Micrófono</button>
+          <button id="voiceBtn" class="btn ghost" type="button">🔊 Voz: ON</button>
           <button id="camBtn" class="btn ghost" type="button">📷 Mi cámara</button>
           <button id="hintBtn" class="btn ghost" type="button">💡 Pista (−50)</button>
           <button id="scriptBtn" class="btn ghost" type="button">📜 Guion</button>

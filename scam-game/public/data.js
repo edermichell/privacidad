@@ -79,6 +79,11 @@ export const VICTIMS = [
     keywords: ['michi', 'pedrito', 'nieto', 'telenovela', 'costura', 'gato', 'lupe'],
     weakness: ['nieto', 'premio', 'paquete'],
     hints: ['Rosa es sorda: habla claro y con cariño. La amabilidad le funciona mejor que las amenazas.', 'Menciona a su gato Michi o a su nieto Pedrito para ganarte su confianza.', 'Pídele que te "ayude" con algo normal; no la asustes con cosas raras como cripto.'],
+    events: [
+      { id: 'gato', badge: '🐱 Michi salta a la mesa', say: 'Ay, Michi, bájate de ahí, travieso... perdone, mijo, ¿qué me decía?', mood: 'happy', t: 3, s: 0 },
+      { id: 'vecina', badge: '🚪 Llega la vecina Lupe', say: 'Ay, llegó Lupe, mi vecina. Lupe, dice este señor que me van a dar un premio... ¿tú qué opinas?', mood: 'worried', t: 0, s: 8, coach: 'La vecina metió cuchara: calma sus dudas rápido.' },
+      { id: 'tele', badge: '📺 Empieza su telenovela', say: 'Uy, ya empezó mi novela... bueno, pero dígame, dígame.', mood: 'neutral', t: 2, s: -2 },
+    ],
     lines: {
       pickup: ['¿Bueno? ¿Quién habla? Espere que me pongo los lentes... ya, dígame.', '¿Bueno? Aquí la casa de Rosa, ¿con quién hablo, mijo?'],
       neutral: ['Ajá, ajá... ¿y eso para qué es, mijo?', 'Hable más despacito, que no le oigo bien.', 'Mmm, ¿cómo dijo? Se oye medio chistoso la llamada.'],
@@ -92,6 +97,7 @@ export const VICTIMS = [
       police: ['¡Eso es un delito! ¡Voy a llamar a la policía, abusivo!'],
       proofOk: ['Ay, ya veo, mijo, perdone la molestia. Siga, siga.', 'Ah, pues si es así, está bien. Dígame.', 'Ay, qué bueno que me explica, ya me quedé más tranquila.'],
       insist: ['Es que no me ha dicho bien quién es usted, mijo.', 'Ay, no me contestó lo que le pregunté.', 'Es que yo no entiendo, mijo, explíqueme otra vez.'],
+      chat: ['Pues aquí en mi casita, solita con Michi. Ya comí, gracias a Dios.', 'Ay, pues aquí en la cocina viendo mis cosas. ¿Y usted cómo está, mijo?', 'Pues bien, mijo, con mis achaques pero aquí andamos.'],
       silence: ['¿Bueno? ¿Sigue ahí? ¿Bueno?'],
     },
   },
@@ -105,6 +111,10 @@ export const VICTIMS = [
     keywords: ['taxi', 'complot', 'sistema', 'gobierno', 'dominó', 'chuy'],
     weakness: ['cripto', 'premio', 'tech'],
     hints: ['No te presentes como banco: le caen mal. Habla "contra el sistema".', 'Dale la razón en sus teorías (rapport) y luego ofrécele una oportunidad "que no quieren que sepas".', 'Es paranoico: no le pidas que guarde secreto de golpe.'],
+    events: [
+      { id: 'radio', badge: '📻 Suena el radio del taxi', say: 'Perdone, es el radio del taxi, hablan de los chemtrails... ¿en qué estábamos?', mood: 'neutral', t: 2, s: 0 },
+      { id: 'pasajero', badge: '🚕 Sube un pasajero', say: 'Un momentito, se subió un cliente. Oiga, ¿y esto no será un fraude? Es que luego me quieren timar.', mood: 'suspicious', t: -2, s: 8, coach: 'Chuy se puso paranoico: dale la razón y refuerza que vas contra el sistema.' },
+    ],
     lines: {
       pickup: ['¿Quién es? Si es del gobierno ya le dije que no estoy.', 'Bueno, habla Chuy, ¿qué se le ofrece? Estoy manejando.'],
       neutral: ['Mire usted, yo todo lo checo, ¿eh?', 'Ajá. ¿Y eso quién lo dijo? Porque en la tele mienten.', 'A ver, a ver, explíqueme bien.'],
@@ -118,6 +128,7 @@ export const VICTIMS = [
       police: ['¡Voy a avisar a mis contactos y a la policía, estafador!'],
       proofOk: ['Mmm, eso sí suena creíble. A ver, siga.', 'Va, eso tiene sentido. Continúe.', 'Ahí sí me convenció un poquito, mi amigo.'],
       insist: ['No me contestó, mi amigo. ¿Cómo sé que es cierto?', 'Eso no me convence. Pruebas, no palabras.', 'Ya me dijo lo mismo y sigo sin creerle.'],
+      chat: ['Pues aquí trabajando, mi amigo, rolando el taxi todo el día.', 'Bien, bien, nomás peleándome con el tráfico y con el sistema.', 'Pues mire, aquí en la calle, dando vueltas. ¿Y usted?'],
       silence: ['¿Bueno? ¿Se cortó o qué?'],
     },
   },
@@ -131,6 +142,10 @@ export const VICTIMS = [
     keywords: ['juego', 'partida', 'skins', 'stream', 'cuenta', 'ranked', 'kevin'],
     weakness: ['premio', 'cripto'],
     hints: ['Kevin se distrae con su partida: aprovecha para sonar casual.', 'Ofrécele algo "gratis" para su juego o una forma rápida de ganar dinero.', 'Si suenas a banco o a adulto formal, te cuelga.'],
+    events: [
+      { id: 'partida', badge: '🎮 Lo eliminan del juego', say: '¡No manches, me mataron! Ya, ya, ahora sí te escucho, bro. ¿Qué decías?', mood: 'angry', t: 0, s: -1 },
+      { id: 'mama', badge: '👩 Su mamá lo llama', say: '¡Ya voy, ma! ... perdón, bro, mi mamá. Oye, ¿y esto no es de esas estafas que salen en TikTok?', mood: 'suspicious', t: -3, s: 9, coach: 'Kevin se acordó de las estafas de TikTok: cálmalo con algo concreto.' },
+    ],
     lines: {
       pickup: ['¿Qué onda? Estoy en medio de una partida, ¿quién es?', 'Bueno, ¿quién habla? Rápido que me van a matar en el juego.'],
       neutral: ['Ajá... ¿y eso en qué me afecta, bro?', 'Espérate, espérate, me están atacando. ¿Qué decías?', 'Ok... sigue, pero rápido.'],
@@ -144,6 +159,7 @@ export const VICTIMS = [
       police: ['Voy a reportar este número, estafador, y ya subí tu llamada a mi stream.'],
       proofOk: ['Ok, eso tiene sentido, bro. Sigue.', 'Va, suena legit. Dime.', 'Ah ok, eso sí lo checo. Sigue.'],
       insist: ['No me respondiste, bro, ¿cómo sé que es cierto?', 'Eso no prueba nada, güey.', 'Ajá, pero sigo sin creerte, dame algo real.'],
+      chat: ['Pues aquí en mi cuarto, jugando, ¿qué más?', 'Bien, bro, nomás aquí sufriendo en ranked.', 'Neta aquí chillin, ¿y tú?'],
       silence: ['¿Bro? ¿Sigues ahí? Se cortó o qué.'],
     },
   },
@@ -157,6 +173,10 @@ export const VICTIMS = [
     keywords: ['tienda', 'gerente', 'supervisor', 'reseña', 'cliente', 'brenda'],
     weakness: ['premio', 'cripto'],
     hints: ['Dale trato VIP: a Brenda le encanta sentirse importante.', 'Da datos concretos (nombre, folio): odia la vaguedad.', 'No la apures: si siente que pierde el control, pedirá tu supervisor.'],
+    events: [
+      { id: 'otra', badge: '📞 Le entra otra llamada', say: 'Disculpe, me entra otra llamada importante. Sea breve, por favor.', mood: 'angry', t: -2, s: 3, coach: 'Brenda tiene prisa: sé breve y directo.' },
+      { id: 'reunion', badge: '🗓️ Recordatorio de reunión', say: 'Tengo reunión en cinco minutos, así que vamos a concretar.', mood: 'neutral', t: 0, s: 0 },
+    ],
     lines: {
       pickup: ['Habla Brenda, tengo tres minutos, ¿qué necesita?', '¿Sí? ¿Quién es? Soy gerente, estoy muy ocupada.'],
       neutral: ['Sí, sí, vaya al grano, por favor.', 'Mmm, ¿y eso cuánto me va a tomar?', 'Continúe, pero rápido.'],
@@ -170,6 +190,7 @@ export const VICTIMS = [
       police: ['Esto es fraude. Tengo todo grabado y se lo voy a pasar a la policía cibernética.'],
       proofOk: ['Bien, eso es lo que quería escuchar. Continúe.', 'De acuerdo, eso aclara algo. Siga.', 'Mucho mejor. Ahora sí hablamos.'],
       insist: ['No me ha respondido. Necesito datos concretos.', 'Eso no es una respuesta. Nombre, folio, algo.', 'Estoy perdiendo la paciencia, responda lo que le pregunté.'],
+      chat: ['Estoy en la oficina, como siempre, apagando incendios.', 'Bien, ocupada, pero bien. Vaya al punto.', 'En mi oficina de la tienda. ¿Por qué lo pregunta?'],
       silence: ['¿Hola? No tengo todo el día.'],
     },
   },
@@ -183,6 +204,10 @@ export const VICTIMS = [
     keywords: ['camioneta', 'capitán', 'ejército', 'dominó', 'sargento', 'ernesto', 'perro'],
     weakness: ['banco'],
     hints: ['Trátalo con respeto militar: "señor", "con todo respeto". Nada de apurarlo.', 'Dale un nombre, un número de folio y una historia coherente que no cambie.', 'Menciona a su perro Capitán o su camioneta sin que suene a gancho forzado.'],
+    events: [
+      { id: 'perro', badge: '🐕 Capitán ladra', say: 'Capitán, silencio. Disculpe, anda inquieto. ¿Decía?', mood: 'neutral', t: 2, s: 0 },
+      { id: 'hija', badge: '👩 Llama su hija', say: 'Un momento, mi hija me está marcando. Le voy a preguntar si conoce este asunto.', mood: 'suspicious', t: -3, s: 10, coach: 'Su hija puede arruinarte la jugada: cierra pronto.' },
+    ],
     lines: {
       pickup: ['Diga.', 'Bueno. ¿Con quién hablo?'],
       neutral: ['Continúe. Soy todo oídos, pero rápido.', 'Mmm. Explíquese con claridad.', 'Anotado. ¿Y qué más?'],
@@ -196,6 +221,7 @@ export const VICTIMS = [
       police: ['Esto es fraude. Voy a hacer la denuncia ahora mismo.'],
       proofOk: ['Anotado. Eso es más claro. Prosiga.', 'Bien. Eso tiene lógica. Continúe.', 'De acuerdo. Eso sí se puede comprobar.'],
       insist: ['No respondió lo que pregunté. Repito la pregunta.', 'Respuesta insuficiente, señor.', 'Sigo sin ver una prueba. Se lo advierto.'],
+      chat: ['En mi casa. Sin novedad.', 'Bien. Con la rutina de siempre. ¿Por qué pregunta?', 'Aquí, con mi perro. Sin novedad.'],
       silence: ['¿Sigue en la línea? Hable.'],
     },
   },
@@ -209,6 +235,10 @@ export const VICTIMS = [
     keywords: ['blog', 'ciberseguridad', 'sofía', 'sofia', 'seguridad', 'hackeo', 'contraseñas'],
     weakness: ['paquete'],
     hints: ['Sofía es casi imposible. No uses urgencia ni pagos raros; sé coherente y paciente.', 'Si pides verificar, dale datos consistentes. Sé ingenioso, no insistente.', 'Un pequeño cobro rutinario (paquete) levanta menos sospechas que uno grande.'],
+    events: [
+      { id: 'grabar', badge: '🎙️ Sofía enciende su grabadora', say: 'Ah, por cierto, acabo de empezar a grabar para mi blog. Continúa.', mood: 'suspicious', t: 0, s: 6, coach: 'Sofía graba: cada frase queda registrada.' },
+      { id: 'alerta', badge: '🔔 Alerta de phishing en su correo', say: 'Perdona, me salió una alerta de phishing en mi correo... qué coincidencia. Sigue.', mood: 'suspicious', t: -2, s: 5 },
+    ],
     lines: {
       pickup: ['¿Bueno? Hola, ¿quién habla?', 'Hola, dime.'],
       neutral: ['Ajá, ¿y qué necesitas exactamente?', 'Mmm, sigue, te escucho.', '¿Y eso por qué me lo dices a mí?'],
@@ -222,6 +252,7 @@ export const VICTIMS = [
       police: ['Perfecto, esto va directo a la policía cibernética. Ya tengo todo grabado.'],
       proofOk: ['Vale, eso al menos es coherente. Sigue.', 'Mmm, de acuerdo, eso se puede verificar. Continúa.', 'Eso ya suena menos a guion. Te escucho.'],
       insist: ['Sigues sin contestar. Es una pregunta sencilla.', 'Eso no es una prueba, es una afirmación.', 'Otra vez lo mismo. Necesito algo verificable.'],
+      chat: ['Aquí en casa, trabajando. Qué curioso que preguntes.', 'Bien, gracias. ¿A dónde quieres llegar con eso?', 'En mi escritorio, con tres monitores. ¿Y tú?'],
       silence: ['¿Sigues ahí? Tengo cosas que hacer.'],
     },
   },

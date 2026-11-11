@@ -13,7 +13,7 @@ para reconocer estafas reales.
 5. Ganas si acepta pagar; pierdes si cuelga, llama a la policía o se acaba el tiempo.
 6. Ranking final y debriefing educativo de cada llamada.
 
-Detalles: expresiones y labios animados, tu avatar (o tu cámara), pistas (−50 pts), guion
+Detalles: la víctima **recuerda sus dudas** ("¿cómo sé que es cierto?") y juzga tu respuesta, responde preguntas personales, sufre **eventos sorpresa** (la vecina, la hija, el gato…) y te da **consejos en vivo**; hay frases rápidas, nivel de micrófono, puntos flotantes y estrellas. Expresiones y labios animados, tu avatar (o tu cámara), pistas (−50 pts), guion
 sugerido, "debilidades" de cada víctima, 6 víctimas y 6 pretextos.
 
 ## Ejecutar

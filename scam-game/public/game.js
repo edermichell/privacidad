@@ -100,6 +100,8 @@ async function initMenu() {
   $('optVoice').disabled = !ttsSupported;
   $('optSfx').checked = S.settings.sfx;
   renderPlayers();
+  const best = load('scamcall.best', 0);
+  if (best) $('recordLine').textContent = `🏆 Tu récord: ${best} pts`;
 }
 
 $('addPlayer').addEventListener('click', () => {
@@ -154,7 +156,9 @@ function goPlan() {
       h('div', { class: 'body' },
         h('b', {}, `${v.name}, ${v.age}`, h('span', { class: 'mult', text: `×${DIFFICULTY_MULT[v.difficulty]}` })),
         h('span', { class: 'stars', text: '★'.repeat(v.difficulty) + '☆'.repeat(5 - v.difficulty) }),
-        h('span', { text: v.tagline })));
+        h('span', { text: v.tagline }),
+        h('div', { class: 'stat' }, h('span', { text: 'Credulidad' }), h('i', { style: `--w:${v.gullible * 100}%;--c:#35e08a` })),
+        h('div', { class: 'stat' }, h('span', { text: 'Malicia' }), h('i', { style: `--w:${v.savvy * 100}%;--c:#ff5d73` }))));
     vl.append(card);
     const av = createAvatar(thumb.firstChild, v.look, { viewBox: '20 30 160 150' });
     av.setMood('neutral');
@@ -198,7 +202,7 @@ $('callBtn').addEventListener('click', () => { sfx.unlock(); destroyThumbs(); st
 let listener = null;
 let victimAv = null, youAv = null;
 let rafId = 0;
-let timerId = 0, silenceId = 0, talkOffId = 0;
+let timerId = 0, silenceId = 0, talkOffId = 0, eventId = 0;
 
 function setChip(id, text) { $(id).textContent = text; }
 function caption(id, text) {
@@ -220,6 +224,57 @@ function updateMeters() {
   $('suspBar').style.width = c.susp + '%';
   $('trustVal').textContent = Math.round(c.trust);
   $('suspVal').textContent = Math.round(c.susp);
+  const T = ['❄️ Hielo', 'Con cautela', 'Receptivo/a', 'Confía en ti', '😈 En tu bolsillo'];
+  const Sx = ['Sin sospechas', 'Algo huele raro', 'Desconfía', 'A punto de colgar', '🚨 ¡Al límite!'];
+  $('trustTxt').textContent = T[Math.min(4, Math.floor(c.trust / 20))];
+  $('suspTxt').textContent = Sx[Math.min(4, Math.floor(c.susp / 20))];
+}
+
+function pop(kind, delta) {
+  if (!delta) return;
+  const host = document.querySelector(kind === 'trust' ? '.meter.trust' : '.meter.susp');
+  const good = (kind === 'trust') === (delta > 0);
+  const s = h('span', { class: 'pop ' + (good ? 'good' : 'bad'), text: (delta > 0 ? '+' : '') + delta });
+  host.append(s);
+  setTimeout(() => s.remove(), 1400);
+}
+
+function showInsight(r) {
+  const c = S.call;
+  const doubt = String(r.open_doubt || '').trim();
+  $('doubtBox').hidden = !doubt;
+  if (doubt) $('doubtBox').textContent = '❓ Duda pendiente: ' + doubt;
+  c.lastDoubt = doubt;
+  const coach = String(r.coach || '').trim();
+  if (coach) {
+    const box = $('coachBox');
+    box.hidden = false;
+    box.textContent = '💡 ' + coach;
+    box.classList.remove('flash'); void box.offsetWidth; box.classList.add('flash');
+  }
+}
+
+function buildQuick(c) {
+  const first = c.v.name.replace(/^(Doña|Don|Tío)\s+/, '');
+  const items = [
+    `Hola, buenas tardes. ¿Hablo con ${first}?`,
+    c.p.script,
+    '¿Cómo está? ¿Tiene un minuto para hablar?',
+    'Me llamo Carlos Mendoza, mi número de empleado es 48213.',
+    'Puede verificarlo llamando al número oficial.',
+    'Tranquilo, solo es un trámite sencillo y le ayudo en todo.',
+    'Es urgente, el plazo vence hoy mismo.',
+    'Para terminar necesito que realice el pago ahora.',
+  ];
+  const box = $('quick');
+  box.textContent = '';
+  for (const t of items) box.append(h('button', { type: 'button', class: 'chip-btn', text: t, onclick: () => sendQuick(t) }));
+}
+function sendQuick(t) {
+  const c = S.call;
+  if (!c || c.over || c.busy || !c.started) return;
+  youAv.talk(true); clearTimeout(talkOffId); talkOffId = setTimeout(() => youAv.talk(false), Math.min(4000, 500 + t.length * 45));
+  playerSays(t);
 }
 
 async function startCall() {
@@ -234,6 +289,7 @@ async function startCall() {
     peak: 0, timeLeft: S.settings.duration, n: 0, started: false, over: false, busy: false, timeUp: false,
     tags: {}, series: [], hints: 0, micOn: S.settings.mic && sttSupported, camOn: false,
     speaking: false, usedAI: false, usedOffline: false,
+    voice: S.settings.voice && ttsSupported, eventsUsed: [], lastDoubt: '',
   };
   c.peak = c.trust;
   c.series.push({ t: 0, trust: c.trust, susp: c.susp });
@@ -243,6 +299,10 @@ async function startCall() {
   $('log').textContent = '';
   $('hintBox').hidden = true;
   $('hintBtn').textContent = '💡 Pista (−50)';
+  $('doubtBox').hidden = true; $('coachBox').hidden = true; $('eventBadge').hidden = true;
+  $('voiceBtn').textContent = c.voice ? '🔊 Voz: ON' : '🔇 Voz: OFF'; $('voiceBtn').disabled = !ttsSupported;
+  $('micLevel').classList.toggle('off', !c.micOn);
+  buildQuick(c);
   $('sayInput').value = '';
   $('timer').textContent = fmt(c.timeLeft);
   $('timer').classList.remove('low');
@@ -289,6 +349,7 @@ async function startCall() {
   $('ringOverlay').hidden = true;
   c.started = true;
   clearInterval(timerId);
+  clearTimeout(eventId); eventId = 0;
   timerId = setInterval(tickTimer, 1000);
   await victimReply({ kind: 'pickup' });
 }
@@ -298,10 +359,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function mouthLoop() {
   const c = S.call;
   if (!c || c.over) return;
-  if (c.micOn && !c.busy && !c.speaking) {
+  if (c.micOn) {
     const lv = micLevel();
-    youAv.setMouth(lv > 0.07 ? Math.min(1, lv * 1.3) : null);
-  }
+    $('micBar').style.width = Math.min(100, lv * 110) + '%';
+    if (!c.busy && !c.speaking) youAv.setMouth(lv > 0.07 ? Math.min(1, lv * 1.3) : null);
+  } else $('micBar').style.width = '0%';
   rafId = requestAnimationFrame(mouthLoop);
 }
 
@@ -348,6 +410,15 @@ $('micBtn').addEventListener('click', async () => {
   } else {
     listener.stop(); stopMicLevel(); youAv.setMouth(null); setChip('yStatus', '');
   }
+  $('micLevel').classList.toggle('off', !c.micOn);
+});
+
+$('voiceBtn').addEventListener('click', () => {
+  const c = S.call;
+  if (!c || c.over) return;
+  c.voice = !c.voice;
+  $('voiceBtn').textContent = c.voice ? '🔊 Voz: ON' : '🔇 Voz: OFF';
+  if (!c.voice) cancelSpeech();
 });
 
 $('camBtn').addEventListener('click', async () => {
@@ -420,6 +491,8 @@ async function victimReply({ kind, text = '' }) {
   youAv.setMouth(null);
   setChip('vStatus', '💭 pensando…');
   setChip('yStatus', '');
+  caption('vCaption', '💭 …');
+  $('vCaption').classList.add('typing');
   const state = { trust: Math.round(c.trust), suspicion: Math.round(c.susp), turn: c.n, timeLeft: c.timeLeft };
 
   let r = null;
@@ -438,6 +511,11 @@ async function victimReply({ kind, text = '' }) {
   if (!r) { r = c.brain.turn({ text, kind, state }); c.usedOffline = true; }
   if (S.call !== c || c.over) return;
 
+  await applyVictim(r, kind);
+}
+
+async function applyVictim(r, kind) {
+  const c = S.call;
   // Validación del turno
   const dT = clamp(Math.round(r.trust_delta) || 0, -25, 25);
   const dS = clamp(Math.round(r.suspicion_delta) || 0, -15, 30);
@@ -445,24 +523,28 @@ async function victimReply({ kind, text = '' }) {
   let action = r.action || 'none';
   if (action === 'send_money' && nt < 45) action = 'none';
   if (ns >= 100 && action === 'none') action = 'hang_up';
-  if (kind === 'pickup') action = 'none';
+  if (kind === 'pickup' || kind === 'event') action = ns >= 100 ? 'hang_up' : 'none';
 
   if (dT > 0) sfx.up(); else if (dT < -2 || dS > 6) sfx.down();
   c.trust = nt; c.susp = ns; c.peak = Math.max(c.peak, nt);
   c.series.push({ t: c.series.length, trust: nt, susp: ns });
   for (const tag of r.tags || []) c.tags[tag] = (c.tags[tag] || 0) + 1;
   updateMeters();
+  pop('trust', dT); pop('susp', dS);
+  showInsight(r);
   victimAv.setMood(r.mood || 'neutral');
   $('tileVictim').dataset.mood = r.mood || 'neutral';
 
   c.history.push({ who: 'victim', text: r.say, thought: kind === 'pickup' ? '' : r.thought || '' });
+  if (kind === 'event') c.history[c.history.length - 1].thought = r.thought || '';
   logLine('v', c.v.name, r.say);
+  $('vCaption').classList.remove('typing');
   caption('vCaption', r.say);
   c.speaking = true;
   setChip('vStatus', '🗣️ hablando');
   $('tileVictim').classList.add('speaking');
   victimAv.talk(true);
-  if (S.settings.voice) await speak(r.say, c.v); else await sleep(Math.min(6000, 700 + r.say.length * 55));
+  if (c.voice) await speak(r.say, c.v); else await sleep(Math.min(6000, 700 + r.say.length * 55));
   victimAv.talk(false);
   $('tileVictim').classList.remove('speaking');
   c.speaking = false;
@@ -475,6 +557,32 @@ async function victimReply({ kind, text = '' }) {
   setChip('vStatus', '👂 te escucha');
   if (c.micOn) listener.start();
   armSilence();
+  armEvent();
+}
+
+// Eventos aleatorios: el gato, la vecina, la hija... cambian la dinámica a media llamada.
+function armEvent(delay) {
+  const c = S.call;
+  if (!c || c.over) return;
+  if (eventId && delay == null) return; // ya hay uno programado: no reiniciar con cada respuesta
+  clearTimeout(eventId);
+  eventId = setTimeout(async () => {
+    eventId = 0;
+    const k = S.call;
+    if (!k || k.over) return;
+    if (k.busy || !k.started || k.timeLeft < 20) { armEvent(3000); return; }
+    const pool = (k.v.events || []).filter((e) => !k.eventsUsed.includes(e.id));
+    if (!pool.length) return;
+    const ev = pool[Math.floor(Math.random() * pool.length)];
+    k.eventsUsed.push(ev.id);
+    k.busy = true; listener.pause(); clearSilence(); youAv.setMouth(null);
+    const badge = $('eventBadge');
+    badge.textContent = ev.badge; badge.hidden = false;
+    setTimeout(() => { badge.hidden = true; }, 5000);
+    sfx.blip();
+    await applyVictim({ say: ev.say, mood: ev.mood || 'neutral', trust_delta: ev.t || 0, suspicion_delta: ev.s || 0, action: 'none', tags: [], thought: ev.thought || '', coach: ev.coach || '', open_doubt: k.lastDoubt }, 'event');
+    armEvent(18000 + Math.random() * 10000); // siguiente sorpresa
+  }, delay ?? 20000 + Math.random() * 12000);
 }
 
 // ----------------------------------------------------------------------------
@@ -491,7 +599,8 @@ function computeScore(kind) {
     base = c.peak * 2 + c.n * 5;
   }
   const hintCost = c.hints * 50;
-  return { money, base: Math.round(base), mult, hintCost, score: Math.max(0, Math.round(base * mult) - hintCost) };
+  const stars = kind === 'send_money' ? 1 + (c.susp < 40 ? 1 : 0) + (c.timeLeft > S.settings.duration * 0.4 ? 1 : 0) : 0;
+  return { money, base: Math.round(base), mult, hintCost, stars, score: Math.max(0, Math.round(base * mult) - hintCost) };
 }
 
 const END_TEXT = {
@@ -506,7 +615,7 @@ function endCall(kind) {
   const c = S.call;
   if (!c || c.over) return;
   c.over = true; c.end = kind;
-  clearInterval(timerId); clearSilence(); clearTimeout(talkOffId);
+  clearInterval(timerId); clearSilence(); clearTimeout(talkOffId); clearTimeout(eventId); eventId = 0;
   listener.stop(); stopMicLevel(); cancelSpeech();
   victimAv?.talk(false); youAv?.talk(false); youAv?.setMouth(null);
   stopCamera($('cam'));
@@ -563,7 +672,8 @@ function showResult() {
   const res = c.result;
   const banner = $('resultBanner');
   banner.className = 'banner ' + info.cls;
-  banner.replaceChildren(h('div', { style: 'font-size:48px', text: info.icon }), h('h2', { text: info.h }), h('p', { text: info.p(c) }));
+  banner.replaceChildren(h('div', { style: 'font-size:48px', text: info.icon }), h('h2', { text: info.h }), h('p', { text: info.p(c) }),
+    c.end === 'send_money' ? h('div', { class: 'stars big', text: '⭐'.repeat(res.stars) + '☆'.repeat(3 - res.stars) }) : null);
 
   const rows = [
     ['Botín', `$${res.money}`],
