@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.4 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.5 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -21262,7 +21262,7 @@ function s137Render() {
   if (!S137.rooms.length) { box.innerHTML = '<p class="hint">No hay salas disponibles. ¡Crea la primera!</p>'; }
   else box.innerHTML = S137.rooms.map(r => {
     const full = r.jugadores >= r.max, st = r.estado === 'activa' ? (r.jugadores + '/' + r.max + ' jugadores' + (r.dia ? ' · día ' + r.dia : '')) : r.estado === 'iniciando' ? 'iniciando…' : 'dormida · se despierta al entrar (0/' + r.max + ')';
-    const bd = (r.plan247 ? '<i class="bdg g">24/7</i>' : '') + (r.usuario ? (r.publica ? '<i class="bdg">PÚBLICA</i>' : '<i class="bdg p">PRIVADA</i>') : '<i class="bdg o">OFICIAL</i>') + (r.mia ? '<i class="bdg m">TUYA</i>' : '');
+    const bd = (r.plan247 ? '<i class="bdg g">24/7</i>' : '') + (r.usuario ? (r.publica ? '<i class="bdg">PÚBLICA</i>' : '<i class="bdg p">PRIVADA</i>') : '<i class="bdg o">OFICIAL</i>') + (r.mapa >= 960 ? '<i class="bdg">MAPA 960</i>' : '') + (r.mia ? '<i class="bdg m">TUYA</i>' : '');
     const mine = r.mia ? '<span class="mpmine"><button class="ghost" data-code="' + s137Esc(r.id) + '">CÓDIGO</button><button class="ghost" data-pub="' + s137Esc(r.id) + '" data-to="' + (r.publica ? 'privada' : 'publica') + '">' + (r.publica ? 'HACER PRIVADA' : 'HACER PÚBLICA') + '</button><button class="ghost" data-del="' + s137Esc(r.id) + '">BORRAR</button><button class="ghost" data-mgr="' + s137Esc(r.id) + '">ADMINISTRAR</button></span>' : '';
     return '<div class="mproom"><div class="mpi"><b>' + s137Esc(r.nombre) + '</b> ' + bd + '<br><small>' + st + '</small>' + mine + '</div><button class="mbp" data-room="' + s137Esc(r.id) + '"' + (full ? ' disabled' : '') + '><span>' + (full ? 'LLENA' : 'UNIRSE') + '</span></button></div>';
   }).join('');
@@ -23906,7 +23906,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23947,7 +23947,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23970,7 +23970,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23999,7 +23999,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24033,7 +24033,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24064,7 +24064,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24097,7 +24097,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24126,12 +24126,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.4') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.5') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

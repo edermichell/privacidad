@@ -124,6 +124,7 @@ async function getBrowser() {
   return browserStarting;
 }
 const ICE = () => (CFG.usarStunTurn ? [{ urls: ['stun:stun.l.google.com:19302'] }] : []);
+const SIZES = { small: 168, big: 264, huge: 360, vast: 480, colossal: 960 };   /* lado del mundo en casillas (solo para mostrarlo en la lista de salas) */
 const WORLDKEYS = ['semilla', 'modo', 'dificultad', 'tamano', 'zombis', 'botin', 'lluvia', 'mundo'];
 
 class Room {
@@ -200,7 +201,7 @@ class Room {
   async fresh() { if (this.status !== 'activa' || Date.now() - this.freshAt < 1500) return; this.freshAt = Date.now(); const s = await this.poll(); if (s && !s.bad) this.state = s; }
   async watchdog() {
     if (this.stopping || this.promise) return;
-    if (this.status === 'dormida') { if ((this.wanted || (this.nunca && licenseOk(this.owner))) && Date.now() >= this.nextTry && (this.nunca || activeCount() < CFG.salasActivasMax)) await this.start(); return; }
+    if (this.status === 'dormida') { if ((this.wanted || (this.nunca && licenseOk(this.owner))) && Date.now() >= this.nextTry && (this.nunca || slotFree(this))) await this.start(); return; }
     if (this.status !== 'activa') return;
     const s = await this.poll(); this.state = s;
     if (!this.page || !s || s.bad || s.st !== 'play' || !(browser && browser.isConnected())) { this.badCount++; if (this.badCount >= 2 || !this.page) { log('[' + this.id + '] anfitrión caído (' + ((s && (s.bad || s.st)) || 'sin página') + '), reiniciando'); this.badCount = 0; this.restarts++; this.status = 'dormida'; this.wanted = true; this.nextTry = 0; await this._close(true); await this.start(); } return; }
@@ -212,7 +213,7 @@ class Room {
     else if (!this.nunca && CFG.dormirTrasMin > 0 && Date.now() - this.lastBusy > CFG.dormirTrasMin * 60000) { await this.sleep('sin jugadores ' + CFG.dormirTrasMin + ' min'); return; }
     if ((s.role !== 'host' || s.es === 2) && !s.peers && !s.connecting) { log('[' + this.id + '] la sala no estaba abierta, reabriendo'); try { await this.page.evaluate(() => { if (NET.role) netClose(); netHost(); }); } catch (e) { } }
   }
-  info() { const s = this.state || {}; return { id: this.id, nombre: this.nombre, estado: this.status, jugadores: this.status === 'activa' ? (s.peers || 0) : 0, conectando: s.connecting || 0, max: CFG.maxJugadores, dia: this.status === 'activa' ? s.day : undefined, nombres: this.status === 'activa' ? (s.names || []) : [], zombis: s.z, pausada: !!s.paused, reinicios: this.restarts, ultimoGuardado: this.lastSave ? new Date(this.lastSave).toISOString() : null, errores: s.err || 0, guardada: this.hasSave(), publica: this.publica, plan247: this.plan247, usuario: this.dynamic }; }
+  info() { const s = this.state || {}; return { id: this.id, nombre: this.nombre, estado: this.status, jugadores: this.status === 'activa' ? (s.peers || 0) : 0, conectando: s.connecting || 0, max: CFG.maxJugadores, dia: this.status === 'activa' ? s.day : undefined, nombres: this.status === 'activa' ? (s.names || []) : [], zombis: s.z, pausada: !!s.paused, reinicios: this.restarts, ultimoGuardado: this.lastSave ? new Date(this.lastSave).toISOString() : null, errores: s.err || 0, guardada: this.hasSave(), publica: this.publica, plan247: this.plan247, usuario: this.dynamic, mapa: SIZES[this.cfg.tamano !== undefined ? this.cfg.tamano : CFG.tamano] || 0 }; }
 }
 const rooms = new Map(CFG.salas.map(c => [c.id, new Room(c)]));
 const saveUserRooms = () => { try { writeJson('salas_usuario.json', [...rooms.values()].filter(r => r.dynamic).map(r => r.record())); } catch (e) { log('[salas] no se pudo guardar la lista:', e.message); } };
@@ -240,9 +241,15 @@ function maintenance() {
   }
 }
 const activeCount = () => [...rooms.values()].filter(r => r.status === 'activa' || r.status === 'iniciando').length;
+/* ¿cabe otra sala activa? Sin «salasUsuarioActivasMax» (servidores anteriores): un único tope para todas. Con él: las oficiales tienen su tope (salasActivasMax) y las de jugadores el suyo, para que una sala de jugadores no deje sin sitio a una oficial. */
+const activeOf = f => [...rooms.values()].filter(r => (r.status === 'activa' || r.status === 'iniciando') && f(r)).length;
+function slotFree(room) {
+  if (CFG.salasUsuarioActivasMax == null) return activeCount() < CFG.salasActivasMax;
+  return room.dynamic ? activeOf(r => r.dynamic && !r.plan247) < CFG.salasUsuarioActivasMax : activeOf(r => !r.dynamic) < CFG.salasActivasMax;
+}
 async function wake(room) {
   if (room.status === 'activa') return { ok: true, estado: 'activa' }; if (room.status === 'iniciando') return { ok: true, estado: 'iniciando' };
-  if (activeCount() >= CFG.salasActivasMax) return { ok: false, error: 'El servidor ya tiene ' + CFG.salasActivasMax + ' salas activas. Entra a una de ellas o espera a que se vacíe.' };
+  if (!slotFree(room)) return { ok: false, error: CFG.salasUsuarioActivasMax != null ? (room.dynamic ? 'Ya hay ' + CFG.salasUsuarioActivasMax + ' sala(s) de jugadores activa(s). Entra a una oficial o espera a que se vacíe.' : 'Las ' + CFG.salasActivasMax + ' salas oficiales ya están activas.') : 'El servidor ya tiene ' + CFG.salasActivasMax + ' salas activas. Entra a una de ellas o espera a que se vacíe.' };
   room.nextTry = 0; room.start().catch(() => { }); return { ok: true, estado: 'iniciando' };
 }
 
@@ -428,7 +435,9 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
   if (!tailscaleIp() && CFG.escuchar !== 'todas') log('AVISO: no se detecta Tailscale (100.x.x.x). Solo se podrá jugar desde este equipo hasta que Tailscale esté activo; se detectará solo.');
   if (urlPub()) log('Dirección pública configurada:', urlPub(), '(los jugadores entran sin Tailscale mientras esté publicada)');
   else if (tailscaleIp()) log('Tailscale detectado:', tailscaleIp(), '→ en el juego: MULTIJUGADOR → «' + tailscaleIp() + ':' + CFG.puerto + '»');
-  log('Salas:', [...rooms.values()].map(r => r.id + ' («' + r.nombre + '»)').join(', '), '· máx. ' + CFG.maxJugadores + ' jugadores por sala · ' + CFG.salasActivasMax + ' salas activas a la vez');
+  { const big = [...rooms.values()].filter(r => !r.dynamic && (SIZES[r.cfg.tamano !== undefined ? r.cfg.tamano : CFG.tamano] || 0) >= 960).length, gb = (os.totalmem() / 1073741824).toFixed(1);
+    if (big) { log('Mapa nuevo 960×960 en ' + big + ' sala(s) oficial(es). Cada sala activa usa ~0,8 GB de RAM (el PC tiene ' + gb + ' GB); las salas se duermen solas tras ' + CFG.dormirTrasMin + ' min sin jugadores.'); if (os.totalmem() < 7.5 * 1073741824 && Math.min(big, CFG.salasActivasMax) >= 3) log('AVISO: con ' + gb + ' GB de RAM, 3 salas 960 activas a la vez pueden dejar poca memoria libre. Ejecuta PROBAR_CARGA.bat con las 3 salas; si falla, baja «salasActivasMax» a 2.'); } }
+  log('Salas:', [...rooms.values()].map(r => r.id + ' («' + r.nombre + '»)').join(', '), '· máx. ' + CFG.maxJugadores + ' jugadores por sala · ' + (CFG.salasUsuarioActivasMax != null ? CFG.salasActivasMax + ' oficiales + ' + CFG.salasUsuarioActivasMax + ' de jugadores activas a la vez' : CFG.salasActivasMax + ' salas activas a la vez'));
   setInterval(() => { if (CFG.escuchar !== 'todas') bindAll(); }, 10000);
   maintenance(); setInterval(maintenance, 10 * 60000);
   setInterval(() => { for (const r of rooms.values()) r.watchdog().catch(e => log('[vigilante ' + r.id + ']', e.message)); }, 5000);

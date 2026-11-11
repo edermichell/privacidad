@@ -70,4 +70,5 @@ Riesgo: 10 días es justo; si algo se atrasa, recortamos distritos antes que est
 - **Fase 2 (v14.2) hecha:** plano de distritos por regiones para 960² (centro, industrial, puerto, parques, residencial, campo); mundos de otros tamaños idénticos. Ver `actualizacion_v142/CAMBIOS_v14.2.md`.
 - **Fase 3 (v14.3) hecha en parte:** callejones (pasantes, cruz, sin salida con botín y emboscada) y mini-rotondas. Sin avenidas/calles estrechas/anillo ni patios con portón. Ver `actualizacion_v143/CAMBIOS_v14.3.md`.
 - **Fase 4 (v14.4) hecha en parte:** mar y muelles, estanques con puentes, patios de carga, suelo por distrito y botín alto en el centro. Sin arte nuevo (grúas, contenedores apilados, barcos, rascacielos) ni ambiente propio. Ver `actualizacion_v144/CAMBIOS_v14.4.md`.
-- Siguiente: **Fase 5** (3 salas oficiales con el mundo nuevo) y **Fase 6** (pruebas reales en tu portátil y teléfonos).
+- **Fase 5 (v14.5) hecha:** migración con copia/reversión a 3 salas oficiales 960 (10 jugadores), límites separados oficiales/jugadores, etiqueta MAPA 960. Ver `actualizacion_v145/CAMBIOS_v14.5.md` y `servidor_tailscale/MAPA_NUEVO_960.md`. **Aún no aplicada a tu servidor.**
+- Siguiente: **Fase 6** (pruebas reales en tu portátil y teléfonos).
