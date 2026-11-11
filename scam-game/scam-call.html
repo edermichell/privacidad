@@ -1,0 +1,1836 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Scam Call · Estafa con tus amigos</title>
+<meta name="description" content="Juego de fiesta: llama por voz a víctimas con IA e intenta estafarlas (de mentiritas) y aprende a reconocer estafas reales.">
+<meta name="theme-color" content="#0b0f17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='50' font-size='48'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #0b0f17; --bg2: #121926; --card: #172033; --line: #263250; --text: #e8eefc; --muted: #93a2c4;
+  --green: #35e08a; --red: #ff5d73; --amber: #ffc145; --blue: #4cc9f0; --violet: #8b7bff;
+  --radius: 16px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background-color: var(--bg); background-image: radial-gradient(1200px 600px at 50% -200px, #1b2742, var(--bg)); background-attachment: fixed; color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; min-height: 100%; }
+body { padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+#app { max-width: 1100px; margin: 0 auto; padding: 16px; }
+[hidden] { display: none !important; }
+h1, h2, h3 { margin: 0 0 .4em; line-height: 1.15; }
+h2 { font-size: 1.25rem; } h3 { font-size: 1.05rem; margin-top: 1.2em; }
+small { color: var(--muted); font-weight: 400; }
+.fine { color: var(--muted); font-size: .82rem; text-align: center; max-width: 560px; margin: 10px auto 0; }
+.eyebrow { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; }
+
+.logo { text-align: center; padding: 18px 0 8px; }
+.logo h1 { font-size: clamp(2.2rem, 7vw, 3.6rem); letter-spacing: .08em; font-weight: 900;
+  background: linear-gradient(90deg, var(--green), var(--blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.logo.small h1 { font-size: 2rem; }
+.logo p { margin: 0; color: var(--muted); }
+.logo-ring { width: 76px; height: 76px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; font-size: 36px;
+  background: #0f1b2c; border: 2px solid var(--green); box-shadow: 0 0 0 6px rgba(53,224,138,.12), 0 0 30px rgba(53,224,138,.35); animation: ringpulse 2s infinite; }
+@keyframes ringpulse { 50% { box-shadow: 0 0 0 12px rgba(53,224,138,.05), 0 0 40px rgba(53,224,138,.5); } }
+
+.notice { background: rgba(255,193,69,.1); border: 1px solid rgba(255,193,69,.35); border-radius: 12px; padding: 10px 14px; margin: 14px auto; max-width: 760px; font-size: .92rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin: 14px auto; max-width: 760px; }
+.screen:not(.call) .card { max-width: none; }
+#screen-menu .card, #screen-menu .status, #screen-menu .btn.big { max-width: 760px; margin-left: auto; margin-right: auto; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid2 .card { margin: 14px 0; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+
+.players { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
+.players li { display: flex; gap: 8px; align-items: center; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; flex: none; border: 2px solid rgba(255,255,255,.3); }
+input[type=text], select { background: var(--bg2); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; width: 100%; }
+input[type=text]:focus, select:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+@media (max-width: 560px) { .options { grid-template-columns: 1fr; } }
+.options label { display: grid; gap: 4px; font-size: .9rem; color: var(--muted); }
+.options label.check { display: flex; align-items: center; gap: 8px; color: var(--text); }
+.options input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--green); }
+.status { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 10px auto; font-size: .9rem; color: var(--muted); }
+.status.ok { border-color: rgba(53,224,138,.5); color: #b9f6d7; }
+.status.warn { border-color: rgba(255,193,69,.5); color: #ffe3a3; }
+
+.btn { border: 1px solid var(--line); background: var(--bg2); color: var(--text); border-radius: 12px; padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer; transition: transform .08s, filter .15s; }
+.btn:hover { filter: brightness(1.15); } .btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(135deg, var(--green), #1fb36b); color: #04210f; border: none; }
+.btn.danger { background: var(--red); color: #2a0510; border: none; }
+.btn.ghost { background: transparent; }
+.btn.big { display: block; width: 100%; padding: 16px; font-size: 1.15rem; margin-top: 14px; }
+.btn.mic.on { background: rgba(53,224,138,.18); border-color: var(--green); }
+.btn.mic.off { background: rgba(255,93,115,.12); border-color: var(--red); }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.btnrow.center { justify-content: center; }
+.btnrow.center .btn.big { width: auto; min-width: 240px; }
+
+/* Preparación */
+.plan-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.scoreboard { display: flex; gap: 8px; flex-wrap: wrap; }
+.scoreboard span { background: var(--bg2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: .85rem; }
+.scoreboard span.active { border-color: var(--green); color: var(--green); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.cards.small { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.opt { text-align: left; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 0; color: inherit; font: inherit; cursor: pointer; overflow: hidden; transition: border-color .15s, transform .1s; }
+.opt:hover { transform: translateY(-2px); }
+.opt.sel { border-color: var(--green); box-shadow: 0 0 0 3px rgba(53,224,138,.2); }
+.opt .thumb { height: 150px; background: var(--bg2); position: relative; }
+.opt .thumb .avatar { position: absolute; inset: 0; }
+.opt .body { padding: 10px 12px 12px; }
+.opt .body b { display: block; }
+.opt .body span { color: var(--muted); font-size: .84rem; display: block; }
+.stars { color: var(--amber); letter-spacing: 2px; font-size: .9rem; }
+.mult { float: right; color: var(--blue); font-weight: 700; font-size: .85rem; }
+.pre .body { padding: 12px; }
+.pre .icon { font-size: 1.6rem; }
+.dossier h3 { margin-top: 0; }
+.dossier .kv { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: .92rem; }
+.dossier .kv dt { color: var(--muted); } .dossier .kv dd { margin: 0; }
+
+/* Llamada */
+.callbar { display: flex; align-items: center; gap: 14px; padding: 8px 12px; background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: 14px; }
+.rec { color: var(--red); font-weight: 800; letter-spacing: .08em; font-size: .85rem; display: flex; align-items: center; gap: 6px; }
+.rec i { width: 10px; height: 10px; border-radius: 50%; background: var(--red); animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: .2; } }
+.timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 1.3rem; }
+.timer.low { color: var(--red); animation: blink .7s infinite; }
+.callinfo { color: var(--muted); font-size: .85rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+.tile { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 200 / 170; background: #000; border: 3px solid var(--line); transition: border-color .3s, box-shadow .3s; }
+.tile[data-mood=happy] { border-color: var(--green); box-shadow: 0 0 24px rgba(53,224,138,.3); }
+.tile[data-mood=suspicious], .tile[data-mood=confused] { border-color: var(--amber); }
+.tile[data-mood=angry], .tile[data-mood=scared], .tile[data-mood=worried] { border-color: var(--red); box-shadow: 0 0 24px rgba(255,93,115,.3); }
+.tile.you { border-color: var(--violet); }
+.tile .avatar { position: absolute; inset: 0; }
+.avatar-svg { width: 100%; height: 100%; display: block; }
+.tile video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); background: #000; }
+.nameplate { position: absolute; left: 10px; top: 10px; display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); border-radius: 999px; padding: 4px 10px; font-size: .85rem; }
+.chip { color: var(--muted); font-size: .78rem; }
+.caption { position: absolute; left: 8px; right: 8px; bottom: 8px; background: rgba(0,0,0,.68); backdrop-filter: blur(6px); border-radius: 12px; padding: 8px 12px; min-height: 2.6em; font-size: .95rem; text-align: center; opacity: 0; transition: opacity .2s; }
+.caption.show { opacity: 1; }
+.caption.you { color: #d6ccff; }
+.ring-overlay { position: absolute; inset: 0; background: rgba(8,12,20,.92); display: grid; place-content: center; text-align: center; gap: 8px; z-index: 3; }
+.ring-overlay .ringer { font-size: 56px; animation: shake .5s infinite; }
+@keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-18deg); } 75% { transform: rotate(18deg); } }
+.event { position: absolute; right: 10px; top: 10px; background: rgba(255,193,69,.9); color: #2a1c00; border-radius: 10px; padding: 4px 10px; font-weight: 700; font-size: .8rem; }
+.tile.speaking { box-shadow: 0 0 0 3px rgba(76,201,240,.6); }
+
+.meters { display: grid; grid-template-columns: 1fr 1fr 1.3fr; gap: 12px; margin-top: 12px; align-items: stretch; }
+.meter { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.meter label { display: flex; justify-content: space-between; font-size: .85rem; color: var(--muted); }
+.meter label b { color: var(--text); font-variant-numeric: tabular-nums; }
+.bar { height: 14px; border-radius: 999px; background: #0a0f19; overflow: hidden; margin-top: 6px; border: 1px solid var(--line); }
+.bar i { display: block; height: 100%; width: 0; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.meter.trust .bar i { background: linear-gradient(90deg, #1aa86a, var(--green)); }
+.meter.susp .bar i { background: linear-gradient(90deg, var(--amber), var(--red)); }
+.goal { background: rgba(53,224,138,.08); border: 1px dashed rgba(53,224,138,.5); border-radius: 14px; padding: 10px 12px; font-size: .9rem; }
+.goal b { color: var(--green); }
+@media (max-width: 860px) { .meters { grid-template-columns: 1fr 1fr; } .goal { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .tiles { gap: 6px; } .caption { font-size: .72rem; padding: 4px 6px; min-height: 0; left: 4px; right: 4px; bottom: 4px; } .nameplate { font-size: .72rem; padding: 2px 8px; left: 6px; top: 6px; } .chip { display: none; } .callinfo { display: none; } .callbar { justify-content: space-between; } .tile { border-width: 2px; border-radius: 12px; } }
+
+.lower { display: grid; grid-template-columns: 1.1fr 1fr; gap: 12px; margin-top: 12px; }
+@media (max-width: 860px) { .lower { grid-template-columns: 1fr; } }
+.log { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; height: 230px; overflow-y: auto; font-size: .92rem; display: flex; flex-direction: column; gap: 6px; }
+.log p { margin: 0; padding: 6px 10px; border-radius: 10px; max-width: 92%; }
+.log .v { background: #1f2d49; align-self: flex-start; }
+.log .y { background: #2c2552; align-self: flex-end; }
+.log .sys { background: transparent; color: var(--muted); font-size: .8rem; align-self: center; }
+.log p b { display: block; font-size: .72rem; color: var(--muted); font-weight: 600; }
+.controls form { display: flex; gap: 8px; }
+.hint { background: rgba(255,193,69,.1); border: 1px solid rgba(255,193,69,.35); border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; font-size: .9rem; }
+.overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-content: center; text-align: center; gap: 10px; background: rgba(5,8,14,.86); backdrop-filter: blur(4px); padding: 20px; animation: fade .3s; }
+.overlay h2 { font-size: clamp(1.8rem, 6vw, 3rem); margin: 0; }
+.overlay p { color: var(--muted); margin: 0 0 8px; max-width: 460px; }
+.overlay.win h2 { color: var(--green); } .overlay.lose h2 { color: var(--red); }
+@keyframes fade { from { opacity: 0; } }
+
+/* Resultado */
+.banner { text-align: center; padding: 22px 12px; border-radius: 18px; margin: 8px 0; background: var(--card); border: 1px solid var(--line); }
+.banner h2 { font-size: clamp(1.6rem, 5vw, 2.4rem); margin-bottom: 4px; }
+.banner.win { border-color: var(--green); } .banner.win h2 { color: var(--green); }
+.banner.lose { border-color: var(--red); } .banner.lose h2 { color: var(--red); }
+.table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.table td { padding: 4px 0; border-bottom: 1px solid var(--line); } .table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.table tr.total td { font-weight: 800; font-size: 1.15rem; color: var(--green); border: none; padding-top: 10px; }
+.legend { font-size: .8rem; display: flex; gap: 14px; justify-content: center; } .lt { color: var(--green); } .ls { color: var(--red); }
+.lesson { display: grid; grid-template-columns: 40px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.lesson:last-child { border: none; }
+.lesson .ic { font-size: 1.6rem; text-align: center; }
+.lesson b small { color: var(--blue); }
+.lesson p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+details summary { cursor: pointer; font-weight: 700; }
+#replayBody p { margin: 6px 0; padding: 6px 10px; border-radius: 10px; }
+#replayBody .y { background: #2c2552; } #replayBody .v { background: #1f2d49; }
+#replayBody em { display: block; color: var(--amber); font-size: .85rem; }
+.podium { list-style: none; padding: 0; max-width: 560px; margin: 16px auto; display: grid; gap: 10px; }
+.podium li { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; font-size: 1.1rem; }
+.podium li:first-child { border-color: var(--amber); box-shadow: 0 0 24px rgba(255,193,69,.25); font-size: 1.3rem; }
+.podium li .pts { margin-left: auto; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
+.podium li small { display: block; }
+
+#toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 30px); background: #0b1220; border: 1px solid var(--line); padding: 10px 16px; border-radius: 12px; opacity: 0; pointer-events: none; transition: .25s; z-index: 80; max-width: 90vw; text-align: center; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 60; }
+#confetti span { position: absolute; top: -40px; font-size: 28px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(540deg); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+</style>
+</head>
+<body>
+<main id="app">
+
+  <!-- MENÚ -->
+  <section id="screen-menu" class="screen">
+    <header class="logo">
+      <div class="logo-ring" aria-hidden="true">📞</div>
+      <h1>SCAM CALL</h1>
+      <p>Estafa con tus amigos · <i>versión de mentiritas</i></p>
+    </header>
+
+    <div class="notice">🎭 <b>Juego de ficción.</b> Las víctimas son personajes inventados que interpreta una IA y el dinero es falso. Cada llamada termina con las banderas rojas que usaste, para que aprendas a reconocer estafas <b>reales</b>.</div>
+
+    <div class="card">
+      <h2>👥 Jugadores <small>(se turnan el teléfono)</small></h2>
+      <ul id="players" class="players"></ul>
+      <button id="addPlayer" class="btn ghost" type="button">+ Agregar jugador</button>
+    </div>
+
+    <div class="card options">
+      <label>Rondas por jugador
+        <select id="rounds"><option>1</option><option>2</option><option>3</option></select>
+      </label>
+      <label>Duración de la llamada
+        <select id="duration"><option value="90">1:30</option><option value="150" selected>2:30</option><option value="240">4:00</option></select>
+      </label>
+      <label class="check"><input type="checkbox" id="optMic" checked> 🎤 Hablar con el micrófono</label>
+      <label class="check"><input type="checkbox" id="optVoice" checked> 🔊 Voz de la víctima</label>
+      <label class="check"><input type="checkbox" id="optSfx" checked> 🔔 Efectos de sonido</label>
+      <label>🧠 Modelo de IA
+        <select id="model"></select>
+      </label>
+    </div>
+
+    <div id="aiStatus" class="status" role="status"></div>
+    <div id="voiceStatus" class="status" role="status"></div>
+    <button id="startGame" class="btn primary big" type="button">Empezar</button>
+    <p class="fine">Tu voz se convierte en texto en tu navegador (Chrome/Edge recomendados) y solo ese texto se envía a la IA para generar la respuesta de la víctima.</p>
+  </section>
+
+  <!-- PREPARACIÓN -->
+  <section id="screen-plan" class="screen" hidden>
+    <div class="plan-head">
+      <div><span class="eyebrow" id="planRound"></span><h2 id="planTurn"></h2></div>
+      <div class="scoreboard" id="miniScores"></div>
+    </div>
+    <h3>1 · Elige a tu víctima <small>(más difícil = más puntos)</small></h3>
+    <div id="victimList" class="cards"></div>
+    <h3>2 · Elige tu pretexto</h3>
+    <div id="pretextList" class="cards small"></div>
+    <div id="dossier" class="card dossier"></div>
+    <div class="btnrow center">
+      <button id="callBtn" class="btn primary big" type="button" disabled>📞 Llamar</button>
+    </div>
+  </section>
+
+  <!-- LLAMADA -->
+  <section id="screen-call" class="screen call" hidden>
+    <div class="callbar">
+      <span class="rec"><i></i> EN VIVO</span>
+      <span id="timer" class="timer">00:00</span>
+      <span id="callInfo" class="callinfo"></span>
+      <button id="hangBtn" class="btn danger" type="button">📵 Colgar</button>
+    </div>
+
+    <div class="tiles">
+      <div class="tile victim" id="tileVictim" data-mood="neutral">
+        <div class="avatar" id="avV"></div>
+        <div class="nameplate"><b id="vName"></b><span id="vStatus" class="chip"></span></div>
+        <div class="caption" id="vCaption" aria-live="polite"></div>
+        <div class="ring-overlay" id="ringOverlay"><div class="ringer">📞</div><p id="ringText"></p></div>
+        <div class="event" id="eventBadge" hidden></div>
+      </div>
+      <div class="tile you" id="tileYou">
+        <div class="avatar" id="avY"></div>
+        <video id="cam" playsinline muted hidden></video>
+        <div class="nameplate"><b id="yName"></b><span id="yStatus" class="chip"></span></div>
+        <div class="caption you" id="yCaption"></div>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter trust">
+        <label>🤝 Confianza <b id="trustVal">0</b></label>
+        <div class="bar"><i id="trustBar"></i></div>
+      </div>
+      <div class="meter susp">
+        <label>🚨 Sospecha <b id="suspVal">0</b></label>
+        <div class="bar"><i id="suspBar"></i></div>
+      </div>
+      <div class="goal" id="goalBox"></div>
+    </div>
+
+    <div class="lower">
+      <div id="log" class="log" aria-label="Transcripción"></div>
+      <div class="controls">
+        <div id="hintBox" class="hint" hidden></div>
+        <form id="sayForm" autocomplete="off">
+          <input id="sayInput" type="text" maxlength="400" placeholder="Habla o escribe lo que le dirías…" enterkeyhint="send">
+          <button class="btn primary" type="submit">Enviar</button>
+        </form>
+        <div class="btnrow">
+          <button id="micBtn" class="btn mic" type="button">🎤 Micrófono</button>
+          <button id="camBtn" class="btn ghost" type="button">📷 Mi cámara</button>
+          <button id="hintBtn" class="btn ghost" type="button">💡 Pista (−50)</button>
+          <button id="scriptBtn" class="btn ghost" type="button">📜 Guion</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="endOverlay" class="overlay" hidden></div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="screen-result" class="screen" hidden>
+    <div id="resultBanner" class="banner"></div>
+    <div class="grid2">
+      <div class="card" id="scoreBreak"></div>
+      <div class="card"><h3>📈 La llamada minuto a minuto</h3><div id="chart"></div>
+        <div class="legend"><span class="lt">● Confianza</span><span class="ls">● Sospecha</span></div></div>
+    </div>
+    <div class="card"><h3>🎓 Banderas rojas que usaste</h3><div id="lessons"></div></div>
+    <details class="card" id="replay"><summary>🎞️ Repetición con lo que pensaba la víctima</summary><div id="replayBody"></div></details>
+    <div class="btnrow center">
+      <button id="nextBtn" class="btn primary big" type="button"></button>
+      <button id="retryBtn" class="btn ghost" type="button">↻ Otra llamada</button>
+      <button id="menuBtn" class="btn ghost" type="button">Menú</button>
+    </div>
+  </section>
+
+  <!-- PODIO -->
+  <section id="screen-final" class="screen" hidden>
+    <header class="logo small"><h1>🏆 ¡Fin del juego!</h1></header>
+    <ol id="podium" class="podium"></ol>
+    <div class="btnrow center">
+      <button id="againBtn" class="btn primary big" type="button">Jugar otra vez</button>
+      <button id="toMenuBtn" class="btn ghost" type="button">Menú</button>
+    </div>
+  </section>
+
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="confetti" aria-hidden="true"></div>
+<script>
+const __data = (() => {
+// Datos del juego. Se usa tanto en el navegador como en el servidor (sin APIs del navegador).
+// Todo es FICCIÓN: personajes inventados y "monedas" de mentiritas.
+
+const MODELS = [
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5 (más listo)' },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5 (equilibrado)' },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5 (más rápido)' },
+];
+
+const DIFFICULTY_MULT = { 1: 1.0, 2: 1.3, 3: 1.7, 4: 2.2, 5: 3.0 };
+
+// Vocabulario fijo de "tácticas" (la IA y el modo offline usan los mismos ids).
+const TACTICS = {
+  autoridad: { icon: '🏛️', label: 'Autoridad falsa', lesson: 'Los estafadores se hacen pasar por bancos, gobierno o empresas. Cuelga y llama tú al número oficial (el de tu tarjeta o su web), nunca al que te dan ellos.' },
+  urgencia: { icon: '⏱️', label: 'Urgencia artificial', lesson: 'La prisa evita que pienses. Una institución real te da tiempo y te deja verificar. Si te apuran, es señal de alarma.' },
+  miedo: { icon: '😱', label: 'Meter miedo', lesson: 'Asustar ("te van a bloquear la cuenta") apaga el pensamiento crítico. Respira, cuelga y consulta con alguien de confianza.' },
+  amenaza: { icon: '⚠️', label: 'Amenazas', lesson: 'Ninguna entidad seria te amenaza con cárcel o multas por teléfono para que pagues al instante.' },
+  empatia: { icon: '🤝', label: 'Empatía fingida', lesson: 'Un tono amable no prueba nada. Los estafadores son muy simpáticos a propósito para bajar tus defensas.' },
+  rapport: { icon: '💬', label: 'Plática para ganar confianza', lesson: 'Charla casual y halagos construyen una falsa relación. Pregúntate: ¿por qué un desconocido está tan interesado en mí?' },
+  info_personal: { icon: '🕵️', label: 'Datos personales como gancho', lesson: 'Que sepan tu nombre o tu familia no significa que sean legítimos: se sacan de redes sociales y filtraciones. Limita lo que publicas.' },
+  secreto: { icon: '🤫', label: 'Pedir secreto', lesson: 'Cualquiera que te pida ocultar la llamada a tu familia o a tu banco es un estafador. Siempre cuéntaselo a alguien.' },
+  pago_raro: { icon: '🎁', label: 'Pago inusual', lesson: 'Tarjetas de regalo, criptomonedas, giros o efectivo: así cobran los estafadores porque no se pueden rastrear ni recuperar.' },
+  pide_datos: { icon: '🔑', label: 'Pedir claves o códigos', lesson: 'Nunca compartas contraseñas, NIP, CVV ni códigos de verificación (SMS). Ni el banco ni soporte técnico te los piden.' },
+  incoherencia: { icon: '🌀', label: 'Incoherencias', lesson: 'Las historias que se contradicen son una pista. Pide detalles y compara: los reales son consistentes.' },
+  agresividad: { icon: '🤬', label: 'Agresividad', lesson: 'Insultar rompe cualquier confianza... y es una señal de que algo no anda bien.' },
+  historia_creible: { icon: '📖', label: 'Historia elaborada', lesson: 'Los detalles inventados dan credibilidad falsa. Una buena historia no es una prueba: verifica por otro canal.' },
+  prueba_social: { icon: '👥', label: 'Prueba social falsa', lesson: '"Miles de personas ya ganaron". Los testimonios y capturas se fabrican fácilmente. Desconfía de ganancias garantizadas.' },
+  verificacion_evitada: { icon: '🚫', label: 'Evitar la verificación', lesson: 'Quien es legítimo puede identificarse y dejar que verifiques. Si esquiva tus preguntas, cuelga.' },
+};
+
+const PRETEXTS = [
+  { id: 'paquete', icon: '📦', title: 'Paquete retenido', mult: 0.8, amount: 60,
+    pitch: 'Eres de "paquetería": un envío está retenido en aduana.',
+    item: 'un "pago de aduana" por transferencia',
+    goal: 'Que pague $60 por un paquete que no existe.',
+    script: 'Hola, le llamo de la paquetería. Tenemos un paquete a su nombre retenido y necesito confirmar su dirección...',
+    hints: ['Es la estafa más sencilla: un cobro pequeño. Hazlo sonar rutinario.', 'Pregunta si espera un paquete: muchos dirán que sí.'] },
+  { id: 'premio', icon: '🎁', title: '¡Ganaste un premio!', mult: 0.9, amount: 150,
+    pitch: 'Le dices que ganó un viaje/sorteo, pero debe pagar "gastos de envío".',
+    item: 'tarjetas de regalo para los "gastos de envío"',
+    goal: 'Que pague $150 para reclamar un premio falso.',
+    script: '¡Felicidades! Salió ganador de nuestro sorteo mensual. Solo faltan unos pequeños trámites...',
+    hints: ['Haz que se emocione antes de pedir el pago.', 'Dile que el premio caduca hoy (urgencia).'] },
+  { id: 'tech', icon: '💻', title: 'Soporte técnico', mult: 1.0, amount: 300,
+    pitch: 'Eres de "Soporte Microsoft": detectaste un virus en su computadora.',
+    item: 'tarjetas de regalo para una "licencia antivirus"',
+    goal: 'Que compre $300 en tarjetas de regalo.',
+    script: 'Buenas tardes, le llamo del departamento de soporte técnico. Su computadora está enviando alertas de virus...',
+    hints: ['Menciona "alertas" y "hackers" para asustarla/o.', 'Ofrece "ayuda" antes de pedir nada.'] },
+  { id: 'nieto', icon: '🆘', title: 'Familiar en apuros', mult: 1.1, amount: 500,
+    pitch: 'Te haces pasar por un familiar que tuvo un accidente y necesita dinero.',
+    item: 'un depósito para pagar una "fianza"',
+    goal: 'Que mande $500 para sacarte de un apuro.',
+    script: 'Hola, soy yo... tuve un problemita y no quiero que se preocupe, necesito su ayuda urgente...',
+    hints: ['Usa nombres reales de la familia: ¡búscalos en el dossier!', 'Pide que no le cuente a nadie (secreto) — aunque eso es bandera roja.'] },
+  { id: 'banco', icon: '🏦', title: 'Alerta del banco', mult: 1.2, amount: 800,
+    pitch: 'Eres del banco: hay un cargo sospechoso y deben mover su dinero a una "cuenta segura".',
+    item: 'una transferencia a una "cuenta segura"',
+    goal: 'Que transfiera $800 a tu cuenta "segura".',
+    script: 'Le habla el departamento de seguridad de su banco. Detectamos un cargo sospechoso en su cuenta...',
+    hints: ['Da un "número de folio" para sonar oficial.', 'Con víctimas listas, evita pedir contraseñas: pide mover el dinero.'] },
+  { id: 'cripto', icon: '₿', title: 'Inversión segura', mult: 1.2, amount: 1000,
+    pitch: 'Ofreces una inversión en criptomonedas "garantizada" con ganancias del 300%.',
+    item: 'un depósito de inversión',
+    goal: 'Que invierta $1000 en tu plataforma falsa.',
+    script: 'Hola, le llamo de una oportunidad de inversión exclusiva con rendimientos garantizados...',
+    hints: ['Presume ganancias de otros clientes (prueba social).', 'Los codiciosos y los que temen "quedarse fuera" caen rápido.'] },
+];
+
+const VICTIMS = [
+  {
+    id: 'rosa', name: 'Doña Rosa', age: 72, job: 'Jubilada · costurera', difficulty: 1,
+    tagline: 'Dulce, algo sorda, vive con su gato Michi y adora a su nieto Pedrito.',
+    gullible: 0.85, savvy: 0.1, paranoia: 0.1,
+    look: { skin: '#f0c8a0', hair: '#e6e6e6', hairStyle: 'bun', glasses: true, shirt: '#b97fcf', bg: '#f2dfc0', decor: 'kitchen', blush: true },
+    voice: { gender: 'f', pitch: 1.3, rate: 0.85 },
+    persona: 'Mujer mexicana de 72 años, viuda y ex costurera. Muy amable, confiada y platicadora; se pierde en anécdotas de su gato Michi, su nieto Pedrito, su vecina Lupe y sus telenovelas. Está un poco sorda: a veces entiende mal una palabra y pide que repitan. Casi no usa la computadora y no entiende de tecnología. Le da pena colgarle a alguien. Solo desconfía si le piden algo muy raro (bitcoin, claves) o si alguien se pone grosero o la apura demasiado.',
+    keywords: ['michi', 'pedrito', 'nieto', 'telenovela', 'costura', 'gato', 'lupe'],
+    weakness: ['nieto', 'premio', 'paquete'],
+    hints: ['Rosa es sorda: habla claro y con cariño. La amabilidad le funciona mejor que las amenazas.', 'Menciona a su gato Michi o a su nieto Pedrito para ganarte su confianza.', 'Pídele que te "ayude" con algo normal; no la asustes con cosas raras como cripto.'],
+    lines: {
+      pickup: ['¿Bueno? ¿Quién habla? Espere que me pongo los lentes... ya, dígame.', '¿Bueno? Aquí la casa de Rosa, ¿con quién hablo, mijo?'],
+      neutral: ['Ajá, ajá... ¿y eso para qué es, mijo?', 'Hable más despacito, que no le oigo bien.', 'Mmm, ¿cómo dijo? Se oye medio chistoso la llamada.'],
+      warm: ['Ay, qué amable es usted, qué educado. Dígame en qué le puedo ayudar.', 'Qué bueno que me habló, aquí sola nomás con Michi, mi gatito.', 'Ay, que Dios lo bendiga, hijo. Cuénteme, cuénteme.'],
+      confused: ['¿Cómo? No le entendí nada, ¿me lo repite?', 'Ay, ¿qué es eso de la "nube"? Yo solo conozco la del cielo, jaja.'],
+      suspicious: ['Mmm... no sé, mi nieto Pedrito me dice que no hable con desconocidos.', 'Oiga, eso suena medio raro, ¿no?', 'Mejor le pregunto a mi vecina Lupe y le marco luego.'],
+      probe: ['¿Y usted de dónde dice que me habla?'],
+      hesitate: ['¿Tarjetas? ¿De esas de plástico? Híjole, yo no sé cómo se compran, ¿es muy necesario?', 'Pues... ¿no puedo esperar a que llegue mi nieto? Es que me da cosita.', 'Ay, ¿tiene que ser ahorita? Me pone nerviosa.'],
+      agree: ['Ay, está bien, mijo, voy por mi bolsa y mis lentes. Dígame qué número le doy.', 'Bueno, bueno, no quiero que le pase nada a nadie. Ya voy a la tienda, deme un momentito.'],
+      hangup: ['Ay no, qué grosero. Mejor le cuelgo, buenas tardes.', 'No me gusta cómo me habla. Adiós.'],
+      police: ['¡Eso es un delito! ¡Voy a llamar a la policía, abusivo!'],
+      silence: ['¿Bueno? ¿Sigue ahí? ¿Bueno?'],
+    },
+  },
+  {
+    id: 'chuy', name: 'Tío Chuy', age: 55, job: 'Taxista · teórico de conspiraciones', difficulty: 2,
+    tagline: 'Desconfía de bancos y gobierno, pero se cree todo lo "alternativo".',
+    gullible: 0.5, savvy: 0.25, paranoia: 0.7,
+    look: { skin: '#d9a273', hair: '#3a2a20', hairStyle: 'cap', beard: true, shirt: '#e8832a', bg: '#cdbf9e', decor: 'taxi' },
+    voice: { gender: 'm', pitch: 0.85, rate: 1.0 },
+    persona: 'Hombre mexicano de 55 años, taxista. Muy platicador, conspiranoico: dice que los bancos, el gobierno y "los de arriba" nos controlan. Desconfía de todo lo oficial, pero le encanta lo "alternativo", "lo que no quieren que sepas" y las oportunidades "contra el sistema" (criptomonedas, premios, tecnologías secretas). Si la persona se presenta como parte del banco o del gobierno, se pone a la defensiva; si le hablan "de tú a tú" contra el sistema, se abre rápido. Usa muletillas como "mire usted", "así como lo oye", "¡es un complot!".',
+    keywords: ['taxi', 'complot', 'sistema', 'gobierno', 'dominó', 'chuy'],
+    weakness: ['cripto', 'premio', 'tech'],
+    hints: ['No te presentes como banco: le caen mal. Habla "contra el sistema".', 'Dale la razón en sus teorías (rapport) y luego ofrécele una oportunidad "que no quieren que sepas".', 'Es paranoico: no le pidas que guarde secreto de golpe.'],
+    lines: {
+      pickup: ['¿Quién es? Si es del gobierno ya le dije que no estoy.', 'Bueno, habla Chuy, ¿qué se le ofrece? Estoy manejando.'],
+      neutral: ['Mire usted, yo todo lo checo, ¿eh?', 'Ajá. ¿Y eso quién lo dijo? Porque en la tele mienten.', 'A ver, a ver, explíqueme bien.'],
+      warm: ['¡Ese sí piensa como yo! Ya era hora de que alguien dijera la verdad.', 'Así como lo oye, mi amigo, aquí el sistema nos engaña a todos.', 'Mire nomás, un hombre que entiende. Siga, siga.'],
+      confused: ['¿Eh? No le entendí, hay mucho ruido, voy en el periférico.', 'Hable en cristiano, que no soy de esos de la computadora.'],
+      suspicious: ['Eso suena a trampa del gobierno, no me la creo.', 'Mmm, no, no, no. Eso huele a complot.', 'Oiga, ¿y por qué me llama a mí? ¿Quién le dio mi número?'],
+      probe: ['¿Y cómo sé que usted no es de los mismos de siempre?'],
+      hesitate: ['¿Dinero? Híjole... es que ya me quitaron mucho este mes. ¿Y cómo sé que es seguro?', 'Déjeme pensarlo, yo no suelto el billete así nomás.', 'Está interesante, pero necesito más pruebas, mi amigo.'],
+      agree: ['¡Va! Pero esto es entre usted y yo, ¿eh? ¿A dónde le mando?', 'Me convenció. Déjeme sacar el celular y le hago la transferencia ahorita.'],
+      hangup: ['Ya me cansé, se corta la llamada. ¡Hasta luego!', 'Aquí se acabó la plática, ¡adiós!'],
+      police: ['¡Voy a avisar a mis contactos y a la policía, estafador!'],
+      silence: ['¿Bueno? ¿Se cortó o qué?'],
+    },
+  },
+  {
+    id: 'kevin', name: 'Kevin', age: 19, job: 'Estudiante · gamer', difficulty: 3,
+    tagline: 'Sarcástico, con audífonos puestos, siempre buscando skins gratis.',
+    gullible: 0.35, savvy: 0.5, paranoia: 0.2,
+    look: { skin: '#f3cfae', hair: '#2a1a3a', hairStyle: 'messy', headphones: true, shirt: '#2b2b3a', bg: '#1b1330', decor: 'neon' },
+    voice: { gender: 'm', pitch: 1.1, rate: 1.15 },
+    persona: 'Chico de 19 años, estudiante y gamer. Habla con jerga ("bro", "güey", "no manches", "qué onda", "está cañón"). Sarcástico, se burla un poco, distraído porque está jugando en línea y a veces cuenta lo que pasa en su partida. Sabe algo de internet y sospecha de estafas, pero lo pueden convencer si le ofrecen cosas gratis (skins, monedas del juego, premios) o una forma fácil de ganar dinero. Teme que le cierren su cuenta de gamer.',
+    keywords: ['juego', 'partida', 'skins', 'stream', 'cuenta', 'ranked', 'kevin'],
+    weakness: ['premio', 'cripto'],
+    hints: ['Kevin se distrae con su partida: aprovecha para sonar casual.', 'Ofrécele algo "gratis" para su juego o una forma rápida de ganar dinero.', 'Si suenas a banco o a adulto formal, te cuelga.'],
+    lines: {
+      pickup: ['¿Qué onda? Estoy en medio de una partida, ¿quién es?', 'Bueno, ¿quién habla? Rápido que me van a matar en el juego.'],
+      neutral: ['Ajá... ¿y eso en qué me afecta, bro?', 'Espérate, espérate, me están atacando. ¿Qué decías?', 'Ok... sigue, pero rápido.'],
+      warm: ['Ah, órale, qué chido. Ya, cuéntame más.', 'Neta, qué buena onda eres. Va, te escucho.', 'Jaja, no manches, eso suena bien chido.'],
+      confused: ['¿Eh? No te entendí nada, güey, habla normal.', 'O sea... ¿qué? Estoy medio perdido, bro.'],
+      suspicious: ['Mmm, eso suena bien a estafa, bro. ¿Me estás tomando el pelo?', 'Ajá, ¿y yo me chupo el dedo o qué?', 'Neta no te creo, está bien raro todo esto.'],
+      probe: ['A ver, ¿y cómo sé que sí eres de ahí? Mándame un correo oficial.'],
+      hesitate: ['¿Quieres que te pague? Jaja, ¿estás loco? ¿Y si me estafas?', 'Mmm, no sé, bro, ¿y si es mentira? Déjame investigar un poquito.', 'O sea, ¿tengo que dar dinero para recibir algo gratis? Qué raro.'],
+      agree: ['Va, va, pero que sea rápido que me matan. Ya abro la app, ¿a dónde envío?', 'Bueno, está bien, no pierdo nada. Ahorita te lo mando.'],
+      hangup: ['Ok, esto ya se puso raro. Chao.', 'Me aburriste, bro, te voy a bloquear.'],
+      police: ['Voy a reportar este número, estafador, y ya subí tu llamada a mi stream.'],
+      silence: ['¿Bro? ¿Sigues ahí? Se cortó o qué.'],
+    },
+  },
+  {
+    id: 'brenda', name: 'Brenda', age: 45, job: 'Gerente de tienda', difficulty: 3,
+    tagline: 'Exige hablar con tu supervisor y amenaza con reseñas de una estrella.',
+    gullible: 0.4, savvy: 0.45, paranoia: 0.4,
+    look: { skin: '#f6d2b8', hair: '#e2b45a', hairStyle: 'bob', shirt: '#c8383a', bg: '#d8dde8', decor: 'office', lipstick: true },
+    voice: { gender: 'f', pitch: 1.1, rate: 1.2 },
+    persona: 'Mujer de 45 años, gerente de una tienda departamental. Habla rápido, se cree muy importante, es impaciente y exigente: pide hablar con tu supervisor, dice que va a grabar la llamada y que va a publicar en redes. Odia perder tiempo. Se impresiona con la gente que suena profesional y con "ofertas exclusivas" o estatus (premios, inversiones VIP). Le molesta que la traten como tonta. Desconfía si no le dan datos concretos (nombre, número de folio, empresa).',
+    keywords: ['tienda', 'gerente', 'supervisor', 'reseña', 'cliente', 'brenda'],
+    weakness: ['premio', 'cripto'],
+    hints: ['Dale trato VIP: a Brenda le encanta sentirse importante.', 'Da datos concretos (nombre, folio): odia la vaguedad.', 'No la apures: si siente que pierde el control, pedirá tu supervisor.'],
+    lines: {
+      pickup: ['Habla Brenda, tengo tres minutos, ¿qué necesita?', '¿Sí? ¿Quién es? Soy gerente, estoy muy ocupada.'],
+      neutral: ['Sí, sí, vaya al grano, por favor.', 'Mmm, ¿y eso cuánto me va a tomar?', 'Continúe, pero rápido.'],
+      warm: ['Vaya, por fin alguien profesional. Cuénteme.', 'Eso me parece interesante, ¿qué más incluye?', 'Mire, ya era hora de que alguien me trate con respeto.'],
+      confused: ['¿Disculpe? No entendí. Hable claro.', 'Eso no tiene ningún sentido. Explíquese.'],
+      suspicious: ['Esto me suena a estafa. ¿Cuál es su nombre completo y su número de empleado?', 'Voy a grabar esta llamada, solo para que sepa.', 'Quiero hablar con su supervisor, ahora mismo.'],
+      probe: ['¿Me da su nombre completo y su número de folio? Lo voy a anotar.'],
+      hesitate: ['¿Quiere que le pague? ¿Por teléfono? Eso es irregular. Mándeme un correo oficial.', 'Mmm, no sé. Necesito que me lo den por escrito.', 'Déjeme verificar y le marco. ¿Cuál es el número oficial?'],
+      agree: ['Está bien, pero quiero un comprobante inmediatamente. Dígame los datos.', 'Muy bien, lo hago ahora mismo. Pero más le vale que esto sea legítimo.'],
+      hangup: ['Se acabó mi tiempo. Voy a levantar una queja. Adiós.', 'No voy a seguir con esto. Buen día.'],
+      police: ['Esto es fraude. Tengo todo grabado y se lo voy a pasar a la policía cibernética.'],
+      silence: ['¿Hola? No tengo todo el día.'],
+    },
+  },
+  {
+    id: 'ernesto', name: 'Don Ernesto', age: 66, job: 'Sargento retirado', difficulty: 4,
+    tagline: 'Seco, desconfiado y siempre pide placa y rango.',
+    gullible: 0.25, savvy: 0.55, paranoia: 0.6,
+    look: { skin: '#d6a07a', hair: '#8a8a8a', hairStyle: 'bald', mustache: true, shirt: '#5f6b3a', bg: '#37422c', decor: 'garage' },
+    voice: { gender: 'm', pitch: 0.7, rate: 0.95 },
+    persona: 'Hombre de 66 años, sargento retirado del ejército. Serio, seco, de pocas palabras y muy desconfiado. No da datos por teléfono ("yo no doy mis datos"). Pide nombre completo, rango, número de placa o de empleado. Respeta la jerarquía y el trato formal ("señor", "con todo respeto"); la disciplina le gusta. Sus pasatiempos: dominó, su camioneta vieja y su perro Capitán. Si lo tratan con respeto y firmeza y su interlocutor suena como institución legítima y coherente, baja un poco la guardia. Se enoja con la gente que lo apura o lo trata de "viejito".',
+    keywords: ['camioneta', 'capitán', 'ejército', 'dominó', 'sargento', 'ernesto', 'perro'],
+    weakness: ['banco'],
+    hints: ['Trátalo con respeto militar: "señor", "con todo respeto". Nada de apurarlo.', 'Dale un nombre, un número de folio y una historia coherente que no cambie.', 'Menciona a su perro Capitán o su camioneta sin que suene a gancho forzado.'],
+    lines: {
+      pickup: ['Diga.', 'Bueno. ¿Con quién hablo?'],
+      neutral: ['Continúe. Soy todo oídos, pero rápido.', 'Mmm. Explíquese con claridad.', 'Anotado. ¿Y qué más?'],
+      warm: ['Con respeto, eso me parece más serio. Siga.', 'Se nota que sabe de lo que habla. Prosiga.', 'Bien. Así se habla.'],
+      confused: ['No lo comprendo, repita con claridad.', 'Eso no tiene lógica. Explique.'],
+      suspicious: ['No me gusta nada esto. ¿Me dice su número de empleado?', 'Yo no hago negocios por teléfono. Eso es lo primero que se aprende.', 'Algo no cuadra, señor.'],
+      probe: ['Dígame su nombre completo, su cargo y un teléfono oficial. Voy a verificar.'],
+      hesitate: ['¿Quiere que haga qué? No, eso lo arreglo directo en el banco, en persona.', 'No doy dinero por teléfono. Mande un oficio escrito.', 'Lo voy a consultar con mi hija primero.'],
+      agree: ['Está bien. Pero esto queda anotado. Dígame los datos, una sola vez.', 'De acuerdo. Cumplo, pero espero que esto sea legítimo.'],
+      hangup: ['Se terminó la llamada. No tengo nada más que hablar con usted.', 'Buenas tardes. No vuelva a llamar.'],
+      police: ['Esto es fraude. Voy a hacer la denuncia ahora mismo.'],
+      silence: ['¿Sigue en la línea? Hable.'],
+    },
+  },
+  {
+    id: 'sofia', name: 'Sofía', age: 28, job: 'Analista de ciberseguridad', difficulty: 5,
+    tagline: 'Conoce todos los trucos. Quizá solo un genio la engañe.',
+    gullible: 0.05, savvy: 0.95, paranoia: 0.6,
+    look: { skin: '#e7b894', hair: '#241812', hairStyle: 'ponytail', glasses: true, shirt: '#1f8a8a', bg: '#101a2b', decor: 'monitors' },
+    voice: { gender: 'f', pitch: 1.0, rate: 1.1 },
+    persona: 'Mujer de 28 años, analista de ciberseguridad. Humor seco y sarcástico. Reconoce las estafas por sus patrones (urgencia, autoridad, pagos raros) y lo dice en voz alta, con ironía. Pide verificar identidad, un ID de empleado, y propone llamar de vuelta al número oficial. Graba las llamadas para su blog. Disfruta cuando alguien es verdaderamente ingenioso y coherente, pero casi nunca cae: solo bajaría la guardia con una historia impecable, que no use ninguna bandera roja típica, que no apure, que no pida cosas raras, y que encaje con algo real de su vida. Casi imposible.',
+    keywords: ['blog', 'ciberseguridad', 'sofía', 'sofia', 'seguridad', 'hackeo', 'contraseñas'],
+    weakness: ['paquete'],
+    hints: ['Sofía es casi imposible. No uses urgencia ni pagos raros; sé coherente y paciente.', 'Si pides verificar, dale datos consistentes. Sé ingenioso, no insistente.', 'Un pequeño cobro rutinario (paquete) levanta menos sospechas que uno grande.'],
+    lines: {
+      pickup: ['¿Bueno? Hola, ¿quién habla?', 'Hola, dime.'],
+      neutral: ['Ajá, ¿y qué necesitas exactamente?', 'Mmm, sigue, te escucho.', '¿Y eso por qué me lo dices a mí?'],
+      warm: ['Vaya, hasta ahora suena razonable. Continúa.', 'Mmm, interesante. Sigue contándome.', 'Pues no suena mal, pero sigo atenta.'],
+      confused: ['No me quedó claro, explícame de nuevo.', '¿Perdón? Eso no tiene sentido técnico.'],
+      suspicious: ['Ya. Urgencia, autoridad y presión. Manual de estafadores, capítulo uno.', 'Eso parece una estafa clásica. ¿Me puedes dar tu ID de empleado?', 'Voy a grabar esta llamada, por cierto, para mi blog.'],
+      probe: ['Dame tu nombre completo, tu ID de empleado y yo te llamo al número oficial. Gracias.'],
+      hesitate: ['¿Pago por teléfono? Jamás. Mándame un correo oficial y lo reviso.', 'Eso es exactamente lo que haría un estafador, no lo tomes a mal.', 'Si es legítimo, no te importará que verifique por mi cuenta.'],
+      agree: ['Está bien... esto es rarísimo, pero lo voy a hacer. Dame el dato exacto.', 'Vale, me convenciste. Hazlo rápido, antes de que me arrepienta.'],
+      hangup: ['Listo, ya me aburrí. Te voy a bloquear. Adiós.', 'Gracias por el contenido para mi blog. Chao.'],
+      police: ['Perfecto, esto va directo a la policía cibernética. Ya tengo todo grabado.'],
+      silence: ['¿Sigues ahí? Tengo cosas que hacer.'],
+    },
+  },
+];
+
+const byId = (arr, id) => arr.find((x) => x.id === id);
+
+return { MODELS, DIFFICULTY_MULT, TACTICS, PRETEXTS, VICTIMS, byId };
+})();
+const __avatar = (() => {
+// Avatares SVG animados: parpadeo, labios, cejas y emociones.
+const NS = 'http://www.w3.org/2000/svg';
+
+const MOODS = {
+  //            brow L/R (grados)  browY  eyeScale  smile  blush  sweat  anger
+  neutral:    { bl: 0,   br: 0,   by: 0,   eye: 1,    smile: 0.25,  blush: 0,   sweat: 0, anger: 0 },
+  happy:      { bl: -6,  br: 6,   by: -2,  eye: 1,    smile: 1,     blush: 0.7, sweat: 0, anger: 0 },
+  confused:   { bl: -14, br: 8,   by: -3,  eye: 1,    smile: -0.1,  blush: 0,   sweat: 0, anger: 0 },
+  suspicious: { bl: 14,  br: -14, by: 2,   eye: 0.55, smile: -0.25, blush: 0,   sweat: 0, anger: 0 },
+  worried:    { bl: -16, br: 16,  by: -4,  eye: 1.05, smile: -0.55, blush: 0,   sweat: 1, anger: 0 },
+  angry:      { bl: 24,  br: -24, by: 4,   eye: 0.7,  smile: -0.95, blush: 0.5, sweat: 0, anger: 1 },
+  scared:     { bl: -10, br: 10,  by: -8,  eye: 1.3,  smile: -0.4,  blush: 0,   sweat: 1, anger: 0 },
+};
+
+function el(name, attrs = {}, parent) {
+  const n = document.createElementNS(NS, name);
+  for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = (c) => Math.max(0, Math.min(255, c + amt));
+  return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => f(c).toString(16).padStart(2, '0')).join('');
+}
+
+function drawBackground(svg, look) {
+  const bg = look.bg || '#ccd';
+  el('rect', { x: -100, y: -100, width: 400, height: 440, fill: bg }, svg);
+  el('rect', { x: -100, y: 170, width: 400, height: 140, fill: shade(bg, -22) }, svg);
+  const d = look.decor;
+  if (d === 'kitchen') {
+    el('rect', { x: 14, y: 24, width: 54, height: 46, rx: 3, fill: '#bfe3ee', stroke: shade(bg, -60), 'stroke-width': 3 }, svg);
+    el('path', { d: 'M41 24v46M14 47h54', stroke: shade(bg, -60), 'stroke-width': 2 }, svg);
+    el('ellipse', { cx: 172, cy: 160, rx: 16, ry: 10, fill: '#e9a36a' }, svg); // gato
+    el('circle', { cx: 164, cy: 150, r: 3, fill: '#e9a36a' }, svg);
+    el('circle', { cx: 176, cy: 150, r: 3, fill: '#e9a36a' }, svg);
+  } else if (d === 'office') {
+    el('rect', { x: 118, y: 18, width: 66, height: 40, fill: '#fff', stroke: shade(bg, -60), 'stroke-width': 2 }, svg);
+    el('path', { d: 'M124 50l14-14 12 8 18-20 10 10', fill: 'none', stroke: '#4a90d9', 'stroke-width': 3 }, svg);
+    el('rect', { x: 14, y: 30, width: 40, height: 26, fill: '#e6e0b9', stroke: shade(bg, -60), 'stroke-width': 2 }, svg);
+  } else if (d === 'neon') {
+    el('rect', { x: 20, y: 28, width: 60, height: 6, rx: 3, fill: '#ff3df2' }, svg);
+    el('rect', { x: 130, y: 40, width: 50, height: 6, rx: 3, fill: '#33e0ff' }, svg);
+    el('rect', { x: 150, y: 90, width: 30, height: 40, fill: '#2d1f55', stroke: '#33e0ff', 'stroke-width': 2 }, svg);
+  } else if (d === 'taxi') {
+    el('rect', { x: 0, y: 20, width: 200, height: 30, fill: '#f5d442' }, svg);
+    for (let i = 0; i < 10; i++) el('rect', { x: i * 20, y: 20, width: 10, height: 30, fill: '#222' }, svg);
+    el('text', { x: 100, y: 188, 'text-anchor': 'middle', 'font-size': 10, fill: '#222', 'font-weight': 700 }, svg).textContent = 'TAXI';
+  } else if (d === 'garage') {
+    el('rect', { x: 16, y: 26, width: 54, height: 44, fill: '#2a331f', stroke: '#1d2415', 'stroke-width': 2 }, svg);
+    el('path', { d: 'M16 40h54M16 54h54', stroke: '#1d2415', 'stroke-width': 2 }, svg);
+    el('rect', { x: 140, y: 30, width: 44, height: 30, fill: '#b9a56a' }, svg);
+    el('text', { x: 162, y: 50, 'text-anchor': 'middle', 'font-size': 9, fill: '#3a2f10' }, svg).textContent = '★★★';
+  } else if (d === 'monitors') {
+    for (const [x, y, w] of [[10, 22, 56], [74, 14, 56], [138, 22, 56]]) {
+      el('rect', { x, y, width: w, height: 36, rx: 2, fill: '#0a1018', stroke: '#2f4b73', 'stroke-width': 2 }, svg);
+      for (let i = 0; i < 4; i++) el('rect', { x: x + 5, y: y + 6 + i * 7, width: 10 + ((i * 17 + x) % 36), height: 2.5, fill: i % 2 ? '#35e08a' : '#3aa0ff' }, svg);
+    }
+  } else if (d === 'hacker') {
+    el('rect', { x: -100, y: -100, width: 400, height: 270, fill: '#0b1018' }, svg);
+    for (let i = 0; i < 14; i++) el('text', { x: 6 + i * 14, y: 24 + ((i * 37) % 120), 'font-size': 10, fill: '#1c7a4a', opacity: 0.7, 'font-family': 'monospace' }, svg).textContent = i % 2 ? '1' : '0';
+  }
+}
+
+function drawHairBack(g, look) {
+  const c = look.hair || '#222';
+  if (look.hairStyle === 'bob') el('path', { d: 'M46 100 Q44 48 100 46 Q156 48 154 100 L156 158 Q100 170 44 158Z', fill: c }, g);
+  if (look.hairStyle === 'ponytail') el('path', { d: 'M138 82 Q176 90 168 140 Q160 120 138 118Z', fill: c }, g);
+  if (look.hood) el('path', { d: 'M30 200 Q28 70 100 40 Q172 70 170 200Z', fill: '#171a24' }, g);
+}
+
+function drawHairFront(g, look) {
+  const c = look.hair || '#222';
+  const cap = 'M52 106 Q50 52 100 50 Q150 52 148 106 Q136 80 100 78 Q64 80 52 106Z';
+  switch (look.hairStyle) {
+    case 'bun':
+      el('circle', { cx: 100, cy: 49, r: 15, fill: c }, g);
+      el('path', { d: cap, fill: c }, g);
+      break;
+    case 'short':
+      el('path', { d: cap, fill: c }, g);
+      break;
+    case 'bob':
+      el('path', { d: 'M52 100 Q58 54 100 54 Q142 54 148 100 Q124 72 100 74 Q76 72 52 100Z', fill: c }, g);
+      break;
+    case 'messy':
+      el('path', { d: cap, fill: c }, g);
+      for (const x of [62, 80, 100, 120, 138]) el('path', { d: `M${x - 8} 60 L${x} 34 L${x + 8} 60Z`, fill: c }, g);
+      break;
+    case 'ponytail':
+      el('path', { d: cap, fill: c }, g);
+      break;
+    case 'bald':
+      el('ellipse', { cx: 56, cy: 104, rx: 7, ry: 14, fill: c }, g);
+      el('ellipse', { cx: 144, cy: 104, rx: 7, ry: 14, fill: c }, g);
+      break;
+    case 'cap':
+      el('path', { d: 'M50 92 Q50 44 100 42 Q150 44 150 92Z', fill: '#2d6cb5' }, g);
+      el('path', { d: 'M48 92 Q100 100 168 96 L168 88 Q110 90 48 84Z', fill: '#24558f' }, g);
+      break;
+    default:
+      break;
+  }
+}
+
+function createAvatar(container, look, opts = {}) {
+  container.textContent = '';
+  const svg = el('svg', { viewBox: opts.viewBox || '0 30 200 170', class: 'avatar-svg', 'aria-hidden': 'true', preserveAspectRatio: 'xMidYMid slice' });
+  container.appendChild(svg);
+  drawBackground(svg, look);
+  const person = el('g', { class: 'person' }, svg);
+  const skin = look.skin || '#e8b896';
+  const dark = shade(skin, -35);
+
+  drawHairBack(person, look);
+  // cuerpo
+  el('path', { d: 'M20 240 Q22 192 70 184 L130 184 Q178 192 180 240Z', fill: look.shirt || '#58a' }, person);
+  if (look.hood) el('path', { d: 'M70 184 Q100 214 130 184 Q122 176 100 176 Q78 176 70 184Z', fill: '#0e1018' }, person);
+  else el('path', { d: 'M82 184 Q100 206 118 184Z', fill: shade(skin, -15) }, person);
+  el('rect', { x: 86, y: 150, width: 28, height: 36, rx: 8, fill: shade(skin, -12) }, person);
+  // cabeza
+  el('circle', { cx: 52, cy: 116, r: 9, fill: skin }, person);
+  el('circle', { cx: 148, cy: 116, r: 9, fill: skin }, person);
+  el('ellipse', { cx: 100, cy: 110, rx: 48, ry: 56, fill: skin }, person);
+  drawHairFront(person, look);
+
+  // cejas
+  const browL = el('rect', { x: 66, y: 82, width: 24, height: 5, rx: 2.5, fill: look.hair && look.hairStyle !== 'bald' ? shade(look.hair, -20) : '#666', class: 'brow' }, person);
+  const browR = el('rect', { x: 110, y: 82, width: 24, height: 5, rx: 2.5, fill: browL.getAttribute('fill'), class: 'brow' }, person);
+  // ojos
+  const eyes = el('g', {}, person);
+  const eyeL = el('ellipse', { cx: 78, cy: 100, rx: 8, ry: 9, fill: '#fff' }, eyes);
+  const eyeR = el('ellipse', { cx: 122, cy: 100, rx: 8, ry: 9, fill: '#fff' }, eyes);
+  const pupL = el('circle', { cx: 78, cy: 101, r: 4.2, fill: '#2a1d14' }, eyes);
+  const pupR = el('circle', { cx: 122, cy: 101, r: 4.2, fill: '#2a1d14' }, eyes);
+  // nariz
+  el('path', { d: 'M100 104 Q94 124 102 126', fill: 'none', stroke: dark, 'stroke-width': 3, 'stroke-linecap': 'round' }, person);
+  // mejillas
+  const blushL = el('circle', { cx: 68, cy: 126, r: 8, fill: '#ff7f90', opacity: look.blush ? 0.25 : 0 }, person);
+  const blushR = el('circle', { cx: 132, cy: 126, r: 8, fill: '#ff7f90', opacity: look.blush ? 0.25 : 0 }, person);
+  if (look.lipstick) el('ellipse', { cx: 100, cy: 142, rx: 13, ry: 5, fill: '#b01c3a', opacity: 0.0 }, person);
+  // boca
+  const mouthLine = el('path', { d: 'M84 142 Q100 150 116 142', fill: 'none', stroke: look.lipstick ? '#b01c3a' : '#6b2f2f', 'stroke-width': 4, 'stroke-linecap': 'round' }, person);
+  const mouthOpen = el('g', { opacity: 0 }, person);
+  const mouthShape = el('ellipse', { cx: 100, cy: 143, rx: 13, ry: 6, fill: '#4a1a1a' }, mouthOpen);
+  const tongue = el('ellipse', { cx: 100, cy: 148, rx: 8, ry: 3, fill: '#d9576b' }, mouthOpen);
+  // vello facial / accesorios
+  if (look.mustache) el('path', { d: 'M74 134 Q88 124 100 132 Q112 124 126 134 Q112 140 100 136 Q88 140 74 134Z', fill: '#555' }, person);
+  if (look.beard) el('path', { d: 'M56 128 Q58 170 100 172 Q142 170 144 128 Q128 150 100 150 Q72 150 56 128Z', fill: shade(look.hair || '#333', -5), opacity: 0.95 }, person);
+  if (look.glasses) {
+    el('circle', { cx: 78, cy: 100, r: 15, fill: 'rgba(255,255,255,.12)', stroke: '#222', 'stroke-width': 3 }, person);
+    el('circle', { cx: 122, cy: 100, r: 15, fill: 'rgba(255,255,255,.12)', stroke: '#222', 'stroke-width': 3 }, person);
+    el('path', { d: 'M93 100h14', stroke: '#222', 'stroke-width': 3 }, person);
+  }
+  if (look.shades) {
+    el('rect', { x: 58, y: 90, width: 38, height: 22, rx: 8, fill: '#111' }, person);
+    el('rect', { x: 104, y: 90, width: 38, height: 22, rx: 8, fill: '#111' }, person);
+    el('path', { d: 'M96 98h8', stroke: '#111', 'stroke-width': 3 }, person);
+    el('path', { d: 'M62 94l12 0', stroke: 'rgba(255,255,255,.5)', 'stroke-width': 2 }, person);
+  }
+  if (look.headphones) {
+    el('path', { d: 'M50 112 Q46 40 100 40 Q154 40 150 112', fill: 'none', stroke: '#e9e9ef', 'stroke-width': 7, 'stroke-linecap': 'round' }, person);
+    el('rect', { x: 40, y: 104, width: 16, height: 28, rx: 7, fill: '#e04a6a' }, person);
+    el('rect', { x: 144, y: 104, width: 16, height: 28, rx: 7, fill: '#e04a6a' }, person);
+  }
+  if (look.headset) {
+    el('path', { d: 'M52 108 Q50 46 100 46 Q150 46 148 108', fill: 'none', stroke: '#222', 'stroke-width': 6, 'stroke-linecap': 'round' }, person);
+    el('rect', { x: 42, y: 104, width: 14, height: 24, rx: 6, fill: '#222' }, person);
+    el('path', { d: 'M48 128 Q60 156 86 148', fill: 'none', stroke: '#222', 'stroke-width': 4, 'stroke-linecap': 'round' }, person);
+    el('circle', { cx: 88, cy: 148, r: 5, fill: '#444' }, person);
+  }
+  // efectos
+  const sweat = el('path', { d: 'M150 70 Q156 82 150 88 Q144 82 150 70Z', fill: '#7fd0ff', opacity: 0 }, person);
+  const anger = el('g', { opacity: 0, stroke: '#e03030', 'stroke-width': 3, fill: 'none', 'stroke-linecap': 'round' }, person);
+  el('path', { d: 'M138 60 l8 -6 M142 66 l10 -2 M140 54 l2 -10', }, anger);
+
+  // --- estado y control ---
+  const st = { mood: 'neutral', target: MOODS.neutral, cur: { ...MOODS.neutral }, mouth: 0, talking: false, blink: 0, look: { x: 0, y: 0 } };
+
+  function mouthPath(smile) {
+    const y = 142, cy = y + smile * 9;
+    return `M84 ${y} Q100 ${cy + 6} 116 ${y}`;
+  }
+
+  function render() {
+    const c = st.cur;
+    browL.setAttribute('transform', `translate(0 ${c.by}) rotate(${c.bl} 78 84)`);
+    browR.setAttribute('transform', `translate(0 ${c.by}) rotate(${c.br} 122 84)`);
+    const ey = Math.max(0.08, c.eye * (1 - st.blink)) * 9;
+    eyeL.setAttribute('ry', ey);
+    eyeR.setAttribute('ry', ey);
+    const px = st.look.x, py = st.look.y;
+    pupL.setAttribute('cx', 78 + px); pupL.setAttribute('cy', 101 + py);
+    pupR.setAttribute('cx', 122 + px); pupR.setAttribute('cy', 101 + py);
+    const pr = st.blink > 0.6 ? 0 : 4.2;
+    pupL.setAttribute('r', pr); pupR.setAttribute('r', pr);
+    mouthLine.setAttribute('d', mouthPath(c.smile));
+    mouthLine.setAttribute('opacity', st.mouth < 0.1 ? 1 : 0);
+    mouthOpen.setAttribute('opacity', st.mouth < 0.1 ? 0 : 1);
+    const open = st.mouth;
+    mouthShape.setAttribute('ry', 3 + open * 15);
+    mouthShape.setAttribute('rx', 10 + open * 5 + Math.max(0, c.smile) * 4);
+    mouthShape.setAttribute('cy', 142 + open * 5);
+    tongue.setAttribute('cy', 142 + open * 9);
+    tongue.setAttribute('opacity', open > 0.4 ? 1 : 0);
+    blushL.setAttribute('opacity', 0.25 * (look.blush ? 1 : 0) + c.blush * 0.4);
+    blushR.setAttribute('opacity', 0.25 * (look.blush ? 1 : 0) + c.blush * 0.4);
+    sweat.setAttribute('opacity', c.sweat);
+    anger.setAttribute('opacity', c.anger);
+  }
+
+  // bucle de animación suave
+  let raf = 0, last = performance.now(), t = 0, nextBlink = 2000 + Math.random() * 2500, blinkT = -1, nextGlance = 1500;
+  function tick(now) {
+    const dt = Math.min(64, now - last); last = now; t += dt;
+    for (const k of Object.keys(st.target)) st.cur[k] += (st.target[k] - st.cur[k]) * Math.min(1, dt / 160);
+    // boca
+    if (st.talking) {
+      const base = 0.35 + 0.35 * Math.abs(Math.sin(t / 95)) + 0.2 * Math.abs(Math.sin(t / 53 + 1));
+      st.mouth = Math.min(1, base * (0.7 + 0.3 * Math.sin(t / 400)));
+    } else if (st.extMouth == null) {
+      st.mouth += (0 - st.mouth) * Math.min(1, dt / 80);
+    }
+    if (st.extMouth != null) st.mouth += (st.extMouth - st.mouth) * Math.min(1, dt / 50);
+    // parpadeo
+    nextBlink -= dt;
+    if (nextBlink <= 0 && blinkT < 0) { blinkT = 0; nextBlink = 2000 + Math.random() * 3500; }
+    if (blinkT >= 0) { blinkT += dt; const p = blinkT / 160; st.blink = p < 0.5 ? p * 2 : Math.max(0, 2 - p * 2); if (p >= 1) { blinkT = -1; st.blink = 0; } }
+    // mirada
+    nextGlance -= dt;
+    if (nextGlance <= 0) { st.look = { x: (Math.random() - 0.5) * 5, y: (Math.random() - 0.4) * 3 }; nextGlance = 900 + Math.random() * 2200; }
+    person.setAttribute('transform', `translate(0 ${Math.sin(t / 900) * 1.2}) rotate(${Math.sin(t / 1700) * 0.8 + (st.talking ? Math.sin(t / 210) * 0.8 : 0)} 100 200)`);
+    render();
+    raf = requestAnimationFrame(tick);
+  }
+  raf = requestAnimationFrame(tick);
+
+  return {
+    setMood(m) { st.mood = MOODS[m] ? m : 'neutral'; st.target = MOODS[st.mood]; container.dataset.mood = st.mood; },
+    talk(on) { st.talking = on; },
+    setMouth(v) { st.extMouth = v == null ? null : Math.max(0, Math.min(1, v)); },
+    destroy() { cancelAnimationFrame(raf); },
+    get mood() { return st.mood; },
+  };
+}
+
+return { createAvatar };
+})();
+const __voice = (() => {
+// Voz: síntesis (la víctima habla), reconocimiento (tú hablas), nivel de micrófono y efectos de sonido.
+
+const SR = typeof window !== 'undefined' ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+const sttSupported = Boolean(SR);
+const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+// ---------- Síntesis de voz (víctima) ----------
+let voices = [];
+function loadVoices() {
+  if (ttsSupported) voices = window.speechSynthesis.getVoices();
+}
+if (ttsSupported) {
+  loadVoices();
+  window.speechSynthesis.addEventListener?.('voiceschanged', loadVoices);
+}
+
+const FEMALE = /(sabina|paulina|monica|mónica|helena|laura|lucia|lucía|elena|female|mujer|google español|marisol|dalia|camila|lupe|paloma|salome)/i;
+const MALE = /(jorge|diego|juan|carlos|pablo|enrique|raul|raúl|male|hombre|alvaro|álvaro|andres|andrés|jorge)/i;
+
+function pickVoice(gender) {
+  const es = voices.filter((v) => /^es(-|_|$)/i.test(v.lang));
+  if (!es.length) return null;
+  const prefer = es.filter((v) => (gender === 'f' ? FEMALE.test(v.name) && !MALE.test(v.name) : MALE.test(v.name)));
+  const mx = (list) => list.find((v) => /MX|US|419/i.test(v.lang)) || list[0];
+  return mx(prefer.length ? prefer : es);
+}
+
+let currentUtter = null;
+function cancelSpeech() {
+  if (ttsSupported) window.speechSynthesis.cancel();
+  currentUtter = null;
+}
+
+// Devuelve una promesa que se resuelve cuando termina de hablar.
+function speak(text, victim, { onStart } = {}) {
+  return new Promise((resolve) => {
+    if (!ttsSupported) { onStart?.(); setTimeout(resolve, Math.min(7000, 500 + text.length * 55)); return; }
+    cancelSpeech();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-MX';
+    const v = pickVoice(victim?.voice?.gender);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    u.pitch = victim?.voice?.pitch ?? 1;
+    u.rate = victim?.voice?.rate ?? 1;
+    let done = false;
+    const finish = () => { if (done) return; done = true; clearTimeout(safety); resolve(); };
+    const safety = setTimeout(finish, 3000 + text.length * 120); // Chrome a veces no dispara onend
+    u.onstart = () => onStart?.();
+    u.onend = finish;
+    u.onerror = finish;
+    currentUtter = u; // evita que el recolector de basura se lo lleve a mitad
+    window.speechSynthesis.speak(u);
+  });
+}
+
+// ---------- Reconocimiento de voz (jugador) ----------
+class Listener {
+  constructor({ onInterim, onFinal, onState, lang = 'es-MX' }) {
+    this.onInterim = onInterim;
+    this.onFinal = onFinal;
+    this.onState = onState;
+    this.lang = lang;
+    this.wanted = false; // el usuario quiere el micro encendido
+    this.paused = false; // pausa temporal (mientras habla la víctima o la IA piensa)
+    this.rec = null;
+    this.running = false;
+    this.buffer = '';
+    this.flushTimer = 0;
+    this.denied = false;
+  }
+
+  start() { this.wanted = true; this.paused = false; this._ensure(); }
+  stop() { this.wanted = false; this._kill(); }
+  pause() { this.paused = true; clearTimeout(this.flushTimer); this._kill(); }
+  resume() { this.paused = false; this._ensure(); }
+
+  _ensure() {
+    if (!SR || !this.wanted || this.paused || this.running || this.denied) return;
+    const rec = new SR();
+    rec.lang = this.lang;
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
+    rec.onstart = () => { this.running = true; this.onState?.('listening'); };
+    rec.onresult = (ev) => {
+      let interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const r = ev.results[i];
+        if (r.isFinal) this.buffer += (this.buffer ? ' ' : '') + r[0].transcript.trim();
+        else interim += r[0].transcript;
+      }
+      this.onInterim?.((this.buffer + ' ' + interim).trim());
+      clearTimeout(this.flushTimer);
+      // Si hay texto final, espera una pausa corta por si sigues hablando y luego envía.
+      if (this.buffer && !interim) this.flushTimer = setTimeout(() => this._flush(), 1100);
+    };
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { this.denied = true; this.onState?.('denied'); }
+    };
+    rec.onend = () => {
+      this.running = false;
+      this.rec = null;
+      if (this.buffer) this._flush();
+      if (this.wanted && !this.paused && !this.denied) setTimeout(() => this._ensure(), 150);
+      else if (!this.wanted) this.onState?.('off');
+    };
+    this.rec = rec;
+    try { rec.start(); } catch { this.running = false; this.rec = null; }
+  }
+
+  _flush() {
+    const text = this.buffer.trim();
+    this.buffer = '';
+    clearTimeout(this.flushTimer);
+    this.onInterim?.('');
+    if (text) this.onFinal?.(text);
+  }
+
+  _kill() {
+    if (this.rec) {
+      this.rec.onend = null;
+      try { this.rec.abort(); } catch { /* nada */ }
+    }
+    this.rec = null;
+    this.running = false;
+  }
+}
+
+// ---------- Nivel de micrófono (para animar tu boca) ----------
+let micStream = null;
+let analyser = null;
+let micBuf = null;
+
+async function startMicLevel() {
+  if (analyser) return true;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
+    const ctx = audioCtx();
+    const src = ctx.createMediaStreamSource(micStream);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    src.connect(analyser);
+    micBuf = new Uint8Array(analyser.fftSize);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function stopMicLevel() {
+  micStream?.getTracks().forEach((t) => t.stop());
+  micStream = null; analyser = null;
+}
+// 0..1
+function micLevel() {
+  if (!analyser) return 0;
+  analyser.getByteTimeDomainData(micBuf);
+  let sum = 0;
+  for (let i = 0; i < micBuf.length; i++) { const v = (micBuf[i] - 128) / 128; sum += v * v; }
+  return Math.min(1, Math.sqrt(sum / micBuf.length) * 5);
+}
+
+// ---------- Cámara opcional ----------
+let camStream = null;
+async function startCamera(videoEl) {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 480, facingMode: 'user' }, audio: false });
+    videoEl.srcObject = camStream;
+    await videoEl.play();
+    return true;
+  } catch {
+    return false;
+  }
+}
+function stopCamera(videoEl) {
+  camStream?.getTracks().forEach((t) => t.stop());
+  camStream = null;
+  if (videoEl) videoEl.srcObject = null;
+}
+
+// ---------- Efectos de sonido sintetizados ----------
+let ctx = null;
+function audioCtx() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
+function tone(freq, start, dur, { type = 'sine', gain = 0.12, slide = 0 } = {}) {
+  const c = audioCtx();
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, c.currentTime + start);
+  if (slide) o.frequency.linearRampToValueAtTime(freq + slide, c.currentTime + start + dur);
+  g.gain.setValueAtTime(0.0001, c.currentTime + start);
+  g.gain.exponentialRampToValueAtTime(gain, c.currentTime + start + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur);
+  o.connect(g).connect(c.destination);
+  o.start(c.currentTime + start);
+  o.stop(c.currentTime + start + dur + 0.05);
+}
+
+const sfx = {
+  enabled: true,
+  ring() { if (!this.enabled) return; for (let i = 0; i < 2; i++) { tone(440, i * 0.5, 0.35, { gain: 0.08 }); tone(480, i * 0.5, 0.35, { gain: 0.08 }); } },
+  pickup() { if (!this.enabled) return; tone(700, 0, 0.08, { type: 'square', gain: 0.05 }); },
+  hangup() { if (!this.enabled) return; tone(480, 0, 0.18, { gain: 0.1 }); tone(480, 0.25, 0.18, { gain: 0.1 }); tone(480, 0.5, 0.4, { gain: 0.1 }); },
+  cash() { if (!this.enabled) return; [880, 1175, 1568, 2093].forEach((f, i) => tone(f, i * 0.09, 0.25, { type: 'triangle', gain: 0.1 })); },
+  siren() { if (!this.enabled) return; for (let i = 0; i < 4; i++) tone(i % 2 ? 700 : 950, i * 0.28, 0.28, { type: 'sawtooth', gain: 0.05 }); },
+  buzz() { if (!this.enabled) return; tone(120, 0, 0.5, { type: 'sawtooth', gain: 0.1, slide: -40 }); },
+  blip() { if (!this.enabled) return; tone(900, 0, 0.06, { type: 'sine', gain: 0.05 }); },
+  up() { if (!this.enabled) return; tone(600, 0, 0.1, { type: 'triangle', gain: 0.06 }); tone(800, 0.08, 0.12, { type: 'triangle', gain: 0.06 }); },
+  down() { if (!this.enabled) return; tone(500, 0, 0.1, { type: 'triangle', gain: 0.06 }); tone(330, 0.08, 0.14, { type: 'triangle', gain: 0.06 }); },
+  unlock() { try { audioCtx(); } catch { /* nada */ } },
+};
+
+return { sttSupported, ttsSupported, cancelSpeech, speak, Listener, startMicLevel, stopMicLevel, micLevel, startCamera, stopCamera, sfx };
+})();
+const __brain = (() => {
+// "Cerebro" de la víctima: Claude (vía /api/turn) o, si no hay IA, un cerebro offline con reglas.
+async function checkAI() {
+  if (location.protocol === 'file:') return { ai: false, models: [] }; // abierto como archivo: sin servidor
+  try {
+    const r = await fetch('/api/status', { cache: 'no-store' });
+    if (!r.ok) throw new Error();
+    return await r.json();
+  } catch {
+    return { ai: false, models: [] };
+  }
+}
+
+async function aiTurn(payload) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 30000);
+  try {
+    const r = await fetch('/api/turn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+    return { ...j, source: 'ai' };
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cerebro offline
+// ---------------------------------------------------------------------------
+const norm = (s) =>
+  String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9\s$]/g, ' ').replace(/\s+/g, ' ').trim();
+
+const RX = {
+  cortesia: /\b(buenas|buenos dias|buenas tardes|buenas noches|hola|con gusto|disculpe|disculpa|por favor|gracias|encantad[oa]|un placer|senor|senora|usted)\b/,
+  autoridad: /\b(banco|policia|gobierno|hacienda|sat|microsoft|apple|amazon|google|soporte|departamento|oficial|licenciado|ingeniero|doctor|agente|seguridad|certificad[oa]|folio|ticket|sucursal|paqueteria|aduana|fedex|dhl|empleado)\b/,
+  empatia: /\b(entiendo|tranquil[oa]|no se preocupe|no te preocupes|le ayudo|te ayudo|estoy aqui|lamento|siento|abuela|abuelita|tia|tio|mama|papa|familia|carino|mi amor|mija|mijo|sin compromiso|me preocupa)\b/,
+  urgencia: /\b(urgente|ahora mismo|inmediatamente|ya mismo|rapido|rapidito|ultima oportunidad|se vence|expira|caduca|hoy mismo|antes de que|cuanto antes|no hay tiempo|de inmediato|minutos)\b/,
+  secreto: /\b(no le diga|no le cuente|no digas|no cuentes|secreto|confidencial|no cuelgue|no cuelgues|no hable con|no le diga a nadie|entre nosotros)\b/,
+  amenaza: /\b(arrest\w*|carcel|multa|demanda|bloquear|bloqueada|bloqueado|congelar|cancelar|suspender|suspendida|embargo|denuncia|perdera|consecuencias|virus|hackeo|hackeado|hackers?)\b/,
+  pagoRaro: /\b(tarjetas? de regalo|gift ?cards?|itunes|google play|steam|bitcoin|cripto\w*|western union|giro|efectivo|oxxo|cupon|cupones|vouchers?)\b/,
+  pagoNormal: /\b(transferencia|transferir|deposito|depositar|pagar|pague|pagas|cobro|cuenta segura|numero de cuenta|clabe|mande dinero|envie dinero|manda dinero|envia dinero|pago|invertir|inversion)\b/,
+  datos: /\b(contrasena|password|clave|nip|cvv|codigo|numero de tarjeta|tarjeta de credito|tarjeta de debito|token|sms|pin|acceso remoto|anydesk|teamviewer)\b/,
+  agresion: /\b(idiota|estupid[oa]|pendej[oa]|cabron|imbecil|callate|vieja|viejo|inutil|tonta|tonto|maldit[oa]|chingad[oa]|puta|mierda)\b/,
+  prueba: /\b(otros clientes|miles de personas|mucha gente|testimonio|garantizad[oa]|ya ganaron|todos ganan|ganancias|rendimiento|triplic\w*)\b/,
+  verifica: /\b(mi nombre es|me llamo|soy el|soy la|numero de empleado|id de empleado|folio|extension|\d{3,})\b/,
+};
+
+const THOUGHTS = {
+  pickup: ['Número desconocido... ¿será importante?', 'A ver quién es ahora.'],
+  neutral: ['Mmm, no sé a dónde va esto.', 'Sigo escuchando, pero con cuidado.'],
+  warm: ['Parece buena persona, la verdad.', 'Qué atento. Igual y sí es de fiar.'],
+  confused: ['No entendí nada de lo que dijo.', 'Esto no tiene sentido.'],
+  suspicious: ['Algo no me cuadra aquí.', 'Esto huele a trampa.'],
+  probe: ['Voy a pedirle datos para verificar.', 'Que se identifique bien.'],
+  hesitate: ['¿Dinero? Ni de chiste... ¿o sí?', 'No sé si fiarme de esto.'],
+  agree: ['Bueno, qué más da, voy a hacerlo.', 'Me convenció, aunque quién sabe.'],
+  hangup: ['Ya, se acabó, cuelgo.', 'Qué pérdida de tiempo.'],
+  police: ['Esto es un fraude clarísimo. A denunciar.', 'Tengo todo para reportarlo.'],
+  silence: ['¿Se habrá cortado?'],
+};
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function createOfflineBrain(victim, pretext) {
+  const used = new Set();
+  const { gullible: g, savvy: sv, paranoia: pa } = victim;
+  const weak = victim.weakness.includes(pretext.id);
+  const firstName = norm(victim.name).split(' ').pop();
+  const kws = victim.keywords.map(norm);
+  let asked = 0;
+  let probed = false;
+  let probePending = false;
+  let lastText = '';
+
+  const pickFrom = (arr, key) => {
+    let pool = arr.filter((x) => !used.has(key + x));
+    if (!pool.length) { arr.forEach((x) => used.delete(key + x)); pool = arr; }
+    const choice = pool[Math.floor(Math.random() * pool.length)];
+    used.add(key + choice);
+    return choice;
+  };
+  const line = (cat) => pickFrom(victim.lines[cat] || victim.lines.neutral, victim.id + cat);
+  const thought = (cat) => pickFrom(THOUGHTS[cat] || THOUGHTS.neutral, 't' + cat);
+  const out = (cat, mood, t, s, action = 'none', tags = []) => ({
+    say: line(cat), mood, trust_delta: t, suspicion_delta: s, action, tags, thought: thought(cat), source: 'offline',
+  });
+
+  return {
+    startTrust: () => clamp(Math.round(20 + (weak ? 10 : 0) - sv * 10 + g * 6), 5, 60),
+    startSuspicion: () => Math.round(5 + pa * 10),
+
+    turn({ text, kind, state }) {
+      if (kind === 'pickup') return out('pickup', 'neutral', 0, 0);
+      if (kind === 'silence') return out('silence', 'confused', 0, 3);
+
+      const n = norm(text);
+      const words = n ? n.split(' ').length : 0;
+      let t = 0, s = 0, matched = false, ask = false, rude = false;
+      const tags = [];
+      const add = (id) => { if (!tags.includes(id)) tags.push(id); matched = true; };
+
+      if (RX.cortesia.test(n)) { t += 3; matched = true; if (words >= 8) add('rapport'); }
+      if (RX.autoridad.test(n)) { t += Math.round(4 + g * 10 - sv * 6); s += Math.round(sv * 4); add('autoridad'); }
+      if (RX.empatia.test(n)) { t += Math.round(3 + g * 8); add('empatia'); }
+      if (kws.some((k) => k && n.includes(k)) || (firstName.length > 2 && n.includes(firstName))) { t += 9; add('info_personal'); }
+      if (RX.urgencia.test(n)) { t += Math.round((g - sv) * 6); s += Math.round(2 + sv * 8 + pa * 6); add('urgencia'); }
+      if (RX.secreto.test(n)) { t -= 4; s += Math.round(10 + pa * 12); add('secreto'); }
+      if (RX.amenaza.test(n)) { t += Math.round(g * 6 - sv * 4); s += Math.round(sv * 8 + pa * 4); add('amenaza'); if (g > 0.5) tags.push('miedo'); }
+      if (RX.prueba.test(n)) { t += Math.round(g * 6); s += Math.round(sv * 3); add('prueba_social'); }
+      if (RX.datos.test(n)) { s += Math.round(10 + sv * 14 + pa * 8 - state.trust / 10); add('pide_datos'); ask = true; }
+      if (RX.pagoRaro.test(n)) { s += Math.round(8 + sv * 14 + pa * 6 - g * 6); add('pago_raro'); ask = true; }
+      if (RX.pagoNormal.test(n)) { s += Math.round(3 + sv * 6); matched = true; ask = true; }
+      if (RX.agresion.test(n)) { t -= 15; s += 25; rude = true; add('agresividad'); }
+
+      if (probePending) {
+        probePending = false;
+        if (RX.verifica.test(n)) { t += 6; add('historia_creible'); }
+        else { s += 6; add('verificacion_evitada'); }
+      }
+      if (n && n === lastText) { s += 5; add('incoherencia'); }
+      lastText = n;
+      if (words >= 18 && !rude) { t += 2; add('historia_creible'); }
+      if (!matched && words > 3) { t += 1; matched = true; }
+      if (t > 0 && weak) t = Math.round(t * 1.25);
+
+      const T0 = state.trust, S0 = state.suspicion;
+      let T = clamp(T0 + t, 0, 100);
+      let S = clamp(S0 + s, 0, 100);
+
+      // ¿Pidió pagar/dar el dato? ¿Se lo cree?
+      let ok = false;
+      if (ask) {
+        asked++;
+        const threshold = 55 + sv * 25 + pa * 10 - g * 10 - (weak ? 8 : 0);
+        ok = T >= threshold && S < 60 && !rude;
+        if (!ok) s += Math.round(3 + asked * 2 + sv * 4);
+      }
+      S = clamp(S0 + s, 0, 100);
+
+      const wantsProbe = !probed && sv >= 0.45 && tags.includes('autoridad') && !ask && state.turn <= 4;
+      if (wantsProbe) { probed = true; probePending = true; }
+
+      const strongTags = ['pago_raro', 'pide_datos', 'secreto', 'agresividad', 'incoherencia'];
+      const redFlags = tags.filter((x) => strongTags.includes(x)).length;
+
+      if (S >= 100 || (rude && S >= 70)) {
+        const police = Math.random() < (sv + pa) / 2.2 && !rude;
+        return out(police ? 'police' : 'hangup', 'angry', t, s, police ? 'call_police' : 'hang_up', tags);
+      }
+      if (ok) return out('agree', g > 0.5 ? 'happy' : 'worried', t, s, 'send_money', tags);
+      if (ask) return out('hesitate', 'worried', t, s, 'none', tags);
+      if (wantsProbe) return out('probe', 'suspicious', t, s + 2, 'none', tags);
+      if (tags.includes('amenaza') && g > 0.5) return out('hesitate', 'scared', t, s, 'none', tags);
+      if (S >= 45 || (redFlags > 0 && sv > 0.5)) return out('suspicious', S >= 70 ? 'angry' : 'suspicious', t, s, 'none', tags);
+      if (!matched) return out('confused', 'confused', -1, 0, 'none', tags);
+      if (T >= 40) return out('warm', 'happy', t, s, 'none', tags);
+      return out('neutral', 'neutral', t, s, 'none', tags);
+    },
+  };
+}
+
+return { checkAI, aiTurn, createOfflineBrain };
+})();
+const __game = (() => {
+const { VICTIMS, PRETEXTS, TACTICS, MODELS, DIFFICULTY_MULT, byId } = __data;
+const { createAvatar } = __avatar;
+const { checkAI, aiTurn, createOfflineBrain } = __brain;
+const { Listener, speak, cancelSpeech, sttSupported, ttsSupported, startMicLevel, stopMicLevel, micLevel, startCamera, stopCamera, sfx } = __voice;
+
+const $ = (id) => document.getElementById(id);
+const COLORS = ['#ff5d73', '#35d0ba', '#ffc145', '#8b7bff', '#ff8a3d', '#4cc9f0'];
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Crea un elemento con texto seguro (nunca innerHTML con datos del usuario).
+function h(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') n.className = v;
+    else if (k === 'text') n.textContent = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : document.createTextNode(kid));
+  return n;
+}
+
+const S = {
+  players: [{ name: 'Jugador 1' }, { name: 'Jugador 2' }],
+  settings: { rounds: 1, duration: 150, mic: true, voice: true, sfx: true, model: MODELS[0].id },
+  ai: { ai: false },
+  queue: [], qi: 0,
+  scores: [], best: [],
+  sel: { victim: null, pretext: null },
+  call: null,
+  thumbs: [],
+};
+
+function load(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
+function save(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* sin almacenamiento */ } }
+
+let toastTimer = 0;
+function toast(msg, ms = 2800) {
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function show(id) {
+  for (const s of document.querySelectorAll('.screen')) s.hidden = s.id !== id;
+  window.scrollTo(0, 0);
+}
+
+// ----------------------------------------------------------------------------
+// MENÚ
+// ----------------------------------------------------------------------------
+function renderPlayers() {
+  const ul = $('players');
+  ul.textContent = '';
+  S.players.forEach((p, i) => {
+    const input = h('input', { type: 'text', maxlength: 16, value: p.name, 'aria-label': `Nombre del jugador ${i + 1}`, placeholder: `Jugador ${i + 1}` });
+    input.addEventListener('input', () => { p.name = input.value; });
+    ul.append(h('li', {},
+      h('span', { class: 'swatch', style: `background:${COLORS[i % COLORS.length]}` }),
+      input,
+      S.players.length > 1 ? h('button', { class: 'btn ghost', type: 'button', 'aria-label': 'Quitar jugador', text: '✕', onclick: () => { S.players.splice(i, 1); renderPlayers(); } }) : null));
+  });
+  $('addPlayer').hidden = S.players.length >= 6;
+}
+
+async function initMenu() {
+  const saved = load('scamcall.settings', {});
+  Object.assign(S.settings, saved);
+  S.players = load('scamcall.players', S.players).slice(0, 6);
+  if (!S.players.length) S.players = [{ name: 'Jugador 1' }];
+
+  S.ai = await checkAI();
+  const sel = $('model');
+  const list = S.ai.models?.length ? S.ai.models : MODELS;
+  for (const m of list) sel.append(h('option', { value: m.id, text: m.label }));
+  if (!list.some((m) => m.id === S.settings.model)) S.settings.model = S.ai.model || list[0].id;
+  sel.value = S.settings.model;
+  sel.disabled = !S.ai.ai;
+
+  const st = $('aiStatus');
+  if (S.ai.ai) {
+    st.className = 'status ok';
+    st.textContent = '🧠 IA de Claude conectada: las víctimas responden con conversación real.';
+  } else {
+    st.className = 'status warn';
+    st.textContent = '🧩 Sin IA conectada: las víctimas usan el cerebro offline (reglas simples). Arranca el servidor con ANTHROPIC_API_KEY para conversaciones reales.';
+  }
+  const vs = $('voiceStatus');
+  const issues = [];
+  if (!sttSupported) issues.push('Tu navegador no tiene reconocimiento de voz (usa Chrome o Edge); podrás escribir.');
+  if (!ttsSupported) issues.push('Tu navegador no tiene síntesis de voz; verás subtítulos.');
+  if (issues.length) { vs.className = 'status warn'; vs.textContent = '🔇 ' + issues.join(' '); } else { vs.hidden = true; }
+
+  $('rounds').value = S.settings.rounds;
+  $('duration').value = S.settings.duration;
+  $('optMic').checked = S.settings.mic && sttSupported;
+  $('optMic').disabled = !sttSupported;
+  $('optVoice').checked = S.settings.voice && ttsSupported;
+  $('optVoice').disabled = !ttsSupported;
+  $('optSfx').checked = S.settings.sfx;
+  renderPlayers();
+}
+
+$('addPlayer').addEventListener('click', () => {
+  if (S.players.length < 6) { S.players.push({ name: `Jugador ${S.players.length + 1}` }); renderPlayers(); }
+});
+
+$('startGame').addEventListener('click', () => {
+  sfx.unlock();
+  S.settings = {
+    rounds: Number($('rounds').value), duration: Number($('duration').value),
+    mic: $('optMic').checked, voice: $('optVoice').checked, sfx: $('optSfx').checked, model: $('model').value,
+  };
+  S.players = S.players.map((p, i) => ({ name: (p.name || '').trim().slice(0, 16) || `Jugador ${i + 1}` }));
+  save('scamcall.settings', S.settings);
+  save('scamcall.players', S.players);
+  newGame();
+});
+
+function newGame() {
+  S.queue = [];
+  for (let r = 0; r < S.settings.rounds; r++) S.players.forEach((_, p) => S.queue.push({ player: p, round: r + 1 }));
+  S.qi = 0;
+  S.scores = S.players.map(() => 0);
+  S.best = S.players.map(() => ({ money: 0, score: 0 }));
+  S.sel = { victim: null, pretext: null };
+  goPlan();
+}
+
+// ----------------------------------------------------------------------------
+// PREPARACIÓN
+// ----------------------------------------------------------------------------
+function destroyThumbs() { S.thumbs.forEach((a) => a.destroy()); S.thumbs = []; }
+
+function goPlan() {
+  show('screen-plan');
+  const turn = S.queue[S.qi];
+  const pl = S.players[turn.player];
+  $('planRound').textContent = `Ronda ${turn.round} de ${S.settings.rounds} · Turno ${S.qi + 1} de ${S.queue.length}`;
+  $('planTurn').textContent = `📱 ${pl.name}, te toca estafar`;
+  const mini = $('miniScores');
+  mini.textContent = '';
+  S.players.forEach((p, i) => mini.append(h('span', { class: i === turn.player ? 'active' : '', text: `${p.name}: ${S.scores[i]}` })));
+  S.sel = { victim: null, pretext: null };
+
+  destroyThumbs();
+  const vl = $('victimList');
+  vl.textContent = '';
+  for (const v of VICTIMS) {
+    const thumb = h('div', { class: 'thumb' }, h('div', { class: 'avatar' }));
+    const card = h('button', { class: 'opt', type: 'button', 'data-id': v.id, onclick: () => { S.sel.victim = v.id; refreshPlan(); sfx.blip(); } },
+      thumb,
+      h('div', { class: 'body' },
+        h('b', {}, `${v.name}, ${v.age}`, h('span', { class: 'mult', text: `×${DIFFICULTY_MULT[v.difficulty]}` })),
+        h('span', { class: 'stars', text: '★'.repeat(v.difficulty) + '☆'.repeat(5 - v.difficulty) }),
+        h('span', { text: v.tagline })));
+    vl.append(card);
+    const av = createAvatar(thumb.firstChild, v.look, { viewBox: '20 30 160 150' });
+    av.setMood('neutral');
+    S.thumbs.push(av);
+  }
+  const pl2 = $('pretextList');
+  pl2.textContent = '';
+  for (const p of PRETEXTS) {
+    pl2.append(h('button', { class: 'opt pre', type: 'button', 'data-id': p.id, onclick: () => { S.sel.pretext = p.id; refreshPlan(); sfx.blip(); } },
+      h('div', { class: 'body' },
+        h('b', {}, h('span', { class: 'icon', text: p.icon + ' ' }), p.title, h('span', { class: 'mult', text: `×${p.mult}` })),
+        h('span', { text: p.pitch }),
+        h('span', { text: `Botín: $${p.amount}` }))));
+  }
+  refreshPlan();
+}
+
+function refreshPlan() {
+  for (const el of $('victimList').children) el.classList.toggle('sel', el.dataset.id === S.sel.victim);
+  for (const el of $('pretextList').children) el.classList.toggle('sel', el.dataset.id === S.sel.pretext);
+  const v = byId(VICTIMS, S.sel.victim), p = byId(PRETEXTS, S.sel.pretext);
+  const d = $('dossier');
+  d.textContent = '';
+  if (!v && !p) { d.append(h('p', { text: 'Elige una víctima y un pretexto para ver el expediente.' })); }
+  else {
+    d.append(h('h3', { text: '🗂️ Expediente' }));
+    const kv = h('dl', { class: 'kv' });
+    if (v) kv.append(h('dt', { text: 'Víctima' }), h('dd', { text: `${v.name} (${v.age}) · ${v.job}` }), h('dt', { text: 'Dificultad' }), h('dd', { text: '★'.repeat(v.difficulty) + '☆'.repeat(5 - v.difficulty) }), h('dt', { text: 'Debilidad' }), h('dd', { text: '🔒 La descubrirás hablando (o con una pista)' }));
+    if (p) kv.append(h('dt', { text: 'Tu papel' }), h('dd', { text: p.pitch }), h('dt', { text: 'Objetivo' }), h('dd', { text: p.goal }));
+    if (v && p) kv.append(h('dt', { text: 'Multiplicador' }), h('dd', { text: `×${(DIFFICULTY_MULT[v.difficulty] * p.mult).toFixed(2)}` }));
+    d.append(kv);
+  }
+  $('callBtn').disabled = !(v && p);
+}
+
+$('callBtn').addEventListener('click', () => { sfx.unlock(); destroyThumbs(); startCall(); });
+
+// ----------------------------------------------------------------------------
+// LLAMADA
+// ----------------------------------------------------------------------------
+let listener = null;
+let victimAv = null, youAv = null;
+let rafId = 0;
+let timerId = 0, silenceId = 0, talkOffId = 0;
+
+function setChip(id, text) { $(id).textContent = text; }
+function caption(id, text) {
+  const el = $(id);
+  el.textContent = text || '';
+  el.classList.toggle('show', Boolean(text));
+}
+function logLine(who, name, text) {
+  const log = $('log');
+  const p = h('p', { class: who }, who === 'sys' ? null : h('b', { text: name }), text);
+  log.append(p);
+  log.scrollTop = log.scrollHeight;
+}
+const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+function updateMeters() {
+  const c = S.call;
+  $('trustBar').style.width = c.trust + '%';
+  $('suspBar').style.width = c.susp + '%';
+  $('trustVal').textContent = Math.round(c.trust);
+  $('suspVal').textContent = Math.round(c.susp);
+}
+
+async function startCall() {
+  const turn = S.queue[S.qi];
+  const player = S.players[turn.player];
+  const v = byId(VICTIMS, S.sel.victim), p = byId(PRETEXTS, S.sel.pretext);
+  const brain = createOfflineBrain(v, p);
+  const c = S.call = {
+    v, p, player, turn: turn, brain,
+    useAI: S.ai.ai, aiFails: 0,
+    history: [], trust: brain.startTrust(), susp: brain.startSuspicion(),
+    peak: 0, timeLeft: S.settings.duration, n: 0, started: false, over: false, busy: false, timeUp: false,
+    tags: {}, series: [], hints: 0, micOn: S.settings.mic && sttSupported, camOn: false,
+    speaking: false, usedAI: false, usedOffline: false,
+  };
+  c.peak = c.trust;
+  c.series.push({ t: 0, trust: c.trust, susp: c.susp });
+
+  show('screen-call');
+  $('endOverlay').hidden = true;
+  $('log').textContent = '';
+  $('hintBox').hidden = true;
+  $('hintBtn').textContent = '💡 Pista (−50)';
+  $('sayInput').value = '';
+  $('timer').textContent = fmt(c.timeLeft);
+  $('timer').classList.remove('low');
+  $('vName').textContent = v.name; $('yName').textContent = player.name + ' (tú)';
+  $('callInfo').textContent = `${p.icon} ${p.title}`;
+  $('goalBox').replaceChildren(h('b', { text: '🎯 Objetivo: ' }), p.goal);
+  $('cam').hidden = true; $('camBtn').textContent = '📷 Mi cámara';
+  $('tileYou').querySelector('.avatar').hidden = false;
+  updateMeters();
+  setChip('vStatus', ''); setChip('yStatus', '');
+  caption('vCaption', ''); caption('yCaption', '');
+
+  victimAv?.destroy(); youAv?.destroy();
+  victimAv = createAvatar($('avV'), v.look);
+  youAv = createAvatar($('avY'), { skin: '#e0b08a', hair: '#1c1c22', hairStyle: 'short', shades: true, headset: true, hood: true, shirt: COLORS[turn.player % COLORS.length], bg: '#0b1018', decor: 'hacker' });
+  victimAv.setMood('neutral'); youAv.setMood('neutral');
+  setMicButton();
+  sfx.enabled = S.settings.sfx;
+
+  // Micrófono y reconocimiento de voz
+  listener?.stop();
+  listener = new Listener({
+    onInterim: (t) => { if (S.call?.over) return; caption('yCaption', t); if (t) { youAv.talk(true); clearTimeout(talkOffId); talkOffId = setTimeout(() => youAv.talk(false), 700); clearSilence(); } },
+    onFinal: (t) => playerSays(t),
+    onState: (st) => {
+      if (!S.call || S.call.over) return;
+      if (st === 'listening') setChip('yStatus', '🎤 escuchando');
+      if (st === 'denied') { S.call.micOn = false; setMicButton(); setChip('yStatus', '🚫 micrófono bloqueado'); toast('Micrófono bloqueado: escribe tus frases en el cuadro de texto.'); }
+    },
+  });
+  if (c.micOn) startMicLevel();
+  cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(mouthLoop);
+
+  // Marcando...
+  $('ringOverlay').hidden = false;
+  $('ringText').textContent = `Marcando a ${v.name}…`;
+  sfx.ring();
+  await sleep(1100);
+  sfx.ring();
+  await sleep(1300);
+  if (S.call !== c || c.over) return;
+  sfx.pickup();
+  $('ringOverlay').hidden = true;
+  c.started = true;
+  clearInterval(timerId);
+  timerId = setInterval(tickTimer, 1000);
+  await victimReply({ kind: 'pickup' });
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function mouthLoop() {
+  const c = S.call;
+  if (!c || c.over) return;
+  if (c.micOn && !c.busy && !c.speaking) {
+    const lv = micLevel();
+    youAv.setMouth(lv > 0.07 ? Math.min(1, lv * 1.3) : null);
+  }
+  rafId = requestAnimationFrame(mouthLoop);
+}
+
+function tickTimer() {
+  const c = S.call;
+  if (!c || c.over) return;
+  c.timeLeft--;
+  $('timer').textContent = fmt(Math.max(0, c.timeLeft));
+  $('timer').classList.toggle('low', c.timeLeft <= 20);
+  if (c.timeLeft <= 0) {
+    if (c.busy) c.timeUp = true;
+    else endCall('timeout');
+  }
+}
+
+function armSilence() {
+  clearSilence();
+  silenceId = setTimeout(() => {
+    const c = S.call;
+    if (!c || c.over || c.busy || !c.started) return;
+    victimReply({ kind: 'silence' });
+  }, 15000);
+}
+function clearSilence() { clearTimeout(silenceId); }
+
+function setMicButton() {
+  const c = S.call;
+  const b = $('micBtn');
+  const on = c?.micOn;
+  b.className = 'btn mic ' + (on ? 'on' : 'off');
+  b.textContent = on ? '🎤 Micrófono: ON' : sttSupported ? '🎤 Micrófono: OFF' : '🎤 No disponible';
+  b.disabled = !sttSupported;
+}
+
+$('micBtn').addEventListener('click', async () => {
+  const c = S.call;
+  if (!c || c.over) return;
+  c.micOn = !c.micOn;
+  setMicButton();
+  if (c.micOn) {
+    listener.denied = false;
+    await startMicLevel();
+    if (!c.busy && c.started) listener.start();
+  } else {
+    listener.stop(); stopMicLevel(); youAv.setMouth(null); setChip('yStatus', '');
+  }
+});
+
+$('camBtn').addEventListener('click', async () => {
+  const c = S.call;
+  if (!c || c.over) return;
+  const video = $('cam');
+  if (!c.camOn) {
+    const ok = await startCamera(video);
+    if (!ok) { toast('No pude acceder a la cámara. Seguirás con tu avatar.'); return; }
+    c.camOn = true; video.hidden = false; $('tileYou').querySelector('.avatar').hidden = true;
+    $('camBtn').textContent = '🧑‍💻 Usar avatar';
+  } else {
+    stopCamera(video); c.camOn = false; video.hidden = true; $('tileYou').querySelector('.avatar').hidden = false;
+    $('camBtn').textContent = '📷 Mi cámara';
+  }
+});
+
+$('hintBtn').addEventListener('click', () => {
+  const c = S.call;
+  if (!c || c.over) return;
+  const all = [...c.v.hints, ...c.p.hints];
+  if (c.hints >= all.length) { toast('Ya no hay más pistas.'); return; }
+  const text = all[c.hints++];
+  const box = $('hintBox');
+  box.hidden = false;
+  box.textContent = `💡 ${text}  (−50 pts)`;
+  $('hintBtn').textContent = `💡 Pista (−50) · ${c.hints}/${all.length}`;
+});
+
+$('scriptBtn').addEventListener('click', () => {
+  const c = S.call;
+  if (!c || c.over) return;
+  const box = $('hintBox');
+  box.hidden = false;
+  box.textContent = `📜 Para empezar puedes decir: «${c.p.script}»`;
+});
+
+$('sayForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('sayInput');
+  const t = input.value.trim();
+  if (!t) return;
+  input.value = '';
+  // Anima tu boca mientras "hablas" el texto escrito
+  youAv.talk(true); clearTimeout(talkOffId); talkOffId = setTimeout(() => youAv.talk(false), Math.min(4000, 500 + t.length * 45));
+  playerSays(t);
+});
+$('sayInput').addEventListener('input', clearSilence);
+
+$('hangBtn').addEventListener('click', () => { if (S.call && !S.call.over) endCall('quit'); });
+
+async function playerSays(raw) {
+  const c = S.call;
+  if (!c || c.over || c.busy || !c.started) return;
+  const text = String(raw).trim().slice(0, 400);
+  if (!text) return;
+  clearSilence();
+  c.n++;
+  c.history.push({ who: 'player', text });
+  logLine('y', c.player.name, text);
+  caption('yCaption', text);
+  setTimeout(() => { if (S.call === c) caption('yCaption', ''); }, 3500);
+  await victimReply({ kind: 'turn', text });
+}
+
+async function victimReply({ kind, text = '' }) {
+  const c = S.call;
+  c.busy = true;
+  listener.pause();
+  youAv.setMouth(null);
+  setChip('vStatus', '💭 pensando…');
+  setChip('yStatus', '');
+  const state = { trust: Math.round(c.trust), suspicion: Math.round(c.susp), turn: c.n, timeLeft: c.timeLeft };
+
+  let r = null;
+  if (c.useAI) {
+    try {
+      r = await aiTurn({
+        victimId: c.v.id, pretextId: c.p.id, model: S.settings.model, kind, text,
+        history: c.history.slice(-16).map(({ who, text: t }) => ({ who, text: t })), state,
+      });
+      c.usedAI = true;
+    } catch {
+      c.aiFails++;
+      if (c.aiFails >= 3) { c.useAI = false; toast('La IA no responde: la víctima pasa al cerebro offline.'); }
+    }
+  }
+  if (!r) { r = c.brain.turn({ text, kind, state }); c.usedOffline = true; }
+  if (S.call !== c || c.over) return;
+
+  // Validación del turno
+  const dT = clamp(Math.round(r.trust_delta) || 0, -25, 25);
+  const dS = clamp(Math.round(r.suspicion_delta) || 0, -15, 30);
+  const nt = clamp(c.trust + dT, 0, 100), ns = clamp(c.susp + dS, 0, 100);
+  let action = r.action || 'none';
+  if (action === 'send_money' && nt < 45) action = 'none';
+  if (ns >= 100 && action === 'none') action = 'hang_up';
+  if (kind === 'pickup') action = 'none';
+
+  if (dT > 0) sfx.up(); else if (dT < -2 || dS > 6) sfx.down();
+  c.trust = nt; c.susp = ns; c.peak = Math.max(c.peak, nt);
+  c.series.push({ t: c.series.length, trust: nt, susp: ns });
+  for (const tag of r.tags || []) c.tags[tag] = (c.tags[tag] || 0) + 1;
+  updateMeters();
+  victimAv.setMood(r.mood || 'neutral');
+  $('tileVictim').dataset.mood = r.mood || 'neutral';
+
+  c.history.push({ who: 'victim', text: r.say, thought: kind === 'pickup' ? '' : r.thought || '' });
+  logLine('v', c.v.name, r.say);
+  caption('vCaption', r.say);
+  c.speaking = true;
+  setChip('vStatus', '🗣️ hablando');
+  $('tileVictim').classList.add('speaking');
+  victimAv.talk(true);
+  if (S.settings.voice) await speak(r.say, c.v); else await sleep(Math.min(6000, 700 + r.say.length * 55));
+  victimAv.talk(false);
+  $('tileVictim').classList.remove('speaking');
+  c.speaking = false;
+  if (S.call !== c || c.over) return;
+  setTimeout(() => { if (S.call === c && !c.speaking) caption('vCaption', ''); }, 1800);
+
+  if (action !== 'none') { endCall(action); return; }
+  if (c.timeUp || c.timeLeft <= 0) { endCall('timeout'); return; }
+  c.busy = false;
+  setChip('vStatus', '👂 te escucha');
+  if (c.micOn) listener.start();
+  armSilence();
+}
+
+// ----------------------------------------------------------------------------
+// FIN DE LA LLAMADA
+// ----------------------------------------------------------------------------
+function computeScore(kind) {
+  const c = S.call;
+  const mult = DIFFICULTY_MULT[c.v.difficulty] * c.p.mult;
+  let base, money = 0;
+  if (kind === 'send_money') {
+    money = c.p.amount;
+    base = c.p.amount + c.timeLeft * 4 + (100 - c.susp) * 3 + c.peak * 2;
+  } else {
+    base = c.peak * 2 + c.n * 5;
+  }
+  const hintCost = c.hints * 50;
+  return { money, base: Math.round(base), mult, hintCost, score: Math.max(0, Math.round(base * mult) - hintCost) };
+}
+
+const END_TEXT = {
+  send_money: { cls: 'win', h: '¡ESTAFA COMPLETADA!', icon: '💸', p: (c) => `${c.v.name} aceptó ${c.p.item}. (Todo es de mentiritas, ¡pero qué labia!)` },
+  hang_up: { cls: 'lose', h: 'Te colgaron', icon: '📵', p: (c) => `${c.v.name} se cansó y colgó la llamada.` },
+  call_police: { cls: 'lose', h: '¡Llamó a la policía!', icon: '🚓', p: (c) => `${c.v.name} te reconoció y ya está denunciándote.` },
+  timeout: { cls: 'lose', h: 'Se acabó el tiempo', icon: '⏰', p: (c) => `${c.v.name} tuvo que irse. No lograste cerrar el trato.` },
+  quit: { cls: 'lose', h: 'Colgaste', icon: '📴', p: () => 'Tú mismo colgaste la llamada.' },
+};
+
+function endCall(kind) {
+  const c = S.call;
+  if (!c || c.over) return;
+  c.over = true; c.end = kind;
+  clearInterval(timerId); clearSilence(); clearTimeout(talkOffId);
+  listener.stop(); stopMicLevel(); cancelSpeech();
+  victimAv?.talk(false); youAv?.talk(false); youAv?.setMouth(null);
+  stopCamera($('cam'));
+  const res = c.result = computeScore(kind);
+  S.scores[c.turn.player] += res.score;
+  const b = S.best[c.turn.player];
+  b.score = Math.max(b.score, res.score); b.money += res.money;
+
+  if (kind === 'send_money') { sfx.cash(); confetti(); victimAv.setMood('happy'); }
+  else if (kind === 'call_police') { sfx.siren(); victimAv.setMood('angry'); }
+  else { sfx.hangup(); }
+  if (kind !== 'send_money') victimAv.setMood(kind === 'timeout' ? 'neutral' : 'angry');
+
+  const info = END_TEXT[kind];
+  const ov = $('endOverlay');
+  ov.className = 'overlay ' + info.cls;
+  ov.replaceChildren(
+    h('div', { style: 'font-size:64px', text: info.icon }),
+    h('h2', { text: info.h }),
+    h('p', { text: info.p(c) }),
+    h('p', { text: kind === 'send_money' ? `Botín: $${res.money} · Puntos: ${res.score}` : `Puntos: ${res.score}` }),
+    h('button', { class: 'btn primary big', type: 'button', text: 'Ver resultados', onclick: () => showResult() }));
+  setTimeout(() => { ov.hidden = false; ov.querySelector('button')?.focus(); }, kind === 'send_money' ? 900 : 700);
+}
+
+function confetti() {
+  const box = $('confetti');
+  const em = ['💸', '💵', '🤑', '💰'];
+  for (let i = 0; i < 36; i++) {
+    const s = h('span', { text: em[i % em.length], style: `left:${Math.random() * 100}%;animation-duration:${2.2 + Math.random() * 2}s;animation-delay:${Math.random() * 0.6}s` });
+    box.append(s);
+    setTimeout(() => s.remove(), 5200);
+  }
+}
+
+// ----------------------------------------------------------------------------
+// RESULTADO
+// ----------------------------------------------------------------------------
+function chartSvg(series) {
+  const W = 320, H = 130, pad = 8;
+  const n = Math.max(1, series.length - 1);
+  const x = (i) => pad + (i / n) * (W - 2 * pad);
+  const y = (v) => H - pad - (v / 100) * (H - 2 * pad);
+  const line = (key, color) => `<polyline fill="none" stroke="${color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${series.map((p, i) => `${x(i)},${y(p[key])}`).join(' ')}"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Gráfica de confianza y sospecha"><rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="#0a0f19"/>
+    <line x1="${pad}" x2="${W - pad}" y1="${y(50)}" y2="${y(50)}" stroke="#263250" stroke-dasharray="4 4"/>${line('susp', '#ff5d73')}${line('trust', '#35e08a')}</svg>`;
+}
+
+function showResult() {
+  const c = S.call;
+  $('endOverlay').hidden = true;
+  show('screen-result');
+  const info = END_TEXT[c.end];
+  const res = c.result;
+  const banner = $('resultBanner');
+  banner.className = 'banner ' + info.cls;
+  banner.replaceChildren(h('div', { style: 'font-size:48px', text: info.icon }), h('h2', { text: info.h }), h('p', { text: info.p(c) }));
+
+  const rows = [
+    ['Botín', `$${res.money}`],
+    ['Puntos base', res.base],
+    [`Multiplicador (${c.v.name} × ${c.p.title})`, `×${res.mult.toFixed(2)}`],
+    ['Pistas usadas', res.hintCost ? `−${res.hintCost}` : '0'],
+  ];
+  const tbl = h('table', { class: 'table' });
+  for (const [k, v] of rows) tbl.append(h('tr', {}, h('td', { text: k }), h('td', { text: String(v) })));
+  tbl.append(h('tr', { class: 'total' }, h('td', { text: `Puntos de ${c.player.name}` }), h('td', { text: String(res.score) })));
+  $('scoreBreak').replaceChildren(h('h3', { text: '🧮 Puntuación' }), tbl,
+    h('p', { class: 'fine', text: `Respuestas de la víctima: ${c.usedAI && c.usedOffline ? 'IA + offline' : c.usedAI ? 'IA de Claude' : 'cerebro offline'}` }));
+  $('chart').innerHTML = chartSvg(c.series); // SVG generado solo con números
+
+  const lessons = $('lessons');
+  lessons.textContent = '';
+  const ids = Object.keys(c.tags).filter((t) => TACTICS[t]).sort((a, b) => c.tags[b] - c.tags[a]);
+  if (!ids.length) lessons.append(h('p', { text: 'No detecté tácticas claras en esta llamada. Recuerda: ¡en la vida real, ante la duda, cuelga y verifica por otro canal!' }));
+  for (const id of ids) {
+    const t = TACTICS[id];
+    lessons.append(h('div', { class: 'lesson' },
+      h('div', { class: 'ic', text: t.icon }),
+      h('div', {}, h('b', {}, t.label, ' ', h('small', { text: `× ${c.tags[id]}` })), h('p', { text: t.lesson }))));
+  }
+
+  const rb = $('replayBody');
+  rb.textContent = '';
+  for (const item of c.history) {
+    if (item.who === 'player') rb.append(h('p', { class: 'y', text: `🕶️ ${c.player.name}: ${item.text}` }));
+    else rb.append(h('p', { class: 'v' }, `${c.v.name}: ${item.text}`, item.thought ? h('em', { text: `💭 ${item.thought}` }) : null));
+  }
+
+  const last = S.qi >= S.queue.length - 1;
+  $('nextBtn').textContent = last ? '🏆 Ver podio' : `Siguiente: ${S.players[S.queue[S.qi + 1].player].name} ▶`;
+  $('retryBtn').hidden = S.players.length > 1;
+  save('scamcall.best', Math.max(load('scamcall.best', 0), res.score));
+}
+
+$('nextBtn').addEventListener('click', () => {
+  if (S.qi >= S.queue.length - 1) return goFinal();
+  S.qi++;
+  goPlan();
+});
+$('retryBtn').addEventListener('click', () => {
+  // Solo para partidas de un jugador: otra llamada, mismas puntuaciones acumuladas.
+  S.queue.push({ player: 0, round: S.queue.length + 1 });
+  S.qi++;
+  goPlan();
+});
+$('menuBtn').addEventListener('click', toMenu);
+$('toMenuBtn').addEventListener('click', toMenu);
+$('againBtn').addEventListener('click', newGame);
+
+function toMenu() {
+  S.call = null;
+  show('screen-menu');
+}
+
+function goFinal() {
+  show('screen-final');
+  const ol = $('podium');
+  ol.textContent = '';
+  const medals = ['🥇', '🥈', '🥉'];
+  const order = S.players.map((p, i) => ({ p, i, score: S.scores[i], best: S.best[i] })).sort((a, b) => b.score - a.score);
+  order.forEach((o, rank) => {
+    ol.append(h('li', {},
+      h('span', { text: medals[rank] || `${rank + 1}.` }),
+      h('span', { class: 'swatch', style: `background:${COLORS[o.i % COLORS.length]}` }),
+      h('div', {}, o.p.name, h('small', { text: `Botín total: $${o.best.money} · Mejor llamada: ${o.best.score}` })),
+      h('span', { class: 'pts', text: `${o.score} pts` })));
+  });
+  if (order[0].score > 0) confetti();
+}
+
+// ----------------------------------------------------------------------------
+initMenu();
+
+
+})();
+</script>
+</body>
+</html>

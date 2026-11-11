@@ -1,5 +1,6 @@
 // "Cerebro" de la víctima: Claude (vía /api/turn) o, si no hay IA, un cerebro offline con reglas.
 export async function checkAI() {
+  if (location.protocol === 'file:') return { ai: false, models: [] }; // abierto como archivo: sin servidor
   try {
     const r = await fetch('/api/status', { cache: 'no-store' });
     if (!r.ok) throw new Error();
