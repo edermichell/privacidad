@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -1145,7 +1145,7 @@ function dbgc(e) {
   } catch (x) { }
 }
 /* ===================== NÚCLEO: constantes, utilidades, datos ===================== */
-let W = 168, H = 168; const TW = 32, TH = 16, WH = 26;
+let W = 168, H = 168, CKW = 64; const TW = 32, TH = 16, WH = 26;   /* CKW: columnas de bloques en la clave cy*CKW+cx (64 hasta 512 casillas; 128 si el mundo es mayor) */
 const TAU = Math.PI * 2;
 function mkrng(seed) {
   let s = seed >>> 0;
@@ -1496,10 +1496,10 @@ const idx = (x, y) => y * W + x;
 const inb = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
 let ROADS = [10, 34, 58, 82, 106, 130, 154];
 let NB = ROADS.length - 1;
-const WSIZES = { small: 168, big: 264, huge: 360, vast: 480 };
+const WSIZES = { small: 168, big: 264, huge: 360, vast: 480, colossal: 960 };
 /* cambia el tamaño del mundo (múltiplo de 24): reubica calles y reasigna todos los buffers que dependen de W*H */
 function setWorldSize(n) {
-  n = n || 168; W = H = n; ROADS = []; for (let r = 10; r <= n - 14; r += 24) ROADS.push(r); NB = ROADS.length - 1;
+  n = n || 168; W = H = n; CKW = n > 512 ? 128 : 64; ROADS = []; for (let r = 10; r <= n - 14; r += 24) ROADS.push(r); NB = ROADS.length - 1;
   BFSQ = new Int32Array(n * n); FP_BUF = new Uint16Array(n * n); explored = new Uint8Array(n * n); tvTree = new Uint8Array(n * n);
   mapCvs.width = n; mapCvs.height = n; cityCvs.width = n; cityCvs.height = n; cityOK = false; fieldP = null; chunks.clear();
 }
@@ -5107,7 +5107,7 @@ function applySave(s, guest) {
 
 /* ===================== VEHÍCULOS ===================== */
 const cars = []; let carId = 0;
-const CAR_HL = .78, CAR_HW = .42, TRUNK_BASE = 100000;
+const CAR_HL = .78, CAR_HW = .42, TRUNK_BASE = 4194304;
 const axisOf = a => ((Math.round(a / (Math.PI / 2)) % 4) + 4) % 4;
 function mkCar(x, y, h, col) {
   const c = { id: ++carId, x, y, a: h * Math.PI / 2, spd: 0, col: col || 0, fuel: 8 + Math.random() * 55, hp: 55 + Math.random() * 45, eng: false, dead: false, bt: Math.random() < .14 ? 1 : 0, ky: Math.random() < .4 ? 1 : 0, fl: Math.random() < .12 ? 1 : 0, st: 0, hitT: 0, smT: 0, ntT: 0, brake: 0, tr: null };
@@ -8522,7 +8522,7 @@ var DCB = { t: 0, burn: [] };
 function dcTick(dt) {
   DCB.t += dt; if (DCB.t < 1) return; DCB.t = 0;
   dcRefresh(); if (!DCV) return;
-  for (const [key, c] of chunks) { const cx = key & 63, cy = key >> 6; if (c.dst !== dcChunkStage(cx, cy)) chunks.delete(key); }
+  for (const [key, c] of chunks) { const cx = key % CKW, cy = (key / CKW) | 0; if (c.dst !== dcChunkStage(cx, cy)) chunks.delete(key); }
   DCB.burn.length = 0;
   for (const b of buildings) {
     if (b.dead || b.player) continue; const dd = dcBD(b), rs = dcRoofStage(dd);
@@ -12383,7 +12383,7 @@ function netScanSmall() {
     const nu = new Map(); for (const [k, v] of cur) nu.set(k, v[0]); NET.up[nm] = nu;
     if (add.length || del.length) netSend({ t: 'U', n: nm, add, del });
   }
-  for (const [nm, src] of [['pu', pumps], ['tw', twigs], ['bu', bushT]]) {
+  if (((NET.ss = (NET.ss | 0) + 1) % 6) === 1) for (const [nm, src] of [['pu', pumps], ['tw', twigs], ['bu', bushT]]) {
     const sh = NET.msh[nm], ch = [], del = [];
     for (const [k, v] of src) { if (sh.get(k) !== v) { ch.push([k, v]); sh.set(k, v); } }
     for (const k of sh.keys()) if (!src.has(k)) { del.push(k); sh.delete(k); }
@@ -12444,7 +12444,8 @@ function netEvent(o) {
 }
 function netScan() {
   if (!NET.sh) return; const A = netArrs(), ch = [], sl = NET.sl = ((NET.sl | 0) + 1) & 3;
-  for (let k = 0; k < A.length; k++) { const a = A[k], b = NET.sh[k]; if (!b || b.length !== a.length) continue; const i0 = Math.floor(a.length * sl / 4), i1 = Math.floor(a.length * (sl + 1) / 4); for (let i = i0; i < i1; i++) if (a[i] !== b[i]) { ch.push(k, i, a[i]); b[i] = a[i]; } }
+  const cN = (NET.role === 'host' && NET.rp && isFinite(NET.rp.x)) ? NET.rp : P, WR = 44, cX = Math.floor(cN.x), cY = Math.floor(cN.y), wx0 = Math.max(0, cX - WR), wx1 = Math.min(W - 1, cX + WR), wy0 = Math.max(0, cY - WR), wy1 = Math.min(H - 1, cY + WR);   /* ventana de 44 casillas: lo lejano se sincroniza cuando el jugador se acerca (la sombra recuerda lo que ya tiene) */
+  for (let k = 0; k < A.length; k++) { const a = A[k], b = NET.sh[k]; if (!b || b.length !== a.length) continue; for (let y = wy0; y <= wy1; y++) { const r0 = y * W; for (let i = r0 + wx0, e = r0 + wx1; i <= e; i++) if (a[i] !== b[i]) { ch.push(k, i, a[i]); b[i] = a[i]; } } }
   if (ch.length) netSend({ t: 'D', a: ch });
   if (sl !== 0) return;
   netScanSmall();
@@ -12466,7 +12467,7 @@ function netApplyDiff(o) {
     const k = a[j], i = a[j + 1], v = a[j + 2]; if (!A[k] || i >= A[k].length) continue; const old = A[k][i]; A[k][i] = v; NET.sh[k][i] = v;
     if (k === 1 && ((old ^ v) & 1) && typeof DOORANIM !== 'undefined') DOORANIM.set(i, TIME);
     if (k === 0 && v === 0 && typeof BLD !== 'undefined' && BLD.pc.has(i)) { const rec = BLD.pc.get(i), q = BLD.list.indexOf(rec); if (q >= 0) BLD.list.splice(q, 1); BLD.pc.delete(i); }
-    if (k === 5) roof = true; chunks.add(((((i / W) | 0) >> 3) * 64 + ((i % W) >> 3)) + ',' + (i % W) + ',' + ((i / W) | 0));
+    if (k === 5) roof = true; chunks.add(((((i / W) | 0) >> 3) * CKW + ((i % W) >> 3)) + ',' + (i % W) + ',' + ((i / W) | 0));
   }
   const done = new Set(); for (const c of chunks) { const p = c.split(','); const tx = +p[1], ty = +p[2], key = (ty >> 3) + ',' + (tx >> 3); if (done.has(key)) continue; done.add(key); try { invalidateChunkAt(tx, ty); } catch (e) { typeof dbgc === 'function' && dbgc(e); } }
   if (typeof rebuildMap === 'function' && roof) rebuildMap();
@@ -12728,7 +12729,7 @@ function perfChunkScan() {
   const Q = curQ(); if (!Q || typeof getChunk !== 'function') return; PERF.chRing.length = 0;
   const qx = Math.floor(Q.x) >> 3, qy = Math.floor(Q.y) >> 3;
   for (let cy = Math.max(0, qy - 3); cy <= Math.min((H >> 3) - 1, qy + 3); cy++) for (let cx = Math.max(0, qx - 3); cx <= Math.min((W >> 3) - 1, qx + 3); cx++) {
-    if (!chunks.has(cy * 64 + cx)) PERF.chRing.push([Math.abs(cx - qx) + Math.abs(cy - qy), cx, cy]);
+    if (!chunks.has(cy * CKW + cx)) PERF.chRing.push([Math.abs(cx - qx) + Math.abs(cy - qy), cx, cy]);
   }
   PERF.chRing.sort((a, c) => a[0] - c[0]);
 }
@@ -12739,7 +12740,7 @@ function perfIdle(budget) {
   if (SPB.pend.size) { SPB.off = 1; try { for (const [k, o] of SPB.pend) { SPB.pend.delete(k); if (!HC2.has(k)) humanSprite(o); if (performance.now() > lim) return; } } finally { SPB.off = 0; } }
   /* 2. suelo: un bloque por fotograma como máximo */
   PERF.chT -= 1; if (PERF.chT <= 0) { PERF.chT = 20; perfChunkScan(); }
-  if (PERF.chRing.length && budget > 4) { const c = PERF.chRing.shift(); if (!chunks.has(c[2] * 64 + c[1])) getChunk(c[1], c[2]); if (performance.now() > lim) return; }
+  if (PERF.chRing.length && budget > 4) { const c = PERF.chRing.shift(); if (!chunks.has(c[2] * CKW + c[1])) getChunk(c[1], c[2]); if (performance.now() > lim) return; }
   /* 3. techos, por tandas */
   PERF.roofT -= 1; if (PERF.roofT <= 0) { PERF.roofT = 18; perfRoofScan(); }
   while (PERF.roofs.length && performance.now() < lim) {
@@ -20291,7 +20292,7 @@ function s106Init() {
     let ok = true; for (let k = -3; k <= 3 && ok; k++) if (vx ? rY_(ty + k) : rX_(tx + k)) ok = false;
     for (let k = -2; k <= 2 && ok; k++) for (let m = 0; m < 3 && ok; m++) if (!road(vx ? band + m : tx + k, vx ? ty + k : band + m)) ok = false;
     if (!ok || (typeof MILBASE !== 'undefined' && MILBASE && milIn(tx, ty))) continue;
-    const site = { id: cy * 64 + cx, x: sx, y: sy, vx, type: r4 < .3 ? 'crash' : r4 < .56 ? 'luggage' : r4 < .78 ? 'bodies' : 'check', sd: (r5 * 1e9) | 0, lay: null };
+    const site = { id: cy * CKW + cx, x: sx, y: sy, vx, type: r4 < .3 ? 'crash' : r4 < .56 ? 'luggage' : r4 < .78 ? 'bodies' : 'check', sd: (r5 * 1e9) | 0, lay: null };
     S106.sites.push(site); S106.by.set(site.id, site);
   }
 }
@@ -20333,7 +20334,7 @@ function s106Lay(s) {
 
 /* ----- pintar la escena en el bloque de suelo recién construido ----- */
 function s106Bake(c, s) {
-  const L = s106Lay(s), cx0 = (s.id & 63) * 8, cy0 = (s.id >> 6) * 8, g = hiCtx(c.getContext('2d'));
+  const L = s106Lay(s), cx0 = (s.id % CKW) * 8, cy0 = ((s.id / CKW) | 0) * 8, g = hiCtx(c.getContext('2d'));
   g.save(); g.setTransform(RS, 0, 0, RS, 0, 0);
   for (const e of L.dec) {
     const u = e.x - cx0, v = e.y - cy0, X = (u - v) * 16 + 128, Y = (u + v) * 8;
@@ -20376,7 +20377,7 @@ function s106Cars() {
   };
   const _gc = getChunk;
   getChunk = function (cx, cy) {
-    const key = cy * 64 + cx, had = chunks.has(key), c = _gc.apply(this, arguments);
+    const key = cy * CKW + cx, had = chunks.has(key), c = _gc.apply(this, arguments);
     if (!had && S106.by.size) { const s = S106.by.get(key); if (s) { try { s106Bake(c, s); } catch (e) { typeof dbgc === 'function' && dbgc(e); } } }
     return c;
   };
@@ -20879,7 +20880,7 @@ function s135Init() {
     let tx = -1, ty = -1; const ax = 1 + ((r2 * 6) | 0), ay = 1 + ((r3 * 6) | 0);
     for (let k = 0; k < 36 && tx < 0; k++) { const i = (ax + k % 6) % 6 + 1, j = (ay + ((k / 6) | 0)) % 6 + 1, x = cx * 8 + i, y = cy * 8 + j; let ok = true; for (let dy = -1; dy <= 1 && ok; dy++) for (let dx = -1; dx <= 1; dx++) if (!free(x + dx, y + dy)) { ok = false; break; } if (ok) for (let dy = -3; dy <= 3 && ok; dy++) for (let dx = -3; dx <= 3; dx++) { const xx = x + dx, yy = y + dy; if (!inb(xx, yy)) { ok = false; break; } const g = tg[idx(xx, yy)]; if (g === G_WATER || ((g === G_ROAD || g === G_SIDE) && Math.max(Math.abs(dx), Math.abs(dy)) <= 2)) { ok = false; break; } } if (ok) { tx = x; ty = y; } }
     if (tx < 0 || (typeof MILBASE !== 'undefined' && MILBASE && milIn(tx, ty))) continue;
-    const site = { id: 100000 + cy * 64 + cx, key: cy * 64 + cx, x: tx + .5, y: ty + .5, type: r4 < .45 ? 'camp' : r4 < .75 ? 'graves' : 'picnic', sd: (r5 * 1e9) | 0, lay: null };
+    const site = { id: 100000 + cy * CKW + cx, key: cy * CKW + cx, x: tx + .5, y: ty + .5, type: r4 < .45 ? 'camp' : r4 < .75 ? 'graves' : 'picnic', sd: (r5 * 1e9) | 0, lay: null };
     S135.sites.push(site); S135.by.set(site.key, site);
   }
 }
@@ -20899,7 +20900,7 @@ function s135Lay(s) {
   return (s.lay = L);
 }
 function s135Bake(c, s) {
-  const L = s135Lay(s), cx0 = (s.key & 63) * 8, cy0 = (s.key >> 6) * 8, g = hiCtx(c.getContext('2d'));
+  const L = s135Lay(s), cx0 = (s.key % CKW) * 8, cy0 = ((s.key / CKW) | 0) * 8, g = hiCtx(c.getContext('2d'));
   g.save(); g.setTransform(RS, 0, 0, RS, 0, 0);
   for (const e of L.dec) {
     const u = e.x - cx0, v = e.y - cy0, X = (u - v) * 16 + 128, Y = (u + v) * 8, d = e.d, ax = X - d.width / RS / 2, ay = Y - d.height / RS / 2;
@@ -20910,7 +20911,7 @@ function s135Bake(c, s) {
 {
   const _gc = getChunk;
   getChunk = function (cx, cy) {
-    const key = cy * 64 + cx, had = chunks.has(key), c = _gc.apply(this, arguments);
+    const key = cy * CKW + cx, had = chunks.has(key), c = _gc.apply(this, arguments);
     if (!had && S135.by.size) { const s = S135.by.get(key); if (s) { try { s135Bake(c, s); } catch (e) { typeof dbgc === 'function' && dbgc(e); } } }
     return c;
   };
@@ -21531,7 +21532,7 @@ function resetDrawBuckets() {
   drawBucketKeys.length = 0; renderLights.length = 0; renderLightCursor = 0; drawEntryCursor = 0;
 }
 function resetRenderCaches() { chunks.clear(); resetDrawBuckets(); for (const b of buildings) b.roofCv = null; }
-function invalidateChunkAt(tx, ty) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) chunks.delete(((ty + dy) >> 3) * 64 + ((tx + dx) >> 3)); }
+function invalidateChunkAt(tx, ty) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) chunks.delete(((ty + dy) >> 3) * CKW + ((tx + dx) >> 3)); }
 const isTall = o => o === O_WALL || o === O_WIN || o === O_DOOR;
 const rX_ = x => ROADS.some(r => x >= r && x < r + 3), rY_ = y => ROADS.some(r => y >= r && y < r + 3);
 /* paso de cebra: franjas de pintura gastada, dibujadas pixel a pixel a doble resolución */
@@ -21604,7 +21605,7 @@ function decorTile(g, tx, ty, px, py, gnd, o) {
   }
 }
 function getChunk(cx, cy) {
-  const key = cy * 64 + cx; let c = chunks.get(key); if (c) { chunks.delete(key); chunks.set(key, c); return c; }
+  const key = cy * CKW + cx; let c = chunks.get(key); if (c) { chunks.delete(key); chunks.set(key, c); return c; }
   DST = dcOn() ? dcChunkStage(cx, cy) : -1; c = cv(256 * RS, 128 * RS); c.hi = true; c.dst = DST; const g = hiCtx(c.getContext('2d')); g.scale(RS, RS); g.imageSmoothingEnabled = false;
   for (let j = 0; j < CHN; j++) for (let i = 0; i < CHN; i++) {
     const tx = cx * CHN + i, ty = cy * CHN + j; if (!inb(tx, ty)) continue;
@@ -23701,7 +23702,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23742,7 +23743,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23765,7 +23766,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23794,7 +23795,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23828,7 +23829,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23859,7 +23860,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -23892,7 +23893,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -23921,12 +23922,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.0') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.1') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
