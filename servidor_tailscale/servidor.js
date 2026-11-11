@@ -159,6 +159,7 @@ class Room {
       const rafMode = process.env.URSRV_RAF || 'timer';
       await ctx.addInitScript(mode => { if (!/[?&]srv=1/.test(location.search)) return; if (mode === 'parado') { window.requestAnimationFrame = () => 0; } else if (mode === 'timer') { let last = 0; window.requestAnimationFrame = cb => setTimeout(() => { last = performance.now(); cb(last); }, Math.max(0, 33 - (performance.now() - last))); window.cancelAnimationFrame = id => clearTimeout(id); } }, rafMode);
       const page = await ctx.newPage(); this.page = page;
+      if (+process.env.URSRV_CPU > 1) { try { const cdp = await ctx.newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: +process.env.URSRV_CPU }); log('[' + this.id + '] PRUEBA: CPU del anfitrión frenada ×' + process.env.URSRV_CPU); } catch (e) { } }   /* solo para pruebas: imita un PC más lento */
       page.on('pageerror', e => { this.lastErr = e.message; log('[' + this.id + '] error de página:', e.message); });
       page.on('crash', () => log('[' + this.id + '] la página se cerró de forma inesperada'));
       await page.goto('http://127.0.0.1:' + CFG.puerto + '/juego/?srv=1', { waitUntil: 'load', timeout: 60000 });
@@ -320,6 +321,12 @@ function handler(req, res) {
       if (req.method === 'POST' || req.method === 'PUT') return relayPost(topic, req, res); if (req.method === 'GET' && p.endsWith('/sse')) return relaySse(topic, req, res); res.writeHead(404, CORS); return res.end(); }
     if (p === '/juego' || p === '/juego/' || p === '/juego/index.html') { const b = gameHtml(); res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' }); return res.end(b); }
     const ip = clientIp(req), Q = k => u.searchParams.get(k); let m;
+    /* ---- prueba de conexión (la abre el jugador en su teléfono: mide latencia, bajada y subida hasta ESTE servidor por la ruta real) ---- */
+    if (p === '/prueba' || p === '/prueba/') { let h; try { h = fs.readFileSync(path.join(ROOT, 'prueba.html')); } catch (e) { res.writeHead(404); return res.end('Falta prueba.html'); } res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end(h); }
+    if (p === '/prueba/ping') { if (limited('pp:' + ip, 300, 60000)) { res.writeHead(429, CORS); return res.end(); } res.writeHead(200, Object.assign({ 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' }, CORS)); return res.end(String(Date.now())); }
+    if (p === '/prueba/down') { if (limited('pd:' + ip, 20, 60000)) { res.writeHead(429, CORS); return res.end(); } const kb = Math.max(1, Math.min(4096, +Q('kb') || 512)); res.writeHead(200, Object.assign({ 'Content-Type': 'application/octet-stream', 'Cache-Control': 'no-store', 'Content-Length': kb * 1024 }, CORS)); return res.end(require('crypto').randomBytes(kb * 1024)); }
+    if (p === '/prueba/up' && req.method === 'POST') { if (limited('pu:' + ip, 20, 60000)) { res.writeHead(429, CORS); return res.end(); } let n = 0, big = false; req.on('data', d => { n += d.length; if (n > 6 * 1048576 && !big) { big = true; req.destroy(); } }); req.on('end', () => json(res, 200, { bytes: n })); req.on('error', () => { }); return; }
+    if (p === '/admin/apagar' && isLocal(req) && process.env.URSRV_PRUEBA === '1') { json(res, 200, { ok: true }); setTimeout(() => { if (globalThis.__bye) globalThis.__bye('prueba'); }, 200); return; }
     if (p === '/salas') {
       const a = auth(Q('uid'), Q('tok'), () => (ip === '127.0.0.1' || ip === '::1' || !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000))), uid = a.ok ? a.uid : null;
       freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
@@ -378,7 +385,7 @@ function handler(req, res) {
     if (p === '/estado') { freshAll().then(() => json(res, 200, { activo: [...rooms.values()].some(r => r.status === 'activa'), tailscale: tailscaleIp(), url: urlJuego(), salasActivas: activeCount(), salas: [...rooms.values()].map(r => r.info()) })); return; }
     if (p === '/admin/guardar') { if (!adminOk(req)) return adminDenied(req, res, false);  Promise.all([...rooms.values()].map(r => r.saveWorld('manual'))).then(o => { res.writeHead(200); res.end('guardado: ' + o.filter(Boolean).length + ' sala(s)'); }); return; }
     m = p.match(/^\/admin\/dormir\/([A-Za-z0-9]{4,6})$/); if (m) { if (!adminOk(req)) return adminDenied(req, res, false); const r = rooms.get(m[1].toUpperCase()); if (!r) { res.writeHead(404); return res.end(); } r.sleep('manual').then(() => { res.writeHead(200); res.end('dormida'); }); return; }
-    if (p === '/admin/eval' && isLocal(req) && process.env.URSRV_DEBUG === '1') { const r = rooms.get((u.searchParams.get('sala') || '').toUpperCase()); if (!r || !r.page) { res.writeHead(404); return res.end('sala no activa'); } r.page.evaluate(c => { try { return JSON.stringify((0, eval)(c)); } catch (e) { return 'ERR ' + e.message; } }, u.searchParams.get('js') || '').then(o => { res.writeHead(200); res.end(String(o)); }).catch(e => { res.writeHead(500); res.end(e.message); }); return; }
+    if (p === '/admin/eval' && isLocal(req) && (process.env.URSRV_DEBUG === '1' || process.env.URSRV_PRUEBA === '1')) { const r = rooms.get((u.searchParams.get('sala') || '').toUpperCase()); if (!r || !r.page) { res.writeHead(404); return res.end('sala no activa'); } r.page.evaluate(c => { try { return JSON.stringify((0, eval)(c)); } catch (e) { return 'ERR ' + e.message; } }, u.searchParams.get('js') || '').then(o => { res.writeHead(200); res.end(String(o)); }).catch(e => { res.writeHead(500); res.end(e.message); }); return; }
     if (p === '/' || p === '/index.html') { freshAll().then(() => { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(landing(isLocal(req))); }); return; }
     if (p === '/favicon.ico') { res.writeHead(204); return res.end(); }
     res.writeHead(404); res.end('no encontrado');
@@ -442,7 +449,7 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
   maintenance(); setInterval(maintenance, 10 * 60000);
   setInterval(() => { for (const r of rooms.values()) r.watchdog().catch(e => log('[vigilante ' + r.id + ']', e.message)); }, 5000);
   setInterval(() => { for (const r of rooms.values()) if (r.status === 'activa') r.saveWorld('auto').catch(() => { }); }, Math.max(20, CFG.guardarCadaSeg) * 1000);
-  let closing = false; const bye = async sig => { if (closing) return; closing = true; log('Cerrando (' + sig + '): guardando los mundos…'); for (const r of rooms.values()) { try { await r.sleep(); } catch (e) { } } try { if (browser) await browser.close(); } catch (e) { } process.exit(0); };
+  let closing = false; const bye = globalThis.__bye = async sig => { if (closing) return; closing = true; log('Cerrando (' + sig + '): guardando los mundos…'); for (const r of rooms.values()) { try { await r.sleep(); } catch (e) { } } try { if (browser) await browser.close(); } catch (e) { } process.exit(0); };
   process.on('SIGINT', () => bye('SIGINT')); process.on('SIGTERM', () => bye('SIGTERM')); process.on('SIGBREAK', () => bye('SIGBREAK')); process.on('SIGHUP', () => bye('SIGHUP'));
   process.on('uncaughtException', e => log('[error]', e.stack || e.message)); process.on('unhandledRejection', e => log('[error]', (e && e.message) || e));
 })();

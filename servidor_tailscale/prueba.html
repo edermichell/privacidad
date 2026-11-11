@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prueba de conexión · Último Refugio</title>
+<style>
+:root{color-scheme:dark}body{margin:0;background:#141816;color:#e8e4da;font:16px/1.45 system-ui,sans-serif;padding:20px 16px;max-width:560px;margin:auto}
+h1{font-size:22px;margin:0 0 4px}p.s{color:#9aa59d;margin:0 0 16px;font-size:14px}
+button{background:#c8a24a;color:#1a1710;border:0;border-radius:8px;padding:14px 18px;font:700 16px system-ui;width:100%;margin:8px 0}button:disabled{opacity:.5}
+.r{background:#1d231f;border:1px solid #2c352f;border-radius:10px;padding:12px 14px;margin:10px 0}.r b{display:block;font-size:20px}.r small{color:#9aa59d}
+.ok{color:#8fd18f}.mid{color:#e6c35c}.bad{color:#ff8a7a}pre{white-space:pre-wrap;background:#0e110f;border-radius:8px;padding:10px;font-size:13px}
+</style></head><body>
+<h1>Prueba de conexión</h1>
+<p class="s">Mide la ruta real de ESTE dispositivo hasta el servidor del juego (usa tu Wi-Fi o tus datos). Tarda unos 20 segundos y gasta ~8 MB.</p>
+<button id="go">EMPEZAR LA PRUEBA</button>
+<div class="r"><small>LATENCIA (ping)</small><b id="lat">—</b><small id="jit"></small></div>
+<div class="r"><small>BAJADA</small><b id="dn">—</b></div>
+<div class="r"><small>SUBIDA</small><b id="up">—</b></div>
+<div class="r"><small>CANAL DEL JUEGO (WebSocket)</small><b id="ws">—</b></div>
+<pre id="out" hidden></pre>
+<button id="cp" hidden>COPIAR RESULTADO</button>
+<p class="s">Para jugar bien hacen falta: latencia &lt; 150 ms, bajada ≥ 1 Mbit/s, subida ≥ 0,5 Mbit/s y que el WebSocket conecte. Envía el resultado copiado a quien organiza la prueba.</p>
+<script>
+const $=i=>document.getElementById(i), sleep=ms=>new Promise(r=>setTimeout(r,ms)), R={};
+const cls=(v,g,m)=>v<=g?'ok':v<=m?'mid':'bad', clsU=(v,g,m)=>v>=g?'ok':v>=m?'mid':'bad';
+async function ping(){const t=[];for(let i=0;i<15;i++){const a=performance.now();try{await (await fetch('/prueba/ping?'+Math.random(),{cache:'no-store'})).text();t.push(performance.now()-a)}catch(e){}await sleep(120)}
+ t.sort((a,b)=>a-b);if(!t.length)throw new Error('sin respuesta');const med=t[t.length>>1],min=t[0],p95=t[Math.min(t.length-1,Math.floor(t.length*.95))];R.lat={med,min,p95,lost:15-t.length};
+ $('lat').textContent=med.toFixed(0)+' ms';$('lat').className=cls(med,80,150);$('jit').textContent='mínimo '+min.toFixed(0)+' ms · peor '+p95.toFixed(0)+' ms · perdidos '+(15-t.length)}
+async function down(){const v=[];for(let i=0;i<3;i++){const a=performance.now();const b=await (await fetch('/prueba/down?kb=1024&'+Math.random(),{cache:'no-store'})).arrayBuffer();const s=(performance.now()-a)/1000;v.push(b.byteLength*8/1e6/s)}
+ v.sort((a,b)=>b-a);const m=(v[0]+v[1])/2;R.down=m;$('dn').textContent=m.toFixed(1)+' Mbit/s';$('dn').className=clsU(m,2,1)}
+async function up(){const v=[],buf=new Uint8Array(1048576);for(let i=0;i<3;i++){const a=performance.now();await fetch('/prueba/up',{method:'POST',body:buf});const s=(performance.now()-a)/1000;v.push(8/s)}
+ v.sort((a,b)=>b-a);const m=(v[0]+v[1])/2;R.up=m;$('up').textContent=m.toFixed(1)+' Mbit/s';$('up').className=clsU(m,1,.5)}
+function wsTest(){return new Promise(res=>{const u=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws?role=guest&room=SALA1&uid=prueba&n=x&s=x';const a=performance.now();let done=0;const f=(ok,m)=>{if(done)return;done=1;R.ws={ok,ms:Math.round(performance.now()-a),m};$('ws').textContent=ok?'conecta ('+R.ws.ms+' ms)':'NO conecta';$('ws').className=ok?'ok':'bad';res()};
+ try{const w=new WebSocket(u);w.onopen=()=>f(true);w.onclose=e=>f(e.code>=4000||done,e.code);w.onerror=()=>setTimeout(()=>f(false,'error'),300);setTimeout(()=>{f(false,'tiempo');try{w.close()}catch(e){}},8000)}catch(e){f(false,String(e))}})}
+function info(){const n=navigator,c=n.connection||{};return {ua:(n.userAgent.match(/\((.*?)\)/)||[,''])[1].slice(0,70),nucleos:n.hardwareConcurrency||'?',ram:n.deviceMemory?n.deviceMemory+' GB (aprox.)':'?',pantalla:screen.width+'x'+screen.height+' @'+(window.devicePixelRatio||1),red:(c.type?c.type+' ':'')+(c.effectiveType||'?')+(c.downlink?' ~'+c.downlink+' Mbit/s':'')}}
+$('go').onclick=async()=>{$('go').disabled=true;$('go').textContent='Midiendo…';$('cp').hidden=true;$('out').hidden=true;
+ try{await ping();await down();await up();await wsTest()}catch(e){R.err=String(e.message||e)}
+ const I=info(),L=R.lat||{};const t=['PRUEBA DE CONEXIÓN · '+new Date().toISOString().slice(0,16).replace('T',' '),'Servidor: '+location.host,'Dispositivo: '+I.ua,'Núcleos: '+I.nucleos+' · RAM: '+I.ram+' · Pantalla: '+I.pantalla,'Tipo de red: '+I.red,
+  'Latencia: '+(L.med!=null?L.med.toFixed(0)+' ms (mín '+L.min.toFixed(0)+', peor '+L.p95.toFixed(0)+', perdidos '+L.lost+')':'?'),'Bajada: '+(R.down!=null?R.down.toFixed(1):'?')+' Mbit/s','Subida: '+(R.up!=null?R.up.toFixed(1):'?')+' Mbit/s','WebSocket: '+(R.ws?(R.ws.ok?'conecta ('+R.ws.ms+' ms)':'NO conecta ('+R.ws.m+')'):'?')+(R.err?'\nError: '+R.err:'')].join('\n');
+ $('out').textContent=t;$('out').hidden=false;$('cp').hidden=false;$('go').disabled=false;$('go').textContent='REPETIR';};
+$('cp').onclick=async()=>{const t=$('out').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e2){}a.remove()}$('cp').textContent='COPIADO ✔';setTimeout(()=>$('cp').textContent='COPIAR RESULTADO',1800)};
+</script></body></html>
