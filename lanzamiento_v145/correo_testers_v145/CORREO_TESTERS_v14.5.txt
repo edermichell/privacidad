@@ -1,0 +1,39 @@
+Asunto: Último Refugio v14.5 — mapa nuevo gigante: prueba de 20 minutos
+
+Hola equipo:
+
+Ya está lista la v14.5 de Último Refugio. La novedad grande es el MAPA NUEVO de 960×960 casillas (más de 5 veces más grande que el de antes) en las 3 salas oficiales. Necesito que lo prueben en teléfonos reales.
+
+QUÉ HAY DE NUEVO
+- 3 salas oficiales con el mapa nuevo (etiqueta MAPA 960), hasta 10 jugadores por sala.
+- Distritos con personalidad: centro denso (más zombis y mejor botín), zona industrial con patios de cajas, PUERTO con mar y muelles de madera, parques con estanque y puentes, barrio residencial y campo con la base militar.
+- Callejones (pasajes de 1 o 2 casillas, cruces y callejones sin salida con botín… y emboscada) y mini-rotondas.
+- Servidor más ligero: hasta 3 salas llenas a la vez sin tirones en mis pruebas.
+
+(Adjuntar: lobby_mapa960.jpg, muelle.jpg, parque_estanque.jpg, patio_industrial.jpg, callejon.jpg, mapa_distritos.jpg)
+
+CÓMO PROBARLO (≈ 25 minutos)
+1. ANTES de jugar, abran en el teléfono [PEGAR AQUÍ LA DIRECCIÓN]/prueba (por ejemplo https://server.tail12bbaa.ts.net/prueba), pulsen EMPEZAR LA PRUEBA y mándenme el resultado (botón COPIAR RESULTADO). Gasta ~8 MB. Si pueden, háganlo con Wi-Fi y con datos móviles.
+2. Instalen la v14.5 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
+3. Caminen por el centro, la zona industrial, el puerto (muelles al final del camino), un parque con estanque y entren a un callejón.
+4. Peleen contra zombis, construyan un muro, abran cajas y salgan y vuelvan a entrar: lo construido debe seguir ahí.
+5. A los 5 minutos: Ajustes → «Diagnóstico avanzado» → ABRIR → COPIAR y péguenlo en el mensaje.
+
+LO QUE MÁS ME PREOCUPA
+- Fluidez en teléfonos modestos con un mapa tan grande (los FPS del Diagnóstico me dicen todo).
+- Desconexiones al cambiar de Wi-Fi a datos móviles (se corta y hay que volver a entrar).
+- Lugares donde se queden atascados o zonas que no se puedan cruzar (mar, vallas, callejones).
+- Calor del teléfono y consumo de datos (alrededor de 70 MB por hora peleando).
+
+CÓMO REPORTAR
+Modelo de teléfono y versión de Android, qué hacían y dónde (centro, puerto…), hora aproximada, Wi-Fi o datos, y captura o video corto. Para jugadores tramposos o tóxicos usen el botón de reportar y avísenme también.
+
+DESCARGA Y HORARIO
+Descarga de la v14.5: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
+El servidor estará encendido: [PONER FECHA Y HORARIO]
+(Si instalan encima conservan su partida individual. Las partidas de las salas oficiales anteriores no se conservan con el mapa nuevo.)
+
+¡Muchas gracias por su tiempo y sus reportes!
+
+Saludos,
+[TU NOMBRE]

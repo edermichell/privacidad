@@ -437,6 +437,9 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
 
 /* ---------------- arranque / cierre ---------------- */
 (async () => {
+  /* el registro técnico (puede incluir IPs de accesos denegados) se conserva 30 días, como dice la política de privacidad */
+  const trimLog = () => { try { const f = path.join(DATA, 'servidor.log'); if (!fs.existsSync(f)) return; const lim = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10); const ls = fs.readFileSync(f, 'utf8').split('\n'), keep = ls.filter(l => !l || l.slice(0, 10) >= lim || !/^\d{4}-\d{2}-\d{2}/.test(l)); if (keep.length < ls.length) fs.writeFileSync(f, keep.join('\n')); } catch (e) { } };
+  trimLog(); setInterval(trimLog, 864e5);
   log('Último Refugio · servidor multijugador. Datos en', DATA); bindAll();
   log('PANEL DE ADMINISTRACIÓN: abre en este PC  http://127.0.0.1:' + CFG.puerto + '/admin' + (CFG.claveAdmin ? '  (desde otros dispositivos: usuario admin + claveAdmin)' : '  (solo desde este PC)'));
   if (!tailscaleIp() && CFG.escuchar !== 'todas') log('AVISO: no se detecta Tailscale (100.x.x.x). Solo se podrá jugar desde este equipo hasta que Tailscale esté activo; se detectará solo.');

@@ -1,0 +1,19 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) · 450 caracteres ---
+Novedades de la v14.5:
+• Mapa nuevo gigante (960×960) en las 3 salas oficiales: centro denso, zona industrial, puerto con mar y muelles, parques con estanque y callejones.
+• Multijugador con salas públicas y privadas (hasta 10 jugadores); el mundo se guarda en el servidor.
+• Candados de código, cofres y robos entre jugadores.
+• Reportar, expulsar y banear a tramposos.
+• Notas de supervivientes y más detalles en el mapa.
+• Mejoras de rendimiento.
+
+--- English (optional) ---
+What's new in v14.5:
+• Giant new 960×960 map in the 3 official rooms: dense downtown, industrial zone, harbor with sea and piers, parks with ponds and alleys.
+• Multiplayer rooms, public or private (up to 10 players); the world is saved on the server.
+• Code padlocks, chests and player theft.
+• Report, kick and ban cheaters.
+• Survivor notes and more map detail.
+• Performance improvements.
