@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v14.5 (versionCode 137 → 142)
+# Último Refugio — cambios de la v14.0 a la v14.6 (versionCode 137 → 143)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -17,4 +17,7 @@
 - El registro técnico (`servidor.log`) se recorta a **30 días** (lo dice la política de privacidad).
 
 ## Política de privacidad
-- **Actualizada** (v14.5): la anterior (v83) decía que no hay servidores propios ni cuentas. Ahora describe el multijugador con servidor, el identificador anónimo, las salas, reportes, IP/Tailscale y cómo pedir el borrado de datos. **Hay que subir el nuevo `privacy.html` a tu URL pública antes de enviar la app.**
+- **Actualizada** (v14.6): la anterior (v83) decía que no hay servidores propios ni cuentas. Ahora describe el multijugador con servidor, el identificador anónimo, las salas, reportes, IP/Tailscale y cómo pedir el borrado de datos. **Hay que subir el nuevo `privacy.html` a tu URL pública antes de enviar la app.**
+
+## Pulido final (v14.6) — ver `actualizacion_v146/CAMBIOS_v14.6_pulido.md`
+- Corrige el arco rojo de golpe que podía dejar de dibujarse, evita repetir el aviso de distrito en los límites, y reduce CPU y memoria del servidor (firma de autos; el navegador oculto se cierra tras 2 min con todas las salas dormidas).

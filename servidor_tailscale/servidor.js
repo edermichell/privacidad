@@ -451,6 +451,14 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
   setInterval(() => { if (CFG.escuchar !== 'todas') bindAll(); }, 10000);
   maintenance(); setInterval(maintenance, 10 * 60000);
   setInterval(() => { for (const r of rooms.values()) r.watchdog().catch(e => log('[vigilante ' + r.id + ']', e.message)); }, 5000);
+  /* con todas las salas dormidas el navegador no hace falta (~250 MB): se cierra tras 2 min y se vuelve a abrir solo al despertar una sala */
+  let idleSince = 0;
+  setInterval(() => { try {
+    const busy = [...rooms.values()].some(r => r.status !== 'dormida' || r.promise);
+    if (busy || !browser || browserStarting) { idleSince = 0; return; }
+    if (!idleSince) { idleSince = Date.now(); return; }
+    if (Date.now() - idleSince > 120000) { const b = browser; browser = null; idleSince = 0; b.close().then(() => log('[navegador] cerrado por inactividad (se abre solo al despertar una sala)')).catch(() => { }); }
+  } catch (e) { } }, 15000);
   setInterval(() => { for (const r of rooms.values()) if (r.status === 'activa') r.saveWorld('auto').catch(() => { }); }, Math.max(20, CFG.guardarCadaSeg) * 1000);
   let closing = false; const bye = globalThis.__bye = async sig => { if (closing) return; closing = true; log('Cerrando (' + sig + '): guardando los mundos…'); for (const r of rooms.values()) { try { await r.sleep(); } catch (e) { } } try { if (browser) await browser.close(); } catch (e) { } process.exit(0); };
   process.on('SIGINT', () => bye('SIGINT')); process.on('SIGTERM', () => bye('SIGTERM')); process.on('SIGBREAK', () => bye('SIGBREAK')); process.on('SIGHUP', () => bye('SIGHUP'));

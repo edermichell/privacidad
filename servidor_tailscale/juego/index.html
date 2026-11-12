@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.5 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.6 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -8008,7 +8008,7 @@ function questWin() {
   qVisit = function () {
     _qv.apply(this, arguments);
     const pl = S142.plan; if (!pl || !P || !S142.on) return; const t = performance.now(); if (t - (S142.t || 0) < 400) return; S142.t = t;
-    const k = pl.at(P.x | 0, P.y | 0); if (k !== S142.last) { if (S142.last >= 0 && !P.dead) say('Entras a: ' + D142_NAMES[k], 'tip'); S142.last = k; }
+    const k = pl.at(P.x | 0, P.y | 0); if (k !== S142.last) { if (S142.last >= 0 && !P.dead && t - (S142.ann || 0) > 4000) { say('Entras a: ' + D142_NAMES[k], 'tip'); S142.ann = t; } S142.last = k; }
   };
 }
 function questTick() {
@@ -12593,8 +12593,9 @@ function netScanSmall() {
     for (const k of sh.keys()) if (!src.has(k)) { del.push(k); sh.delete(k); }
     if (ch.length || del.length) netSend({ t: 'M', n: nm, ch, del });
   }
+  const sgT = (performance.now() / 16) | 0;
   for (const c of cars) {
-    if (carBusy(c)) continue; const sg = carSig(c);
+    if (carBusy(c)) continue; const sg = c._sf === sgT ? c._ss : (c._sf = sgT, c._ss = carSig(c));
     if (NET.cs.get(c.id) !== sg) { NET.cs.set(c.id, sg); netSend({ t: 'CS', id: c.id, f: Math.round(c.fuel * 10) / 10, h: Math.round(c.hp), d: c.dead ? 1 : 0, bt: c.bt ? 1 : 0, fl: c.fl ? 1 : 0, ky: c.ky ? 1 : 0, pt: c.pt ? c.pt.map(Math.round) : 0, dm: c.dm ? 1 : 0 }); }
   }
 }
@@ -15647,7 +15648,7 @@ function hitiMark(x, y) {
   const _rd = render; render = function (dt) {
     _rd.apply(this, arguments);
     if (HITI.t > 0 && STATE === 'play' && P && !P.dead) {
-      HITI.t = Math.max(0, HITI.t - dt * 1.1); const k = HITI.t, cx = CW / 2, cy = CH / 2, R = Math.min(CW, CH) * .5;
+      HITI.t = Math.max(0, HITI.t - (dt || 0) * 1.1); const k = HITI.t, cx = CW / 2, cy = CH / 2, R = Math.min(CW, CH) * .5;
       ctx.save(); ctx.globalAlpha = Math.min(1, k * 1.3) * .75; const a = HITI.a;
       const ex = cx + Math.cos(a) * R * 1.55, ey = cy + Math.sin(a) * R * 1.05;
       const g = ctx.createRadialGradient(ex, ey, 2, ex, ey, R * .95); g.addColorStop(0, 'rgba(210,20,20,.85)'); g.addColorStop(1, 'rgba(210,20,20,0)');
@@ -23906,7 +23907,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23947,7 +23948,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23970,7 +23971,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23999,7 +24000,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24033,7 +24034,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24064,7 +24065,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24097,7 +24098,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24126,12 +24127,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.5') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.6') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
