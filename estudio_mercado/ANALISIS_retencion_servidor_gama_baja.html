@@ -1,0 +1,322 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Retención, servidor y gama baja · Último Refugio</title><style>body{font:16px/1.55 system-ui,Segoe UI,Arial,sans-serif;max-width:920px;margin:0 auto;padding:24px 16px 60px;color:#1c241e;background:#f6f4ec}
+h1{font-size:28px;margin:.2em 0}h2{font-size:22px;margin-top:1.8em;border-bottom:2px solid #c9c2a8;padding-bottom:4px}h3{font-size:18px;margin-top:1.4em}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px;background:#fff}th,td{border:1px solid #d8d2c0;padding:6px 8px;vertical-align:top;text-align:left}th{background:#ece6d0}
+blockquote{margin:12px 0;padding:8px 14px;background:#fff8e1;border-left:4px solid #c8a24a}a{color:#7a4a10}hr{border:0;border-top:1px solid #d8d2c0;margin:24px 0}code{background:#ece6d0;padding:1px 4px;border-radius:3px}
+@media(max-width:640px){table{font-size:12.5px}th,td{padding:4px 5px}}@media print{body{background:#fff}}</style></head><body><h1>Último Refugio — retención, qué añadir, servidor futuro y gama baja</h1>
+<p><em>Noviembre de 2026 · sobre la versión 14.6.</em>
+Marcas: <strong>[Nuestro]</strong> = sale de tu código o de mis pruebas; <strong>[Web]</strong> = encontrado en buscadores (orientativo, algunas fuentes se contradicen); <strong>[Mi criterio]</strong> = opinión o hipótesis mía.</p>
+<hr />
+<h2>1. ¿Por qué la retención diaria sería baja?</h2>
+<p><strong>Aclaración importante:</strong> <strong>no tengo tus cifras reales.</strong> En el estudio anterior puse un 2/5 a «retención» como <em>opinión mía sobre el diseño</em>, no como medición. Lo que sigue son <strong>hipótesis ordenadas por probabilidad</strong>, cada una con qué evidencia hay en el juego y cómo comprobarla.</p>
+<p><strong>Qué es:</strong> retención día 1 (D1) = de cada 100 que instalan, cuántos vuelven al día siguiente; D7 y D30 igual a 7 y 30 días. Referencias generales de juegos móviles [Web]: mediana D1 ≈ 22 %, D7 ≈ 4 %, D30 &lt; 1 %; un juego medio con marketing ≈ 25–30 % / 10–15 % / 3–6 %; los mejores 45 % / 25 % / 12 %; en Android el D1 de los mejores ronda el 25–27 %. <strong>Primero mira tu número real</strong> (Play Console → KPIs/Estadísticas → «Usuarios retenidos») y compáralo con eso: si tu D1 está en 20–30 %, <strong>no es baja</strong>.</p>
+<h3>Hipótesis (de más a menos probable) [Mi criterio]</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Hipótesis</th>
+<th>Qué hay en el juego [Nuestro]</th>
+<th>Cómo comprobarla</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Al morir lo pierdes todo.</strong> No hay un motivo que sobreviva a la muerte para «volver mañana».</td>
+<td>Al morir se borra la partida guardada (también en Casual). Lo que permanece: unos 39 logros, estadísticas, trajes y el récord.</td>
+<td>Play Console no lo muestra; mide cuánto dura una partida y cuántos mueren antes de 10 min (p. ej. con 5 testers nuevos).</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Los primeros 5–10 minutos abruman o frustran.</strong> Es un simulador con muchas reglas (hambre, sed, heridas, clima, ruido).</td>
+<td>Hay tutorial de 7 pasos, modo Casual por defecto y un mensaje «moriste muy pronto: puedes bajar la dificultad».</td>
+<td>Observa a 5–10 personas que no conocen el juego: ¿llegan a su primera casa y a su primer combate sin ayuda? Es la prueba más valiosa y barata.</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Pocos motivos para volver <em>hoy</em>.</strong></td>
+<td>Existe un reto diario (misma semilla del día), racha de caja diaria (3 días: +1 caja; 7 días: +3), logros. No hay ranking, eventos ni recordatorios.</td>
+<td>Revisa cuánta gente abre el reto diario/ caja diaria (no se mide hoy).</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Nadie te avisa.</strong> Sin notificaciones, quien no se acuerda no vuelve.</td>
+<td>La app no envía recordatorios.</td>
+<td>—</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Comunidad vacía al principio.</strong> El multijugador es lo más diferente, pero con pocos jugadores las salas están vacías.</td>
+<td>3 salas oficiales, etiqueta «MAPA 960», sin chat ni forma de invitar fácil a un amigo.</td>
+<td>Cuántos entran a MULTIJUGADOR y cuántos coinciden en la misma sala (el panel <code>/admin</code> lo muestra).</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Arranque lento / tirones en teléfonos modestos.</strong> El jugador se va sin avisar.</td>
+<td>Con CPU 4× más lenta el menú tarda ≈ 4,5 s y una partida 960 ≈ 11 s (sección 4).</td>
+<td>Play Console → <em>Android vitals</em> (ANR, cierres, arranque lento) y valoraciones por dispositivo.</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Expectativa de la ficha.</strong> Si la ficha promete algo distinto, el D1 cae.</td>
+<td>Ficha con pocas capturas del mapa nuevo.</td>
+<td>Tasa de conversión de la ficha y reseñas de 1–2 estrellas: ¿de qué se quejan?</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mi lectura:</strong> lo más probable es la suma de <strong>1 + 2 + 3</strong> (juego profundo sin gancho para volver) y, en teléfonos modestos, <strong>6</strong>. Las demás son secundarias hasta que haya comunidad. Pero <strong>sin datos es una hipótesis</strong>: antes de construir nada, mide.</p>
+<hr />
+<h2>2. ¿Qué más podemos añadir o lo que tenemos sobra?</h2>
+<p><strong>Respuesta corta:</strong> <strong>en contenido y sistemas, sobra.</strong> Ya tienes más mundo, sistemas y distritos de los que un jugador nuevo ve en sus primeras horas. Lo que falta no son más funciones de juego, sino <strong>«motivos para volver»</strong> y <strong>medir</strong>. Y <strong>no añadiría</strong> por ahora: más distritos, más salas, chat de voz, más trajes.</p>
+<p>Si quieres añadir algo, esto es lo que yo priorizaría (impacto / esfuerzo) [Mi criterio]:</p>
+<table>
+<thead>
+<tr>
+<th>Prioridad</th>
+<th>Qué</th>
+<th>Por qué</th>
+<th>Esfuerzo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Medir</strong> (sin añadir juego): Play Console (retención, vitals) + 5–10 testers nuevos observados</td>
+<td>Convierte hipótesis en datos</td>
+<td>Bajo</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Algo que sobreviva a la muerte</strong>: p. ej. un «legado» (un objeto inicial desbloqueado por días sobrevividos, o un récord por mundo)</td>
+<td>Ataca la hipótesis 1, la más probable</td>
+<td>Medio</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Recordatorio local diario</strong> («tu caja del día te espera», «hay reto nuevo»)</td>
+<td>Ataca 3 y 4; funciona sin servidor</td>
+<td>Bajo-medio (Java + permiso de notificaciones en Android 13+)</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Invitar a un amigo con un toque</strong> (compartir enlace/código de sala por WhatsApp)</td>
+<td>Ataca 5; el multijugador solo vale con gente</td>
+<td>Bajo-medio</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Ranking semanal del reto diario</strong> en tu servidor (ID anónimo)</td>
+<td>Da razón de competir; ya tienes servidor</td>
+<td>Medio-alto</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Primer-día más amable</strong>: 3 metas cortas con recompensa visible en los primeros 10 minutos</td>
+<td>Ataca 2</td>
+<td>Medio</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cuidado:</strong> cualquier medición dentro del juego (analítica) <strong>cambia la política de privacidad y «Seguridad de los datos»</strong> de Play; por eso primero usa lo que Play ya te da.</p>
+<hr />
+<h2>3. Servidor: casa hoy, opciones baratas para crecer</h2>
+<h3>3.1 Cuánto necesita realmente [Nuestro, medido en mi equipo]</h3>
+<p>Con 3 salas × 10 jugadores peleando contra hordas (la prueba dura), en Linux:</p>
+<table>
+<thead>
+<tr>
+<th>Recursos del servidor</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2 núcleos</strong></td>
+<td>29,6–29,7 pasos/s por sala (objetivo 30): <strong>aguanta</strong></td>
+</tr>
+<tr>
+<td><strong>1 núcleo</strong></td>
+<td>11 pasos/s: <strong>no alcanza</strong></td>
+</tr>
+<tr>
+<td>Memoria</td>
+<td>1,4–1,7 GB para las 3 salas (+ el sistema y el navegador oculto)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Mínimo razonable para 3 salas: 2 núcleos rápidos + 4 GB de RAM. Cómodo: 4 núcleos + 8 GB.</strong> Tu portátil (i3-N305, 8 GB) ya cumple, como mostró la <code>PRUEBA_DURA</code>. Cada sala consume por el navegador oculto que la ejecuta; es lo más pesado (ver 3.4).</p>
+<h3>3.2 Opciones [Web — precios de terceros que <strong>se contradicen</strong>; confirma en la página del proveedor]</h3>
+<table>
+<thead>
+<tr>
+<th>Opción</th>
+<th>Costo aproximado</th>
+<th>Ventajas</th>
+<th>Riesgos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A. Seguir en tu PC de casa</strong></td>
+<td>≈ electricidad (portátil de 15–30 W ≈ unos cientos de pesos al año; estimación mía)</td>
+<td>Ya funciona, cero gasto, tu internet (208 Mbps de subida) sobra</td>
+<td>Apagones, internet, el PC se usa para otra cosa. Mitigación: un <strong>regulador/UPS</strong> pequeño y <code>EVITAR_SUSPENSION_WINDOWS.bat</code></td>
+</tr>
+<tr>
+<td><strong>B. Mini PC dedicado (Intel N100, 16 GB)</strong></td>
+<td>≈ US$250–340 nuevo (las fuentes van de US$150 a US$340; la RAM subió de precio)</td>
+<td>Una sola compra, consumo bajo (~10 W), libera tu portátil, ya probado con N305</td>
+<td>Pago inicial; sigue dependiendo de tu casa</td>
+</tr>
+<tr>
+<td><strong>C. VPS en EE. UU. 2 vCPU / 4 GB</strong> (p. ej. Hetzner CPX22 en Ashburn/Hillsboro)</td>
+<td>≈ €8/mes (una fuente; otra lo sitúa más alto)</td>
+<td>Barato, sin apagones, internet de datacenter</td>
+<td>Latencia desde México (Ashburn/Hillsboro están lejos); Hetzner subió precios en 2026</td>
+</tr>
+<tr>
+<td><strong>D. VPS en Dallas</strong> (Vultr/DigitalOcean/Linode)</td>
+<td>≈ US$20–24/mes (4 GB), US$40–48 (8 GB)</td>
+<td><strong>La mejor latencia a México</strong> entre los comerciales; precio estable</td>
+<td>El más caro</td>
+</tr>
+<tr>
+<td><strong>E. Contabo VPS 10 (4 vCPU / 8 GB)</strong></td>
+<td>≈ €4,5–5,5/mes con contrato de 12 meses; recargo por región EE. UU.</td>
+<td>El más barato por recurso</td>
+<td>Rendimiento compartido variable; hay que <strong>probarlo con <code>PRUEBA_DURA</code></strong> antes de confiar</td>
+</tr>
+<tr>
+<td><strong>F. Oracle «Always Free» (ARM)</strong></td>
+<td>US$0</td>
+<td>Gratis</td>
+<td>En 2026 se reportó un recorte a ~2 núcleos/12 GB y que reclaman instancias «inactivas»; <strong>poco fiable</strong> para producción</td>
+</tr>
+</tbody>
+</table>
+<h3>3.3 Mi recomendación por etapas [Mi criterio]</h3>
+<ol>
+<li><strong>Ahora:</strong> quédate en casa. Compra un UPS pequeño, deja <code>AUTOARRANQUE_WINDOWS.bat</code> y vigila <code>/admin</code>.</li>
+<li><strong>Cuando haya jugadores a diario y los cortes duelan:</strong> un <strong>VPS de Dallas 2 vCPU/4 GB (~US$20)</strong> o un <strong>mini PC N100</strong> (pago único). Antes de contratar cualquiera, <strong>corre <code>PRUEBA_DURA</code> allí</strong> (hay versión Linux en el kit) y exige ≥ 27 pasos/s.</li>
+<li><strong>Si «Buen anfitrión» vende:</strong> salas 24/7 pagadas en un VPS aparte, para no mezclar con tu PC.</li>
+</ol>
+<p><strong>Latencia:</strong> para acción en tiempo real conviene &lt; 100 ms. Un servidor en EE. UU. central (Dallas) suele quedar mucho mejor que Europa para México; confírmalo con la página <code>/prueba</code> desde un teléfono.</p>
+<h3>3.4 Lo que más ahorraría a futuro (no ahora)</h3>
+<p>Cada sala corre en un <strong>navegador oculto</strong>; eso es el 80 % de la memoria. Una versión del anfitrión <strong>sin navegador</strong> (en Node) bajaría mucho el costo por sala, pero es un <strong>rediseño grande</strong>; solo tiene sentido si el servidor llega a muchas salas.</p>
+<hr />
+<h2>4. Optimizar para gama baja</h2>
+<h3>4.1 Lo que el juego ya hace [Nuestro]</h3>
+<p>Calidad automática con histéresis (baja a «gráficos bajos» tras ~3 s de sobrecarga y recupera a los 15 s), modo de gráficos bajos manual, tope de 30 FPS opcional, resolución interna según pantalla, presupuesto de cachés (sprites y bloques de mapa), animación y simulación por distancia (LOD), trabajo diferido, panel de diagnóstico con FPS/ms/memoria, y en Android la capa de hardware y aceleración activadas. <strong>Es un sistema bastante completo; no hay «una gran mejora fácil» pendiente.</strong></p>
+<h3>4.2 Lo que medí [Nuestro — emulación, ver límites abajo]</h3>
+<p>Teléfono emulado de 800×360 a densidad 2 con la CPU frenada ×K, mapa 960 (el más pesado):</p>
+<table>
+<thead>
+<tr>
+<th>CPU más lenta que mi equipo</th>
+<th>Gráficos «altos»</th>
+<th>Modo automático (baja solo)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>×1</td>
+<td>59,5 FPS</td>
+<td>—</td>
+</tr>
+<tr>
+<td>×2</td>
+<td>34,7 FPS</td>
+<td>—</td>
+</tr>
+<tr>
+<td>×4</td>
+<td>19,7 FPS</td>
+<td><strong>≈ 37 FPS</strong> (centro de la ciudad)</td>
+</tr>
+<tr>
+<td>×6</td>
+<td>10–12 FPS</td>
+<td><strong>23–27 FPS</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Coste de JavaScript por fotograma</strong> (×4): altos ≈ 37–43 ms; bajos ≈ 15–18 ms (<strong>el modo bajo recorta unas 3 veces</strong> lo que dibuja). Más de la mitad del tiempo del fotograma es del navegador (composición), no del juego.</li>
+<li><strong>Dibujo por fotograma:</strong> ≈ 200–300 llamadas y ≈ 1,5 millones de píxeles (altos) / 0,7–0,8 (bajos): <strong>ligero</strong>.</li>
+<li><strong>Arranque (×4):</strong> menú ≈ 4,5–5 s; partida «enorme» ≈ 2,5 s; mapa 960 ≈ 11 s; «Continuar» ≈ 6–12 s. <strong>Lo que domina el arranque es dibujar los sprites por código</strong> (cv, isoBox, slabHi, treeHi…).</li>
+<li><strong>Memoria:</strong> navegador completo ≈ 420–525 MB (mapa enorme) y 550–600 MB (mapa 960) en escritorio; heap de JavaScript 50–100 MB. Android WebView será distinto.</li>
+</ul>
+<p><strong>Límites de la emulación:</strong> frena solo el procesador principal de JavaScript; la GPU, el calor, la RAM real y el sistema Android de un teléfono de gama baja <strong>no se reproducen</strong>. Estos números sirven para <strong>comparar</strong> cambios, no para prometer FPS en un modelo concreto.</p>
+<h3>4.3 Oportunidades, ordenadas [Mi criterio]</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Mejora</th>
+<th>Beneficio esperado</th>
+<th>Riesgo/esfuerzo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Android: manejar <code>onRenderProcessGone</code></strong> (cuando el sistema mata el WebView por poca memoria, recrearlo en lugar de que la app se cierre)</td>
+<td><strong>Evita cierres en teléfonos de poca RAM</strong> (la guía oficial de Android lo recomienda [Web: <a href="https://developer.android.com/develop/ui/views/layout/webapps/handle-termination">Handle WebView termination</a>])</td>
+<td>Bajo-medio; <strong>Java no probado aquí</strong> (no hay Android SDK en este entorno): compílalo y pruébalo en un teléfono</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Arranque más rápido</strong>: generar solo los sprites del menú y dejar el resto para después</td>
+<td>Menú de ~4,5 s → mucho menos en teléfono lento (estimación)</td>
+<td>Medio; toca el arranque, hay que probar mucho</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Liberar cachés al pasar a segundo plano</strong> (<code>visibilitychange</code> ya guarda; añadir vaciar bloques de mapa)</td>
+<td>Menos probabilidad de que Android cierre el juego</td>
+<td>Bajo</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Tope de 30 FPS por defecto en dispositivos débiles</strong> (≤ 4 núcleos o ≤ 3 GB RAM)</td>
+<td>Menos calor y batería; el modo automático ya existe</td>
+<td>Bajo</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Tercer nivel automático</strong> (aún más bajo) solo si ya está en «bajo» y sigue &lt; 30 FPS</td>
+<td>Ayuda al 5 % más débil; <strong>reduce el campo visible</strong></td>
+<td>Medio; cambia lo que se ve</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Unirse a una sala 960 con teléfono lento</strong>: ≈ 7 s hoy (el invitado vuelve a generar el mundo)</td>
+<td>Entrada más rápida</td>
+<td>Alto (rediseño de red) — no ahora</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Requisito mínimo recomendado [Mi criterio]:</strong> ≥ 2 GB de RAM; con 1 GB (Android Go) puede cerrarse por memoria. Falta confirmarlo en teléfonos reales.</p>
+<h3>4.4 Cómo comprobarlo en teléfonos reales (lo único que da certeza)</h3>
+<ol>
+<li>Consigue 2–3 teléfonos <strong>baratos</strong> (p. ej. de 2–3 GB de RAM, Android 9–11).</li>
+<li>En cada uno: <strong>Ajustes → «Diagnóstico avanzado» → ABRIR</strong>, camina 5 minutos en el centro de la ciudad y <strong>COPIAR</strong>; manda los textos.</li>
+<li>Repite con <strong>Gráficos: Bajos</strong> y con el <strong>tope a 30 FPS</strong>.</li>
+<li>Con esos datos decidimos cuál de las mejoras 1–5 aporta de verdad.</li>
+</ol>
+<hr />
+<h2>5. Qué haría primero (resumen)</h2>
+<ol>
+<li><strong>Medir:</strong> D1/D7/D30 y <em>Android vitals</em> en Play Console; observar a 5–10 testers nuevos.</li>
+<li><strong>Estabilidad en gama baja (Java <code>onRenderProcessGone</code>)</strong> y <strong>tope de 30 FPS en equipos débiles</strong>: bajo esfuerzo, evitan perder jugadores en silencio.</li>
+<li><strong>Un motivo para volver</strong> que sobreviva a la muerte y <strong>un recordatorio diario</strong> (cuando los datos confirmen la hipótesis).</li>
+<li><strong>Servidor:</strong> quedarse en casa con UPS; planear mini PC N100 o VPS de Dallas 2 vCPU/4 GB cuando haya uso diario.</li>
+</ol>
+<h2>6. Fuentes y límites</h2>
+<ul>
+<li>Retención: <a href="https://gamedevreports.substack.com/p/gameanalytics-mobile-gaming-benchmarks">GameAnalytics 2025 (resumen)</a>, <a href="https://appagent.com/?p=61637">AppAgent</a>. Datos generales, no específicos de survival.</li>
+<li>Servidor: <a href="https://www.bitdoze.com/hetzner-cloud-cost-optimized-plans/">Hetzner 2026</a>, <a href="https://pricingsaas.com/companies/contabo.main/diffs/2026Q2">Contabo</a>, <a href="https://docs.oracle.com/iaas/Content/FreeTier/resourceref.htm">Oracle Always Free</a>, <a href="https://www.vpsbenchmarks.com/compare/vultr_vs_digitalocean_vs_linode">comparativa Vultr/DO/Linode</a>, <a href="https://www.pcbuildadvisor.com/?p=3051">mini PC N100</a>. <strong>Los precios varían mucho entre fuentes y cambian</strong>; confirma en la página del proveedor.</li>
+<li>Android: <a href="https://developer.android.com/guide/webapps/managing-webview">Manage WebView objects</a>, <a href="https://developer.android.com/develop/ui/views/layout/webapps/handle-termination">WebView termination</a>.</li>
+<li>Mis mediciones usan Chromium en Linux de 4 núcleos con la CPU frenada; no sustituyen a teléfonos reales.</li>
+<li>No pude abrir muchas páginas completas desde este entorno; usé lo que muestran los buscadores.</li>
+</ul></body></html>
