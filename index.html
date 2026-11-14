@@ -297,7 +297,7 @@ body.touch #bpl{bottom:calc(190px + env(safe-area-inset-bottom,0px))}
 #alim .alic{width:min(520px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:12px 14px}#alim h5{margin:6px 0 0;font-family:var(--disp);font-weight:400;font-size:8px;letter-spacing:.12em;color:var(--gold)}
 #alim .alirow{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#0c1510;border:2px solid #000;box-shadow:0 0 0 1px #2e4535;border-radius:4px;font-size:19px;color:#d7dfd2}#alim .alirow span{flex:1;min-width:0}#alim .alirow i{font-style:normal;font-size:7px;font-family:var(--disp);padding:1px 5px;border-radius:2px;margin-left:6px;vertical-align:2px}
 #alim .alirow i.al{background:#3d7a3d;color:#fff}#alim .alirow i.tr{background:#b3261e;color:#fff}#alim button{font-family:var(--disp);font-size:8px;padding:6px 9px;letter-spacing:.05em}
-#alim .alisg{display:flex;gap:6px;flex-wrap:wrap}#alim .alifoot{display:flex;justify-content:flex-end}#alim .hint{font-size:17px;color:#8fa08c;margin:0}
+#alim .aligm{display:block;font-size:18px;line-height:1.1}#alim .aligm b{color:var(--gold);font-weight:400}#alim .alisg{display:flex;gap:6px;flex-wrap:wrap}#alim .alifoot{display:flex;justify-content:flex-end}#alim .hint{font-size:17px;color:#8fa08c;margin:0}
 #askm{position:fixed;inset:0;z-index:170;background:#000d;display:grid;place-items:center;padding:12px}#askm[hidden]{display:none}
 #askm .askc{width:min(440px,100%);padding:14px 16px;display:flex;flex-direction:column;gap:12px}#askm p{margin:0;font-size:20px;line-height:1.1;color:#d7dfd2;text-align:left}
 #askm .askb{display:flex;gap:8px;justify-content:flex-end}#askm .askb button{font-family:var(--disp);font-size:9px;padding:8px 12px;letter-spacing:.06em}#askm #askYes{background:#2b4a2f;color:#fff}.updbody li{margin:0 0 3px}
@@ -902,7 +902,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v15.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v15.4 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -1111,6 +1111,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
   <div class="stc alic" role="dialog" aria-label="Alianza">
     <header class="sth"><b>ALIANZA</b><button id="bAliX" type="button">LISTO</button></header>
     <div id="aliSt" class="updst"></div>
+    <h5>MISIÓN DE GRUPO</h5><div id="aliGm" class="updst aligm"></div>
     <h5>JUGADORES CERCA</h5><div id="aliNear"></div>
     <h5>SEÑALES RÁPIDAS A TUS ALIADOS</h5><div class="alisg"><button type="button" data-k="0">ALTO</button><button type="button" data-k="1">AYUDA</button><button type="button" data-k="2">BOTÍN AQUÍ</button><button type="button" data-k="3">PELIGRO</button></div>
     <div class="alifoot"><button id="bAliLv" type="button">SALIR DE LA ALIANZA</button></div>
@@ -2319,8 +2320,12 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 150, UR_VERSION = '15.3', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 151, UR_VERSION = '15.4', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '15.4', t: 'Misiones de grupo (salas PVP)', it: [
+    'Si tu alianza tiene <b>2 o más aliados conectados y cerca</b>, cada día llega una <b>misión de grupo</b>: <b>limpiar un nido</b> de infectados o <b>mantener una radio</b> unos minutos mientras atrae zombis.',
+    'Se marca en tu mapa y en el panel de ALIANZA (tecla Y).',
+    'Al cumplirla aparece <b>un solo botín</b> en el suelo: <b>el primero que llegue se lo lleva</b>. ¿Confías en tus aliados?' ] },
   { v: '15.3', t: 'Alianzas y traición (salas PVP)', it: [
     'En las salas PVP puedes <b>aliarte</b> con otros jugadores (hasta 4): acércate, pulsa <b>E</b> o el botón ALIANZA (tecla <b>Y</b>) y propón la alianza.',
     'Los aliados se ven en <b>verde</b>, aparecen en el mapa, se mandan <b>señales rápidas</b> (alto, ayuda, botín, peligro) y pueden abrir tus candados.',
@@ -5422,6 +5427,7 @@ function aliRender() {
   const names = (a.mem || []).map(m => (m.n || 'Aliado') + (m.on ? '' : ' (desconectado)')).join(', ');
   st.textContent = a.tr > 0 ? 'ERES TRAIDOR: ' + Math.ceil(a.tr / 60) + ' h restantes. Nadie puede aliarse contigo.' : a.n ? 'Alianza (' + a.n + '/' + a.max + '): tú' + (names ? ', ' + names : '') + '.' : 'Sin alianza. Acércate a otro jugador y propón una.';
   st.classList.toggle('av', a.tr > 0);
+  const gm = NET.gm, ge = $('aliGm'); if (ge) { if (gm) { const left = Math.max(0, gm.tl - Math.round((performance.now() - gm.t) / 1000)), dm = Math.round(Math.hypot(gm.x - P.x, gm.y - P.y)); ge.innerHTML = '<b>' + urEsc(gm.n) + '</b><br>' + urEsc(gm.d) + '<br>' + (gm.k === 'nido' ? 'Infectados eliminados: ' + gm.p + '/' + gm.m : 'Radio mantenida: ' + gm.p + '/' + gm.m + ' s') + ' · quedan ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') + ' · ' + dm + ' m'; } else ge.textContent = aliHas() ? 'Sin misión de grupo ahora. Llega una por día, de día, si hay 2 o más aliados conectados y cerca.' : 'Alíate con otros jugadores para recibir misiones de grupo.'; }
   const near = aliNear(); nr.innerHTML = near.length ? near.map(({ r, d }) => '<div class="alirow"><span>' + urEsc(r.name || 'Jugador') + (r.al ? '<i class="al">ALIADO</i>' : '') + (r.tr ? '<i class="tr">TRAIDOR</i>' : '') + ' · ' + d.toFixed(0) + ' m</span>' + (!r.al && !r.tr && !(a.tr > 0) && !(a.n >= a.max) ? '<button type="button" data-i="' + r.id + '">PROPONER ALIANZA</button>' : '') + '</div>').join('') : '<p class="hint">No hay jugadores cerca.</p>';
   $('bAliLv').hidden = !(a.n > 0);
 }
@@ -12729,6 +12735,9 @@ function netMsg(o) {
     case 'EV': netEvent(o); break;
     case 'DF': if (NET.role === 'host' && EV.dog && EV.dog.st === 'stray') { EV.dog.st = 'pet'; EV.dog.own = 'g'; EV.dog.gid = NET.cur ? NET.cur.slot : 0; EV.dog.sit = 0; } break;
     case 'HP': if (NET.role === 'guest' && P && !P.dead) { if (o.k) { P.hp = 0; die(o.by ? 'Te mató ' + String(o.by).slice(0, 14) : 'Tu cuerpo no resistió'); } else if (isFinite(o.h) && o.h >= 0 && o.h < P.hp) { P.hp = o.h; try { shake = 4; } catch (e) { } if (o.by) say(String(o.by).slice(0, 14) + ' te hirió', 'bad'); } } break;   /* v15.1: el anfitrión manda la vida en salas PvP */
+    case 'GM': if (NET.role === 'guest') {   /* v15.4: misión de grupo (la lleva el servidor) */
+      if (o.a === 'end') { NET.gm = null; if (o.ok) WP = { x: +o.x, y: +o.y, n: 'Botín de la misión' }; else if (WP && /^Misión de grupo/.test(WP.n)) WP = null; try { sfx(o.ok ? 'coin' : 'click', 0); aliRender(); } catch (e) { } }
+      else { const nw = !NET.gm || NET.gm.id !== o.id; NET.gm = { id: o.id, k: o.k, n: String(o.n || ''), d: String(o.d || ''), x: +o.x, y: +o.y, p: o.p | 0, m: o.m | 0, tl: o.tl | 0, t: performance.now() }; if (nw) { say('MISIÓN DE GRUPO: ' + NET.gm.n, 'good'); say(NET.gm.d, 'tip'); WP = { x: NET.gm.x, y: NET.gm.y, n: 'Misión de grupo: ' + NET.gm.n }; try { sfx('coin', 0); } catch (e) { } } try { aliRender(); } catch (e) { } } } break;
     case 'AI': if (NET.role === 'guest') { NET.ali = { n: o.n | 0, max: o.max | 0 || 4, mem: Array.isArray(o.mem) ? o.mem.slice(0, 6) : [], tr: +o.tr || 0 }; try { aliRender(); netUI(); } catch (e) { } } break;   /* v15.3: estado de mi alianza */
     case 'AQ': if (NET.role === 'guest') { const nm = String(o.n || 'Un jugador').slice(0, 14); urAsk(nm + ' te propone una alianza (hasta 4 jugadores: se ven en el mapa, se mandan señales y pueden abrir sus candados entre sí). Ojo: un aliado también puede traicionarte. ¿Aceptar?', 'ACEPTAR', 'RECHAZAR').then(y => netSend({ t: y ? 'AA' : 'AD' })); } break;
     case 'SGR': if (NET.role === 'guest') { const dx = (+o.x || 0) - P.x, dy = (+o.y || 0) - P.y, dd = Math.round(Math.hypot(dx, dy)), a8 = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)), dir = ['E', 'SE', 'S', 'SO', 'O', 'NO', 'N', 'NE'][((a8 % 8) + 8) % 8]; say('[' + String(o.n || 'Aliado').slice(0, 14) + '] ' + (SIGT[o.k | 0] || '?') + ' · ' + dd + ' m al ' + dir, (o.k | 0) === 3 ? 'bad' : 'tip'); try { sfx('click', 0); } catch (e) { } } break;
@@ -12774,7 +12783,7 @@ async function netGuestLoad() {
     const s = JSON.parse(await gunzip(all, rx.gz)); audioInit();
     withLoading(() => {
       if (!applySave(s, true)) { netFail('No se pudo cargar el mundo del anfitrión.'); return; }
-      tipSeen.clear(); tipSeen.add('start'); metaNewRun(); NET.auth = rx.au ? 1 : 0; NET.pvp = rx.pv ? 1 : 0; NET.ali = null; const got = guestCharLoad(s.seed, rx.au ? (rx.ch || '') : undefined); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
+      tipSeen.clear(); tipSeen.add('start'); metaNewRun(); NET.auth = rx.au ? 1 : 0; NET.pvp = rx.pv ? 1 : 0; NET.ali = null; NET.gm = null; const got = guestCharLoad(s.seed, rx.au ? (rx.ch || '') : undefined); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
       NET.rp = { ok: 0, x: s.P.x, y: s.P.y, nx: s.P.x, ny: s.P.y, dir: 0, sp: {}, anim: 0, name: 'Anfitrión' }; netShadowInit();
       enterGame(); NET.ready = true; NET.st = 'playing'; netSend({ t: 'R' }); $('mpm').hidden = true; netUI(); say(got ? 'Recuperaste tu personaje en este mundo' : 'Te uniste a la partida de tu compañero', 'good'); if (NET.pvp) say('SALA PVP: otros jugadores pueden atacarte. Si mueres, pierdes tu personaje.', 'bad');
     });
@@ -24149,7 +24158,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24190,7 +24199,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24213,7 +24222,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24242,7 +24251,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24276,7 +24285,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24307,7 +24316,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24340,7 +24349,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24369,12 +24378,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.3') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.4') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

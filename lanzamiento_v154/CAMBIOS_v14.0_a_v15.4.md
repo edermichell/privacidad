@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.3 (versionCode 137 → 150)
+# Último Refugio — cambios de la v14.0 a la v15.4 (versionCode 137 → 151)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -54,3 +54,7 @@
 - En salas PvP: alianzas de hasta 4 (se proponen con el indicador de la sala, Y o E), aliados en verde y en el mapa, 4 señales rápidas, candados compartidos.
 - Fuego amistoso activo: herir a un aliado (o exaliado reciente) = TRAIDOR 24 h (nombre rojo para todos, sin poder aliarse, se avisa a su alianza); defensa propia y atacar traidores sin castigo; el cliente no hiere aliados por accidente cuando hay un zombi de por medio.
 - Sin «radar»: en PvP solo se conoce a los jugadores a ≤ 55 casillas y a los aliados.
+
+## Misiones de grupo (v15.4) — ver `actualizacion_v154/CAMBIOS_v15.4_misiones_de_grupo.md`
+- En salas PvP: una misión por día (de día) para alianzas con 2+ miembros conectados y cerca: limpiar un nido o mantener una radio con oleadas.
+- Al cumplirla aparece un solo botín en el suelo: el primero que llegue se lo lleva (aliado, traidor o desconocido).

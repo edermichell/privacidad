@@ -103,7 +103,7 @@ SRV.boot = function (opt) {
     try { netSendRaw(peer, { t: 'AI', n: g ? g.m.length : 0, max: SRV.AL.max, mem, tr: Math.ceil(SRV.traitLeft(peer.uid) / 60000) }); } catch (e) { }
   };
   SRV.aliSendGroup = u => { const g = SRV.grp(u); if (g) for (const m of g.m) { const q = peerByUid(m); if (q) SRV.aliSend(q); } };
-  SRV.aliJoin = peer => { SRV.aliSend(peer); SRV.aliSendGroup(peer.uid); const tl = SRV.traitLeft(peer.uid); if (tl) SRV.aliSay(peer, 'Sigues marcado como TRAIDOR durante ' + Math.ceil(tl / 3600000) + ' h.', 'bad'); };
+  SRV.aliJoin = peer => { SRV.aliSend(peer); try { SRV.gmSendTo(peer); } catch (e) { } SRV.aliSendGroup(peer.uid); const tl = SRV.traitLeft(peer.uid); if (tl) SRV.aliSay(peer, 'Sigues marcado como TRAIDOR durante ' + Math.ceil(tl / 3600000) + ' h.', 'bad'); };
   SRV.aliPropose = (peer, o) => {
     const tg = peerBySlot(o.i | 0), now = performance.now(); if (!tg || tg === peer || !peer.rp || !tg.rp || peer.chDead || tg.chDead) return;
     const a = ppos(peer), b = ppos(tg), d = Math.hypot(a[0] - b[0], a[1] - b[1]); let why = null; const g = SRV.grp(peer.uid);
@@ -152,6 +152,60 @@ SRV.boot = function (opt) {
       if (SRV.pvp && String(code) === 'ALLY') { const L = LK.codes.get(i); if (!L) return { ok: false, m: 'No tiene candado.' }; if (!lkNear(w, i)) return { ok: false, m: 'Estás muy lejos.' }; if (!remove && w.uid && L.u && SRV.allied(L.u, w.uid)) { if (to[i] === O_DOOR) td[i] &= ~2; return { ok: true, m: 'Abierto (candado de tu aliado).' }; } return { ok: false, m: 'Este candado no es de un aliado tuyo.' }; }
       return _lt.apply(this, arguments);
     }; }
+  /* ===== v15.4 · MISIONES DE GRUPO (salas PvP) =====
+     Cada alianza con 2+ miembros conectados y cerca recibe UNA misión por día de juego, de día: «Limpiar el nido» (matar a todos los infectados de un punto) o «Mantener la radio» (alguien del grupo cerca del punto
+     X segundos mientras llegan oleadas). Al cumplirla aparece UN solo botín en el suelo del punto: el primero que llegue se lo lleva (aliados, traidores o desconocidos). Las lleva el anfitrión; los clientes solo la muestran. */
+  SRV.GM = { on: opt.gm !== false, tod: [420, 960], tNido: 15 * 60e3, tRadio: 12 * 60e3, radioNeed: 150, near: 90, minD: 45, maxD: 95 };
+  SRV.gm = new Map();
+  const gmDay = () => Math.floor(GT.min / 1440) + 1;
+  const gmFree = (x, y) => { for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) { const xx = Math.floor(x) + ox, yy = Math.floor(y) + oy; if (!inb(xx, yy) || to[idx(xx, yy)] || tb[idx(xx, yy)] || solidTile(xx, yy) || tg[idx(xx, yy)] === G_WATER) return false; } return true; };
+  SRV.gmOnline = g => g.m.map(peerByUid).filter(p => p && p.rp && !p.chDead && p.A !== undefined && !p.rp.dead);
+  SRV.gmPick = (cx, cy) => { for (let k = 0; k < 400; k++) { const a = Math.random() * 6.283, d = SRV.GM.minD + Math.random() * (SRV.GM.maxD - SRV.GM.minD), x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d; if (x < 10 || y < 10 || x > W - 10 || y > H - 10) continue; if (gmFree(x, y)) return [Math.floor(x) + .5, Math.floor(y) + .5]; } return null; };
+  SRV.gmSend = (peer, m, a) => { try { netSendRaw(peer, { t: 'GM', a, id: m.id, k: m.k, n: m.n, d: m.d, x: m.x, y: m.y, p: m.prog | 0, m: m.need | 0, tl: Math.max(0, Math.round((m.exp - performance.now()) / 1000)), ok: m.ok ? 1 : 0 }); } catch (e) { } };
+  SRV.gmSendTo = peer => { const g = SRV.grp(peer.uid); if (!g) return; const st = SRV.gm.get(g.id); if (st && st.cur) SRV.gmSend(peer, st.cur, 'new'); };
+  SRV.gmWave = (m, n) => {
+    const fld = bfs(Math.floor(m.x), Math.floor(m.y), 45); let made = 0;
+    for (let k = 0; k < 40 && made < 3 + n; k++) { const a = Math.random() * 6.283, d = 14 + Math.random() * 7, x = m.x + Math.cos(a) * d, y = m.y + Math.sin(a) * d; if (!inb(Math.floor(x), Math.floor(y)) || solidTile(Math.floor(x), Math.floor(y)) || to[idx(Math.floor(x), Math.floor(y))]) continue; const z = mkZombie(x, y, made % 5 === 4 ? 'runner' : 'walker'); z.st = 'invest'; z.tx = m.x; z.ty = m.y; z.fld = fld; z.invT = 90; z.evz = 1; Z.push(z); made++; }
+    return made;
+  };
+  SRV.gmStart = (g, st, online, kind) => {
+    const c = [0, 0]; for (const p of online) { const q = ppos(p); c[0] += q[0] / online.length; c[1] += q[1] / online.length; } const sp = SRV.gmPick(c[0], c[1]); if (!sp) return false;
+    kind = kind || (Math.random() < .5 ? 'nido' : 'radio'); const now = performance.now(), m = { id: Math.random().toString(36).slice(2, 7), k: kind, x: sp[0], y: sp[1], prog: 0, need: 0, zs: [], last: 0, wave: now, ok: false };
+    if (kind === 'nido') {
+      const K = Math.min(20, 5 + 3 * online.length); for (let i = 0; i < K; i++) { const a = Math.random() * 6.283, d = Math.random() * 5, x = sp[0] + Math.cos(a) * d, y = sp[1] + Math.sin(a) * d; if (solidTile(Math.floor(x), Math.floor(y))) continue; const z = mkZombie(x, y, i % 7 === 6 ? 'brute' : i % 4 === 3 ? 'runner' : 'walker'); z.st = 'idle'; Z.push(z); m.zs.push(z.id); }
+      m.need = m.zs.length; m.exp = now + SRV.GM.tNido; m.n = 'Limpiar el nido'; m.d = 'Hay un nido de ' + m.need + ' infectados en el punto marcado. Eliminadlos a todos.';
+    } else { m.need = SRV.GM.radioNeed; m.exp = now + SRV.GM.tRadio; m.n = 'Mantener la radio'; m.d = 'Una radio pide refuerzos: que alguien del grupo se mantenga a menos de 7 casillas del punto marcado ' + (Math.round(m.need / 6) / 10) + ' min. El ruido atraerá infectados.'; }
+    st.cur = m; st.lastDay = gmDay(); for (const u of g.m) { const q = peerByUid(u); if (q) SRV.gmSend(q, m, 'new'); }
+    slog('misión de grupo «' + m.n + '» (' + online.length + ' jugadores conectados) en ' + Math.round(sp[0]) + ',' + Math.round(sp[1])); return true;
+  };
+  SRV.gmReward = (m, n) => {
+    const G = [['pistol', 'ammo9', 24], ['revolver', 'ammo38', 12], ['shotgun', 'shells', 10], ['rifle', 'ammo762', 10]], gp = G[(Math.random() * G.length) | 0], out = [];
+    const add = (id, c) => { if (!ITEMS[id]) return; const it = mkItem(id, c || 1); if (ITEMS[id].gun) it.a = ITEMS[id].mag; out.push(it); };
+    add(gp[0], 1); add(gp[1], gp[2]); add('bandage', 3); add('medkit', 1); for (let i = 0; i < n; i++) add(['water', 'beans', 'chips', 'soda', 'pills', 'antiseptic', 'machete', 'vest'][(Math.random() * 8) | 0], 1);
+    for (const it of out) { const a = Math.random() * 6.283, d = Math.random() * 1.2; floorItems.push({ x: m.x + Math.cos(a) * d, y: m.y + Math.sin(a) * d, it, t0: TIME }); } return out.length;
+  };
+  SRV.gmEnd = (g, st, ok, why) => {
+    const m = st.cur; if (!m) return; m.ok = ok; st.cur = null; const n = ok ? SRV.gmReward(m, Math.max(1, g ? SRV.gmOnline(g).length : 2)) : 0;
+    if (g) for (const u of g.m) { const q = peerByUid(u); if (!q) continue; SRV.gmSend(q, m, 'end'); SRV.aliSay(q, ok ? 'MISIÓN CUMPLIDA: el botín (' + n + ' objetos) está en el suelo en el punto marcado. El primero que llegue se lo lleva…' : 'Misión de grupo fallida: ' + (why || ''), ok ? 'good' : 'bad'); }
+    slog('misión de grupo «' + m.n + '» ' + (ok ? 'CUMPLIDA (' + n + ' objetos de botín)' : 'fallida: ' + (why || '')));
+  };
+  SRV.gmForce = (gid, kind) => { const g = SRV.ali.g.find(x => x.id === gid); if (!g) return 'sin alianza'; let st = SRV.gm.get(g.id); if (!st) { st = { lastDay: 0, cur: null }; SRV.gm.set(g.id, st); } if (st.cur) return 'ya hay una'; return SRV.gmStart(g, st, SRV.gmOnline(g), kind) ? 'ok' : 'sin sitio'; };
+  SRV.gmTick = () => {
+    if (!SRV.pvp || !SRV.GM.on || SRV.paused || !NET.peers.length) return; const now = performance.now(), day = gmDay(), tod = GT.min % 1440, ids = new Set(SRV.ali.g.map(g => g.id));
+    for (const [id, st] of SRV.gm) if (!ids.has(id)) { if (st.cur) SRV.gmEnd(null, st, false, 'La alianza se disolvió.'); SRV.gm.delete(id); }
+    for (const g of SRV.ali.g) {
+      let st = SRV.gm.get(g.id); if (!st) { st = { lastDay: 0, cur: null }; SRV.gm.set(g.id, st); } const on = SRV.gmOnline(g), m = st.cur;
+      if (m) {
+        if (!on.length) { SRV.gmEnd(g, st, false, 'Nadie del grupo sigue conectado.'); continue; } if (now > m.exp) { SRV.gmEnd(g, st, false, 'Se acabó el tiempo.'); continue; }
+        if (m.k === 'nido') { m.prog = m.zs.filter(id => { const z = zById(id); return !z || z.st === 'dead'; }).length; if (m.prog >= Math.ceil(m.need * .9)) { SRV.gmEnd(g, st, true); continue; } }
+        else { if (on.some(p => { const q = ppos(p); return Math.hypot(q[0] - m.x, q[1] - m.y) < 7; })) { m.prog++; if (m.prog % 10 === 0) makeNoise(m.x, m.y, 25); } if (now - m.wave > 20000) { m.wave = now; SRV.gmWave(m, on.length); } if (m.prog >= m.need) { SRV.gmEnd(g, st, true); continue; } }
+        if (now - m.last > 5000) { m.last = now; for (const u of g.m) { const q = peerByUid(u); if (q) SRV.gmSend(q, m, 'upd'); } }
+      } else if (on.length >= 2 && st.lastDay < day && tod >= SRV.GM.tod[0] && tod <= SRV.GM.tod[1]) {
+        const base = ppos(on[0]), near = on.filter(p => { const q = ppos(p); return Math.hypot(q[0] - base[0], q[1] - base[1]) <= SRV.GM.near; }); if (near.length >= 2) SRV.gmStart(g, st, near);
+      }
+    }
+  };
+  setInterval(() => { try { SRV.gmTick(); } catch (e) { slog('error en misiones de grupo: ' + (e && e.message)); } }, 1000);
   { const _m = netMsg; netMsg = function (o) {
       const peer = NET.role === 'host' ? NET.cur : null;
       if (peer && o && typeof o.t === 'string') {
