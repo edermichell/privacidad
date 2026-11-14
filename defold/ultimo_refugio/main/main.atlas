@@ -1,0 +1,12 @@
+images {
+  image: "/main/player.png"
+}
+images {
+  image: "/main/zombie.png"
+}
+images {
+  image: "/main/loot.png"
+}
+margin: 0
+extrude_borders: 2
+inner_padding: 0

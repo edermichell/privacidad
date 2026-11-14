@@ -1,0 +1,13 @@
+key_trigger { input: KEY_W action: "up" }
+key_trigger { input: KEY_UP action: "up" }
+key_trigger { input: KEY_S action: "down" }
+key_trigger { input: KEY_DOWN action: "down" }
+key_trigger { input: KEY_A action: "left" }
+key_trigger { input: KEY_LEFT action: "left" }
+key_trigger { input: KEY_D action: "right" }
+key_trigger { input: KEY_RIGHT action: "right" }
+key_trigger { input: KEY_1 action: "use_food" }
+key_trigger { input: KEY_2 action: "use_drink" }
+key_trigger { input: KEY_3 action: "use_med" }
+key_trigger { input: KEY_R action: "restart" }
+mouse_trigger { input: MOUSE_BUTTON_1 action: "touch" }

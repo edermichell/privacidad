@@ -1,0 +1,23 @@
+name: "main"
+instances {
+  id: "world"
+  prototype: "/main/world.go"
+  position { x: 0.0 y: 0.0 z: 0.0 }
+  rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+  scale3 { x: 1.0 y: 1.0 z: 1.0 }
+}
+instances {
+  id: "player"
+  prototype: "/main/player.go"
+  position { x: 184.0 y: 184.0 z: 0.0 }
+  rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+  scale3 { x: 1.0 y: 1.0 z: 1.0 }
+}
+instances {
+  id: "game"
+  prototype: "/main/game.go"
+  position { x: 0.0 y: 0.0 z: 0.0 }
+  rotation { x: 0.0 y: 0.0 z: 0.0 w: 1.0 }
+  scale3 { x: 1.0 y: 1.0 z: 1.0 }
+}
+scale_along_z: 0

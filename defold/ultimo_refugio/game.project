@@ -1,0 +1,25 @@
+[project]
+title = Ultimo Refugio
+
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[display]
+width = 960
+height = 540
+high_dpi = 0
+dynamic_orientation = 0
+
+[graphics]
+default_texture_min_filter = nearest
+default_texture_mag_filter = nearest
+
+[input]
+game_binding = /input/game.input_bindingc
+
+[android]
+package = com.impulso.ultimorefugio
+input_method = HidleThread
+
+[html5]
+scale_mode = fit

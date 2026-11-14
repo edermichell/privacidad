@@ -1,0 +1,444 @@
+-- Ultimo Refugio (port a Defold) - logica principal.
+-- Portado de index.html (v15.6): ITEMS, ciclo dia/noche, hambre/sed, zombis, hordas por dia.
+
+local W, H, TS = 64, 64, 16          -- mundo 64x64 casillas de 16 px
+-- indices (1-based) en tiles.tilesource
+local G_GRASS, G_ROAD, G_SIDE, G_FLOOR, G_WATER = 1, 2, 3, 4, 5
+local O_WALL, O_DOOR, O_TREE = 6, 7, 8
+local ROADS = { 10, 28, 46 }          -- calles de 3 casillas de ancho (en x e y)
+local GAPS = { {1, 7}, {15, 25}, {33, 43}, {51, 62} }
+
+local DAYLEN = 300                    -- segundos reales por dia de juego
+local START_HOUR = 8
+
+-- Datos tomados de ITEMS del juego original (hun/thi negativos = reducen)
+local ITEMS = {
+	beans    = { n = "Lata de frijoles", t = "food",  hun = -38, thi = -4 },
+	soup     = { n = "Sopa enlatada",    t = "food",  hun = -32, thi = -10 },
+	tuna     = { n = "Atun en lata",     t = "food",  hun = -24 },
+	bread    = { n = "Pan",              t = "food",  hun = -26 },
+	apple    = { n = "Manzana",          t = "food",  hun = -10, thi = -8 },
+	water    = { n = "Agua",             t = "drink", thi = -30 },
+	soda     = { n = "Refresco",         t = "drink", thi = -22, hun = -4 },
+	bandage  = { n = "Venda",            t = "med" },
+	bat      = { n = "Bate de beisbol",  t = "wpn", dmg = 34, rng = 1.3,  spd = .8 },
+	pipe     = { n = "Tubo de metal",    t = "wpn", dmg = 30, rng = 1.2,  spd = .7 },
+	knife    = { n = "Cuchillo",         t = "wpn", dmg = 24, rng = .95,  spd = .5 },
+	axe      = { n = "Hacha",            t = "wpn", dmg = 62, rng = 1.25, spd = 1.0 },
+}
+local FISTS = { n = "Punos", dmg = 12, rng = .9, spd = .6 }
+local LOOT = { -- tabla de botin ponderada
+	{ "beans", 3 }, { "soup", 2 }, { "tuna", 2 }, { "bread", 2 }, { "apple", 2 },
+	{ "water", 4 }, { "soda", 2 }, { "bandage", 3 },
+	{ "bat", 1 }, { "pipe", 1 }, { "knife", 1 }, { "axe", 1 },
+}
+local LOOT_TOTAL = 0
+for _, e in ipairs(LOOT) do LOOT_TOTAL = LOOT_TOTAL + e[2] end
+
+local ZOMBIE = { hp = 60, speed = 30, chase = 44, dmg = 8, cd = 1.0, sight = 110, reach = 13 }
+local PLAYER = { speed = 62, radius = 5 }
+
+-- ---------------------------------------------------------------- utilidades
+local function mkrng(seed)
+	local s = seed % 4294967296
+	return function()
+		s = (s * 1664525 + 1013904223) % 4294967296
+		return s / 4294967296
+	end
+end
+
+local function clamp(v, a, b) return math.max(a, math.min(b, v)) end
+local function idx(x, y) return y * W + x + 1 end
+
+local function is_road(v)
+	for _, r in ipairs(ROADS) do if v >= r and v < r + 3 then return true end end
+	return false
+end
+
+-- ---------------------------------------------------------------- mundo
+local function put(self, layer, x, y, tile)
+	tilemap.set_tile("/world#tilemap", layer, self.bx + x, self.by + y, tile)
+end
+
+local function gen_world(self, seed)
+	local R = mkrng(seed)
+	local ri = function(a, b) return a + math.floor(R() * (b - a + 1)) end
+	self.solid, self.loot_spots, self.walk_spots = {}, {}, {}
+	self.bx, self.by = tilemap.get_bounds("/world#tilemap")
+	local ground, occupied = {}, {}
+	for y = 0, H - 1 do
+		for x = 0, W - 1 do
+			local g = G_GRASS
+			if is_road(x) or is_road(y) then g = G_ROAD
+			elseif is_road(x - 1) or is_road(x + 1) or is_road(y - 1) or is_road(y + 1) then g = G_SIDE end
+			ground[idx(x, y)] = g
+		end
+	end
+	-- estanque
+	for y = 0, H - 1 do for x = 0, W - 1 do
+		local dx, dy = x - 5, y - 56
+		if dx * dx + dy * dy <= 16 and ground[idx(x, y)] == G_GRASS then
+			ground[idx(x, y)] = G_WATER; self.solid[idx(x, y)] = true
+		end
+	end end
+	-- edificios: uno por manzana
+	for gx = 1, #GAPS do for gy = 1, #GAPS do
+		local xl, xh, yl, yh = GAPS[gx][1], GAPS[gx][2], GAPS[gy][1], GAPS[gy][2]
+		if R() < 0.8 then
+			local w = ri(5, math.min(10, xh - xl + 1))
+			local h = ri(5, math.min(9, yh - yl + 1))
+			local x0 = ri(xl, xh - w + 1)
+			local y0 = ri(yl, yh - h + 1)
+			local ok = true
+			for y = y0, y0 + h - 1 do for x = x0, x0 + w - 1 do
+				if ground[idx(x, y)] ~= G_GRASS then ok = false end
+			end end
+			if ok then
+				for y = y0, y0 + h - 1 do for x = x0, x0 + w - 1 do
+					local edge = (x == x0 or x == x0 + w - 1 or y == y0 or y == y0 + h - 1)
+					ground[idx(x, y)] = G_FLOOR
+					occupied[idx(x, y)] = true
+					if edge then put(self, "obj", x, y, O_WALL); self.solid[idx(x, y)] = true end
+				end end
+				-- puerta en el muro inferior
+				local dx = ri(x0 + 1, x0 + w - 2)
+				put(self, "obj", dx, y0, O_DOOR); self.solid[idx(dx, y0)] = false
+				-- botin dentro
+				for _ = 1, ri(1, 3) do
+					self.loot_spots[#self.loot_spots + 1] = { x = ri(x0 + 1, x0 + w - 2), y = ri(y0 + 1, y0 + h - 2) }
+				end
+			end
+		end
+	end end
+	-- arboles
+	for y = 0, H - 1 do for x = 0, W - 1 do
+		local i = idx(x, y)
+		if ground[i] == G_GRASS and not occupied[i] and R() < 0.10 and not (x < 14 and y < 14) then
+			put(self, "obj", x, y, O_TREE); self.solid[i] = true
+		end
+	end end
+	-- bordes: arboles
+	for k = 0, W - 1 do
+		for _, p in ipairs({ { k, 0 }, { k, H - 1 }, { 0, k }, { W - 1, k } }) do
+			local i = idx(p[1], p[2])
+			if not self.solid[i] then
+				put(self, "obj", p[1], p[2], O_TREE); self.solid[i] = true
+			end
+		end
+	end
+	for y = 0, H - 1 do for x = 0, W - 1 do
+		local i = idx(x, y)
+		put(self, "ground", x, y, ground[i])
+		if not self.solid[i] then self.walk_spots[#self.walk_spots + 1] = { x = x, y = y } end
+	end end
+end
+
+local function blocked(self, px, py)
+	local tx, ty = math.floor(px / TS), math.floor(py / TS)
+	if tx < 0 or ty < 0 or tx >= W or ty >= H then return true end
+	return self.solid[idx(tx, ty)] == true
+end
+
+local function hits(self, x, y, r)
+	return blocked(self, x - r, y - r) or blocked(self, x + r, y - r)
+		or blocked(self, x - r, y + r) or blocked(self, x + r, y + r)
+end
+
+-- mueve una entidad con colision por ejes; devuelve la nueva (x, y)
+local function slide(self, x, y, dx, dy, r)
+	if not hits(self, x + dx, y, r) then x = x + dx end
+	if not hits(self, x, y + dy, r) then y = y + dy end
+	return x, y
+end
+
+-- ---------------------------------------------------------------- entidades
+local function pick_loot(R)
+	local v = R() * LOOT_TOTAL
+	for _, e in ipairs(LOOT) do
+		v = v - e[2]
+		if v <= 0 then return e[1] end
+	end
+	return "beans"
+end
+
+local function spawn_loot(self, tx, ty, kind)
+	local pos = vmath.vector3(tx * TS + 8, ty * TS + 8, 0)
+	local id = factory.create("#lfactory", pos)
+	self.loot[#self.loot + 1] = { id = id, x = pos.x, y = pos.y, kind = kind }
+end
+
+local function spawn_zombie(self, x, y)
+	local id = factory.create("#zfactory", vmath.vector3(x, y, 0))
+	self.zombies[#self.zombies + 1] = {
+		id = id, x = x, y = y, hp = ZOMBIE.hp, cd = 0,
+		wx = 0, wy = 0, wt = 0, kx = 0, ky = 0,
+	}
+end
+
+local function spawn_far(self, min_dist)
+	for _ = 1, 40 do
+		local s = self.walk_spots[1 + math.floor(self.R() * #self.walk_spots)]
+		local x, y = s.x * TS + 8, s.y * TS + 8
+		local dx, dy = x - self.px, y - self.py
+		if dx * dx + dy * dy > min_dist * min_dist then
+			spawn_zombie(self, x, y); return true
+		end
+	end
+	return false
+end
+
+local function say(self, text, secs)
+	self.msg, self.msg_t = text, secs or 3
+end
+
+local function inv_add(self, kind, n)
+	self.inv[kind] = (self.inv[kind] or 0) + (n or 1)
+end
+
+local function equip_best(self)
+	local best, bd = nil, FISTS.dmg
+	for k, def in pairs(ITEMS) do
+		if def.t == "wpn" and (self.inv[k] or 0) > 0 and def.dmg > bd then best, bd = k, def.dmg end
+	end
+	self.weapon = best
+end
+
+local function first_of(self, t)
+	local pick, score = nil, -1
+	for k, n in pairs(self.inv) do
+		local def = ITEMS[k]
+		if n > 0 and def and def.t == t then
+			local s = -(def.hun or 0) - (def.thi or 0)
+			if s > score then pick, score = k, s end
+		end
+	end
+	return pick
+end
+
+local function use_item(self, t)
+	if self.dead then return end
+	local k = first_of(self, t)
+	if not k then say(self, "No tienes nada de eso", 1.5); return end
+	local def = ITEMS[k]
+	self.inv[k] = self.inv[k] - 1
+	if def.hun then self.hunger = clamp(self.hunger + def.hun, 0, 100) end
+	if def.thi then self.thirst = clamp(self.thirst + def.thi, 0, 100) end
+	if t == "med" then self.hp = clamp(self.hp + 25, 0, 100) end
+	say(self, "Usas: " .. def.n, 1.5)
+end
+
+local function clear_entities(self)
+	for _, z in ipairs(self.zombies) do go.delete(z.id) end
+	for _, l in ipairs(self.loot) do go.delete(l.id) end
+	self.zombies, self.loot = {}, {}
+end
+
+local function new_game(self)
+	clear_entities(self)
+	self.px, self.py = 11 * TS + 8, 11 * TS + 8
+	go.set_position(vmath.vector3(self.px, self.py, 0), "/player")
+	self.hp, self.hunger, self.thirst = 100, 10, 10
+	self.inv, self.weapon = {}, nil
+	self.t = DAYLEN * START_HOUR / 24
+	self.day = 1
+	self.kills, self.swing, self.spawn_t = 0, 0, 6
+	self.dead, self.dead_t = false, 0
+	for _, s in ipairs(self.loot_spots) do spawn_loot(self, s.x, s.y, pick_loot(self.R)) end
+	for _ = 1, 14 do spawn_far(self, 140) end
+	say(self, "Sobrevive. WASD/flechas o toca para moverte. 1 comer 2 beber 3 venda", 6)
+end
+
+local function horde(self, day)
+	local n = 4 + day * 2
+	for _ = 1, n do spawn_far(self, 200) end
+	say(self, "Dia " .. day .. ": llega una horda (" .. n .. ")", 4)
+end
+
+-- ---------------------------------------------------------------- ciclo de vida
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	self.R = mkrng(os.time())
+	self.keys = { up = false, down = false, left = false, right = false }
+	self.pointer = { held = false, x = 0, y = 0 }
+	self.zombies, self.loot, self.loot_spots, self.walk_spots = {}, {}, {}, {}
+	self.msg, self.msg_t = "", 0
+	gen_world(self, 20261114)
+	new_game(self)
+end
+
+local function update_player(self, dt)
+	local dx, dy = 0, 0
+	if self.keys.left then dx = dx - 1 end
+	if self.keys.right then dx = dx + 1 end
+	if self.keys.down then dy = dy - 1 end
+	if self.keys.up then dy = dy + 1 end
+	if dx == 0 and dy == 0 and self.pointer.held then
+		local ww, wh = window.get_size()
+		local ox, oy = self.pointer.x - ww / 2, self.pointer.y - wh / 2
+		-- ignora la zona de botones del HUD (abajo a la derecha)
+		local in_btn = self.pointer.x > ww - 150 and self.pointer.y < 70
+		if not in_btn and (ox * ox + oy * oy) > 400 then dx, dy = ox, oy end
+	end
+	local len = math.sqrt(dx * dx + dy * dy)
+	if len > 0 then
+		dx, dy = dx / len * PLAYER.speed * dt, dy / len * PLAYER.speed * dt
+		self.px, self.py = slide(self, self.px, self.py, dx, dy, PLAYER.radius)
+		go.set_position(vmath.vector3(self.px, self.py, 0), "/player")
+	end
+end
+
+local function update_combat(self, dt)
+	self.swing = self.swing - dt
+	if self.swing > 0 then return end
+	local def = self.weapon and ITEMS[self.weapon] or FISTS
+	local reach = def.rng * TS + 6
+	local target, td = nil, reach * reach
+	for _, z in ipairs(self.zombies) do
+		local dx, dy = z.x - self.px, z.y - self.py
+		local d2 = dx * dx + dy * dy
+		if d2 < td then target, td = z, d2 end
+	end
+	if not target then return end
+	self.swing = def.spd
+	target.hp = target.hp - def.dmg
+	local dx, dy = target.x - self.px, target.y - self.py
+	local l = math.max(1, math.sqrt(dx * dx + dy * dy))
+	target.kx, target.ky = dx / l * 90, dy / l * 90 -- empuje (impulso que decae)
+end
+
+local function update_zombies(self, dt, night)
+	local sight = ZOMBIE.sight * (night and 0.8 or 1.0)
+	for i = #self.zombies, 1, -1 do
+		local z = self.zombies[i]
+		if z.hp <= 0 then
+			go.delete(z.id)
+			table.remove(self.zombies, i)
+			self.kills = self.kills + 1
+			if self.R() < 0.25 then
+				local tx, ty = math.floor(z.x / TS), math.floor(z.y / TS)
+				spawn_loot(self, tx, ty, pick_loot(self.R))
+			end
+		else
+			local dx, dy = self.px - z.x, self.py - z.y
+			local d = math.sqrt(dx * dx + dy * dy)
+			local vx, vy, sp = 0, 0, 0
+			if d < sight and not self.dead then
+				vx, vy, sp = dx / d, dy / d, ZOMBIE.chase
+			else
+				z.wt = z.wt - dt
+				if z.wt <= 0 then
+					z.wt = 1 + self.R() * 3
+					local a = self.R() * math.pi * 2
+					if self.R() < 0.4 then z.wx, z.wy = 0, 0 else z.wx, z.wy = math.cos(a), math.sin(a) end
+				end
+				vx, vy, sp = z.wx, z.wy, ZOMBIE.speed * 0.5
+			end
+			local mx = vx * sp * dt + z.kx * dt
+			local my = vy * sp * dt + z.ky * dt
+			z.kx, z.ky = z.kx * math.max(0, 1 - dt * 8), z.ky * math.max(0, 1 - dt * 8)
+			z.x, z.y = slide(self, z.x, z.y, mx, my, 5)
+			go.set_position(vmath.vector3(z.x, z.y, 0), z.id)
+			-- ataque
+			z.cd = z.cd - dt
+			if d < ZOMBIE.reach and z.cd <= 0 and not self.dead then
+				z.cd = ZOMBIE.cd
+				self.hp = self.hp - ZOMBIE.dmg
+			end
+		end
+	end
+end
+
+local function update_loot(self)
+	for i = #self.loot, 1, -1 do
+		local l = self.loot[i]
+		local dx, dy = l.x - self.px, l.y - self.py
+		if dx * dx + dy * dy < 100 then
+			local def = ITEMS[l.kind]
+			inv_add(self, l.kind)
+			if def.t == "wpn" then equip_best(self) end
+			say(self, "Recoges: " .. def.n, 1.5)
+			go.delete(l.id)
+			table.remove(self.loot, i)
+		end
+	end
+end
+
+function update(self, dt)
+	dt = math.min(dt, 0.05)
+	if self.msg_t > 0 then self.msg_t = self.msg_t - dt end
+	if not self.dead then
+		self.t = self.t + dt
+		local hour = (self.t % DAYLEN) / DAYLEN * 24
+		local day = math.floor(self.t / DAYLEN) + 1
+		local night = hour >= 20 or hour < 6
+		if day > self.day then self.day = day; horde(self, day) end
+		self.hour = hour
+
+		-- hambre / sed (suben con el tiempo); a 100 empiezan a dañar
+		self.hunger = clamp(self.hunger + 0.10 * dt, 0, 100)
+		self.thirst = clamp(self.thirst + 0.17 * dt, 0, 100)
+		if self.hunger >= 100 or self.thirst >= 100 then self.hp = self.hp - 1.0 * dt end
+
+		update_player(self, dt)
+		update_combat(self, dt)
+		update_zombies(self, dt, night)
+		update_loot(self)
+
+		self.spawn_t = self.spawn_t - dt
+		if self.spawn_t <= 0 then
+			self.spawn_t = night and 5 or 10
+			if #self.zombies < (night and 28 or 18) then spawn_far(self, 160) end
+		end
+		if self.hp <= 0 then
+			self.dead, self.dead_t = true, 0
+			say(self, "Moriste. Dia " .. self.day .. ", " .. self.kills .. " zombis. Pulsa R / toca.", 99)
+		end
+	else
+		self.dead_t = self.dead_t + dt
+		update_zombies(self, dt, false)
+	end
+
+	local daylight = (1 + math.cos((((self.hour or 12) - 13) / 24) * math.pi * 2)) / 2
+	local inv_txt = {}
+	for k, n in pairs(self.inv) do
+		if n > 0 then inv_txt[#inv_txt + 1] = ITEMS[k].n .. " x" .. n end
+	end
+	table.sort(inv_txt)
+	msg.post("#hud", "state", {
+		hp = math.ceil(self.hp), hunger = math.floor(self.hunger), thirst = math.floor(self.thirst),
+		hour = self.hour or 12, day = self.day, kills = self.kills,
+		weapon = (self.weapon and ITEMS[self.weapon].n) or FISTS.n,
+		dark = (1 - daylight) * 0.6,
+		inv = table.concat(inv_txt, "  "),
+		text = self.msg_t > 0 and self.msg or "",
+		zombies = #self.zombies,
+	})
+end
+
+function on_message(self, message_id, message)
+	if message_id == hash("use") then
+		use_item(self, message.t)
+	elseif message_id == hash("restart") then
+		if self.dead then new_game(self) end
+	end
+end
+
+function on_input(self, action_id, action)
+	local k = self.keys
+	if action_id == hash("up") then k.up = not action.released
+	elseif action_id == hash("down") then k.down = not action.released
+	elseif action_id == hash("left") then k.left = not action.released
+	elseif action_id == hash("right") then k.right = not action.released
+	elseif action_id == hash("use_food") and action.pressed then use_item(self, "food")
+	elseif action_id == hash("use_drink") and action.pressed then use_item(self, "drink")
+	elseif action_id == hash("use_med") and action.pressed then use_item(self, "med")
+	elseif action_id == hash("restart") and action.pressed and self.dead then new_game(self)
+	elseif action_id == hash("touch") then
+		if action.pressed and self.dead and self.dead_t > 1.5 then new_game(self); return end
+		if action.pressed then self.pointer.held = true end
+		if action.released then self.pointer.held = false end
+		self.pointer.x, self.pointer.y = action.screen_x, action.screen_y
+	elseif action_id == nil and action.screen_x then
+		self.pointer.x, self.pointer.y = action.screen_x, action.screen_y
+	end
+end
