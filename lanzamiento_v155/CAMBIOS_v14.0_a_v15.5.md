@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.4 (versionCode 137 → 151)
+# Último Refugio — cambios de la v14.0 a la v15.5 (versionCode 137 → 152)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -58,3 +58,8 @@
 ## Misiones de grupo (v15.4) — ver `actualizacion_v154/CAMBIOS_v15.4_misiones_de_grupo.md`
 - En salas PvP: una misión por día (de día) para alianzas con 2+ miembros conectados y cerca: limpiar un nido o mantener una radio con oleadas.
 - Al cumplirla aparece un solo botín en el suelo: el primero que llegue se lo lleva (aliado, traidor o desconocido).
+
+## Arreglo: los jugadores no se veían en las salas (v15.5) — ver `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md`
+- Fallo de la app desde la 14.0: cada jugador cercano se dibujaba como el «Anfitrión» del servidor. Corregido: cada jugador se ve en su sitio, con su aspecto y su nombre.
+- El anfitrión del servidor ya no aparece en el mapa; un coche que conduce cualquier jugador cuenta como ocupado.
+- Servidor: paliativo para apps antiguas (ven al jugador más cercano), opción `parcheAppAntigua`.

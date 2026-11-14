@@ -315,6 +315,26 @@ SRV.boot = function (opt) {
     }; }
   { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
   { const _pl = SRV.players; SRV.players = () => _pl().map(x => { const p = NET.peers.find(q => q.slot === x.slot); return Object.assign(x, { build: p ? p.build | 0 : 0, rechazos: p ? p.rej | 0 : 0 }); }); }
+  /* ===== v15.5 · PALIATIVO PARA LA APP ANTIGUA (anterior a la 15.5, versionCode < 152) =====
+     Esas apps tienen un fallo de dibujo: pintan a CUALQUIER jugador cercano con los datos del «anfitrión» (por eso en las salas solo se veía un «Anfitrión» quieto en el punto de entrada y nunca a los demás).
+     No se puede arreglar una app ya instalada, pero sí decidir qué «anfitrión» recibe: a esas apps se les manda, como si fuera el anfitrión, el JUGADOR MÁS CERCANO (posición, movimiento y aspecto reales).
+     Resultado en una app antigua: ve moverse al jugador que tiene más cerca (uno a la vez, con el rótulo «Anfitrión»). La app 15.5 no lo necesita: ve a todos, con su nombre. */
+  SRV.FIXB = 152; SRV.oldFix = opt.oldfix !== false;
+  { const _nsF = netSend; netSend = function (o) {
+      try {
+        const peer = NET.role === 'host' ? NET.cur : null;
+        if (SRV.oldFix && peer && o && o.t === 'S' && o.h && (peer.build | 0) < SRV.FIXB && peer.build !== 138 && peer.rp) {   /* 138 = app 14.0.1, que ya trae el arreglo */
+          const mx = peer.rp.nx !== undefined ? peer.rp.nx : peer.rp.x, my = peer.rp.ny !== undefined ? peer.rp.ny : peer.rp.y; let best = null, bd = 70 * 70;
+          for (const q of NET.peers) { if (q === peer || !q.ready || !q.rp || !q.rp.ok || q.rp.dead) continue; const r = q.rp, x = r.nx !== undefined ? r.nx : r.x, y = r.ny !== undefined ? r.ny : r.y, d = (x - mx) * (x - mx) + (y - my) * (y - my); if (d < bd) { bd = d; best = q; } }
+          if (best) {
+            const r = best.rp, h = { x: r2(r.nx !== undefined ? r.nx : r.x), y: r2(r.ny !== undefined ? r.ny : r.y), d: r2(r.dir || 0), m: r.moving ? 1 : 0, r: r.run ? 1 : 0, s: r.sneak ? 1 : 0, z: r.sleep ? 1 : 0, hp: Math.round(r.hp === undefined ? 100 : r.hp), k: 0, v: r.drive ? 1 : 0, pose: r.pose, ph: r.ph, hu: r.hurt > 0 ? 1 : 0 };
+            peer.fixN = (peer.fixN | 0) + 1; if (r.sp && r.sp.skin && (peer.fixSlot !== best.slot || peer.fixN % 10 === 0)) h.sp = r.sp; peer.fixSlot = best.slot;
+            o = Object.assign({}, o, { h });
+          } else if (peer.fixSlot) { peer.fixSlot = 0; o = Object.assign({}, o, { h: Object.assign({}, o.h, { sp: netSpecNow() }) }); }
+        }
+      } catch (e) { }
+      return _nsF.call(this, o);
+    }; }
   /* el anfitrión no dibuja: 30 pasos por segundo bastan y gastan menos CPU */
   try { OPT.fps = opt.fps === 0 ? 0 : (opt.fps || 30); frameDeadline = 0; } catch (e) { }
   /* sitio de aparcamiento lejos del punto de entrada (para simular el mundo con el servidor vacío sin que los zombis se amontonen donde entra la gente) */

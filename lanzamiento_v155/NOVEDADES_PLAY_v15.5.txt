@@ -1,0 +1,17 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) · 368 caracteres ---
+Novedades de la v15.5:
+• ARREGLO: en las salas no se veía a los demás jugadores (aparecía un «Anfitrión» fijo). Ahora cada jugador se ve en su sitio, con su nombre.
+• Salas PVP: combate entre jugadores, alianzas con traición y misiones de grupo.
+• Botón NOVEDADES y aviso de actualización.
+• Mapa gigante (960×960) en las 3 salas oficiales.
+• Más estable en gama baja.
+
+--- English (optional) · 345 characters ---
+What's new in v15.5:
+• FIX: other players were not visible in rooms (a fixed "Anfitrión" was shown). Each player is now shown in place, with their name.
+• PVP rooms: player-vs-player combat, alliances with betrayal and group missions.
+• NEWS button and update notice.
+• Giant 960×960 map in the 3 official rooms.
+• More stable on low-end phones.

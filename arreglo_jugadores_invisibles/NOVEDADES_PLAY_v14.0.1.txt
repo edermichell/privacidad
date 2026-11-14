@@ -1,0 +1,7 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español ---
+Arreglo importante del multijugador: en las salas no se veía a los demás jugadores (aparecía un personaje fijo llamado «Anfitrión»). Ahora cada jugador se ve en su sitio, con su aspecto y su nombre.
+
+--- English (optional) ---
+Important multiplayer fix: other players were not visible in rooms (a fixed character called "Anfitrión" was shown instead). Each player is now shown in the right place, with their own look and name.
