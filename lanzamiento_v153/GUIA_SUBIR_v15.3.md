@@ -8,7 +8,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.3.zip` (app, version
 | Estado de la 14.0 | Qué hacer |
 |---|---|
 | **Aprobada** (100 %) | Sigue con los pasos de abajo y sube la 15.3 como una versión nueva en la misma pista (alpha). |
-| **Rechazada / con problemas** | Lee el motivo en *Recibidos* y *Política y programas*. La 15.2 ya incluye la política de privacidad corregida; corrige lo que pida Google y sube la 15.1 (no hace falta arreglar la 14.0). Mándame el texto del rechazo si quieres que lo revisemos. |
+| **Rechazada / con problemas** | Lee el motivo en *Recibidos* y *Política y programas*. La 15.3 ya incluye la política de privacidad corregida; corrige lo que pida Google y sube la 15.1 (no hace falta arreglar la 14.0). Mándame el texto del rechazo si quieres que lo revisemos. |
 | **Sigue «En revisión» tras 3–4 días** | Opción: en la versión, *Quitar de la revisión* y enviar directamente la 15.3 (reinicia la espera). Decídelo tú; no lo hagas antes. |
 
 ## 1. Antes de subir (en este orden)
