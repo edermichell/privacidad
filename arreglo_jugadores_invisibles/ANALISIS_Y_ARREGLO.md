@@ -1,3 +1,5 @@
+> **Actualización:** la versión mínima **14.0.2** (versionCode 139) sustituye a la 14.0.1 e incluye además los golpes y disparos visibles. Está en `actualizacion_v156/`. El análisis de abajo sigue siendo válido.
+
 # Los jugadores no se veían en las salas (solo un «Anfitrión») — análisis y arreglo
 
 ## Qué pasaba

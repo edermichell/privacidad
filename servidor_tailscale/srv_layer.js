@@ -26,7 +26,8 @@ SRV.boot = function (opt) {
     };
     openCtl(); setInterval(() => { try { if (SRV.ctl && SRV.ctl.readyState === 1) SRV.ctl.send('{"k":"ka"}'); } catch (e) { } }, 20000); }
   /* el mundo que recibe un invitado nuevo lleva la posición del anfitrión: siempre debe ser el punto de entrada (no el rincón donde se aparca con la sala vacía) */
-  { const _nsw = netSendWorld; netSendWorld = function () { try { if (SRV.spawn && P) { const sp = SRV.pvp && SRV.pickSpawn ? SRV.pickSpawn() : SRV.spawn; P.x = sp[0]; P.y = sp[1]; SRV.lastBusy = true; } } catch (e) { } return _nsw.apply(this, arguments); }; }
+  /* v15.6: en una sala del servidor nadie es «el anfitrión»: los jugadores se numeran desde 1 (antes el primero era «Jugador 2» porque el 1 era el anfitrión invisible) */
+  { const _nsw = netSendWorld; netSendWorld = function () { try { if (NET.cur && (!NET.rpName || /^Jugador \d+$/.test(NET.rpName))) NET.rpName = 'Jugador ' + Math.max(1, NET.cur.slot - 1); } catch (e) { } try { if (SRV.spawn && P) { const sp = SRV.pvp && SRV.pickSpawn ? SRV.pickSpawn() : SRV.spawn; P.x = sp[0]; P.y = sp[1]; SRV.lastBusy = true; } } catch (e) { } return _nsw.apply(this, arguments); }; }
   /* jugadores conectados y expulsión (los usa el servidor) */
   SRV.players = () => (NET.peers || []).filter(p => p.ready).map(p => ({ slot: p.slot, uid: p.uid || '', nombre: ((p.rp && p.rp.name) || ('Jugador ' + p.slot)) }));
   SRV.kick = (slot, msg) => { const p = (NET.peers || []).find(q => q.slot === slot); if (!p) return false; try { netSendRaw(p, { t: 'end', m: msg || 'Fuiste expulsado de la sala.' }); } catch (e) { } setTimeout(() => { try { netPeerLost(p, true); } catch (e) { } }, 450); return true; };
@@ -323,7 +324,7 @@ SRV.boot = function (opt) {
   { const _nsF = netSend; netSend = function (o) {
       try {
         const peer = NET.role === 'host' ? NET.cur : null;
-        if (SRV.oldFix && peer && o && o.t === 'S' && o.h && (peer.build | 0) < SRV.FIXB && peer.build !== 138 && peer.rp) {   /* 138 = app 14.0.1, que ya trae el arreglo */
+        if (SRV.oldFix && peer && o && o.t === 'S' && o.h && (peer.build | 0) < SRV.FIXB && !(peer.build >= 138 && peer.build <= 145) && peer.rp) {   /* 138–145 = apps 14.0.x, que ya traen el arreglo */
           const mx = peer.rp.nx !== undefined ? peer.rp.nx : peer.rp.x, my = peer.rp.ny !== undefined ? peer.rp.ny : peer.rp.y; let best = null, bd = 70 * 70;
           for (const q of NET.peers) { if (q === peer || !q.ready || !q.rp || !q.rp.ok || q.rp.dead) continue; const r = q.rp, x = r.nx !== undefined ? r.nx : r.x, y = r.ny !== undefined ? r.ny : r.y, d = (x - mx) * (x - mx) + (y - my) * (y - my); if (d < bd) { bd = d; best = q; } }
           if (best) {

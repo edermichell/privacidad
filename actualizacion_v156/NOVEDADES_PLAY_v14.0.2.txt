@@ -1,0 +1,13 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español ---
+Mejoras del multijugador:
+• Ahora ves y oyes los golpes y los disparos de los demás jugadores (animación completa, estela de la bala, fogonazo y sonido).
+• Corregido: en las salas no se veía a los otros jugadores.
+• En las salas oficiales el primer jugador es «Jugador 1».
+
+--- English (optional) ---
+Multiplayer improvements:
+• You now see and hear other players' punches and gunshots (full animation, bullet trail, muzzle flash and sound).
+• Fixed: other players were not visible in rooms.
+• In official rooms the first player is "Jugador 1".

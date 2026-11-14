@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.5 (versionCode 137 → 152)
+# Último Refugio — cambios de la v14.0 a la v15.6 (versionCode 137 → 153)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -63,3 +63,7 @@
 - Fallo de la app desde la 14.0: cada jugador cercano se dibujaba como el «Anfitrión» del servidor. Corregido: cada jugador se ve en su sitio, con su aspecto y su nombre.
 - El anfitrión del servidor ya no aparece en el mapa; un coche que conduce cualquier jugador cuenta como ocupado.
 - Servidor: paliativo para apps antiguas (ven al jugador más cercano), opción `parcheAppAntigua`.
+
+## Golpes y disparos de los demás, y salas sin «anfitrión» (v15.6) — ver `actualizacion_v156/CAMBIOS_v15.6_y_v14.0.2.md`
+- Cada golpe y disparo de otro jugador viaja como un evento y se reproduce completo (animación, arco, estela, fogonazo, casquillo, sonido con distancia). Antes solo llegaba una pose ~7 veces por segundo y a veces no se veía.
+- Salas del servidor: jugadores numerados desde «Jugador 1» y textos sin «anfitrión» ni «tu compañero».

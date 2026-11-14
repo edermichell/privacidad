@@ -902,7 +902,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v15.5 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v15.6 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2320,8 +2320,11 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 152, UR_VERSION = '15.5', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 153, UR_VERSION = '15.6', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '15.6', t: 'Golpes y disparos de los demás, a la vista', it: [
+    'Ahora <b>ves y oyes</b> los golpes y los disparos de los otros jugadores: animación completa del golpe, estela de la bala, fogonazo, casquillo y sonido (antes a veces no se veían).',
+    'En las salas oficiales ya no se habla de «anfitrión» ni de «tu compañero»: el primer jugador es <b>Jugador 1</b>.' ] },
   { v: '15.5', t: 'Arreglo: ahora ves a los demás jugadores', it: [
     'Corregido un fallo importante del multijugador: en las salas <b>no se veía a los otros jugadores</b>; en su lugar aparecía un personaje fijo llamado «Anfitrión». Ahora cada jugador se ve en su sitio, con su aspecto y su nombre.',
     'El «Anfitrión» de las salas del servidor ya no aparece en el mapa.' ] },
@@ -5130,6 +5133,7 @@ function tryAttack() {
   P.atkTgt = tg_;
   const spd = (w ? w.spd : .45) * (1 - .03 * sl(w ? w.skill : 'blunt')) * (1 + P.pain / 250) * (P.fat > 80 ? 1.2 : 1);
   P.atkCd = spd; P.atk = .0001; P.atkDur = spd * .7; P.hitDone = false; P.end -= (w ? w.end : 3) * (1 - .03 * sl('fit'));
+  netAct({ k: 'm', d: r2(P.dir), w: P.eq ? P.eq.id : '', u: Math.round(P.atkDur * 1000) });
   sfx('swing', 0); return true;
 }
 function resolveMelee() {
@@ -5186,7 +5190,7 @@ function scanShotTargets102(list) {
 function fireGun(w) {
   const it = P.eq;
   if (it.a <= 0) { say('Sin munición. Recarga (R)', 'bad'); P.atkCd = .4; sfx('click', 0); return false; }
-  it.a--; P.atkCd = w.spd; const ang = aimAngle(); P.dir = ang; P.atk = .0001; P.atkDur = .25; P.hitDone = true;
+  it.a--; P.atkCd = w.spd; const ang = aimAngle(); P.dir = ang; P.atk = .0001; P.atkDur = .25; P.hitDone = true; AXTR.length = 0;
   if (NET.pvp && NET.role === 'guest') pvpShot(ang, w);   /* v15.2 */
   const n = w.pellets || 1; const sp = Math.max(.015, .06 - sl('aim') * .005) * (1 + (P.stress || 0) * .01) * s96Acc();   /* v96: puntería según brazos, manos y ojos */
   for (let p = 0; p < n; p++) {
@@ -5196,7 +5200,7 @@ function fireGun(w) {
     const hit = scan.hit, hd = scan.hd;
     let len = w.rng; if (hit) len = hd;
     else { for (let t = .5; t < w.rng; t += .25) { if (solidTile(Math.floor(P.x + c * t), Math.floor(P.y + s * t)) === 1) { len = t; break; } } }
-    fx.push({ t: 'tr', x1: P.x, y1: P.y, x2: P.x + c * len, y2: P.y + s * len, l: .09 });
+    fx.push({ t: 'tr', x1: P.x, y1: P.y, x2: P.x + c * len, y2: P.y + s * len, l: .09 }); AXTR.push([r2(a), r2(len)]);
     if (hit) {
       const ch = clamp(.9 + sl('aim') * .02 - hd * .008 - P.pain * .0015, .5, .98);
       if (Math.random() < ch) { const dm = w.dmg * (.85 + Math.random() * .3) * (n > 1 ? clamp(1 - hd / 10, .35, 1) : 1); if (hit.npc) damageNpc(hit, dm, { by: 'p', src: 'g' }); else if (hit.fa) faHit(hit, dm); else damageZombie(hit, dm, { kd: .5, noPush: false, src: 'g' }); addXP('aim', 2); }
@@ -5204,6 +5208,7 @@ function fireGun(w) {
   }
   fx.push({ t: 'fl', x: P.x + Math.cos(ang) * .6, y: P.y + Math.sin(ang) * .6, l: .07 });
   spawnPart('casing', P.x, P.y, 1.2, 1, { dir: ang + 1.6 });
+  netAct({ k: 'g', d: r2(ang), w: it.id, l: AXTR.slice(0, 6) });
   sfx('shot', 0); makeNoise(P.x, P.y, w.noise); shake = 2; P.rec = .14; camKick(ang, w.noise > 50 ? 4.4 : 3); spawnPart('smoke', P.x + Math.cos(ang) * .7, P.y + Math.sin(ang) * .7, 1.3, 2); return true;
 }
 function startReload() {
@@ -5591,7 +5596,7 @@ function carBreak(c) {
   if (P && P.drive === c) { say('¡El auto se averió!', 'bad'); leaveCar(true); }
 }
 function enterCar(c) {
-  if (NET.on && netCarTaken(c)) { say('Tu compañero está conduciendo ese auto', 'bad'); return; }
+  if (NET.on && netCarTaken(c)) { say(NET.srv ? 'Otro jugador está conduciendo ese auto' : 'Tu compañero está conduciendo ese auto', 'bad'); return; }
   if (c.dead || c.hp <= 0) { say('El auto está destrozado. Necesita reparación (martillo + 2 clavos)', 'bad'); return; }
   if (c.fuel <= 0) { say('Sin gasolina. Usa una lata o un surtidor', 'bad'); return; }
   if (c.bt) { say('Batería muerta: busca una batería de auto (talleres y gasolineras)', 'bad'); sfx('click', 0); return; }
@@ -10638,7 +10643,7 @@ function stRead(it) {
 }
 function beaconStart() {
   if (BEACON) { say('La señal ya está activa: resiste.', 'bad'); return; }
-  if (NET.role === 'guest') { say('Solo el anfitrión puede activar la señal de rescate.', 'bad'); return; }
+  if (NET.role === 'guest') { say(NET.srv ? 'En las salas no se puede activar la señal de rescate.' : 'Solo el anfitrión puede activar la señal de rescate.', 'bad'); return; }
   const miss = [];
   if (STORY.rd.length < 5) miss.push('conocer la frecuencia (lee al menos 5 notas)');
   if (!hasItem('sample')) miss.push('la muestra del Paciente Cero');
@@ -12704,7 +12709,7 @@ function netEnd(msg) { if (NET.role === 'host') { netSend({ t: 'end', m: msg });
 function netLost() {
   if (!NET.on) return;
   if (NET.role === 'host') { if (NET.st === 'off') return; const had = !!NET.rp; netCloseConn(); NET.ready = false; NET.rp = null; NET.st = 'waiting'; fieldR = null; for (const n of NPCS) { n.talk = false; if (n.own === 'g') n.own = undefined; } if (EV.dog && EV.dog.own === 'g') EV.dog.own = undefined; for (const c of cars) c.gd = 0; if (had && STATE === 'play') say('El otro jugador se desconectó', 'bad'); netUI(); }
-  else if (NET.role === 'guest') { netClose(); if (STATE === 'play' || STATE === 'dead') { say('Se perdió la conexión con el anfitrión', 'bad'); setTimeout(() => { if (STATE !== 'menu') toMenu(); }, 2500); } else { NET.err = 'Se perdió la conexión.'; } netUI(); }
+  else if (NET.role === 'guest') { netClose(); if (STATE === 'play' || STATE === 'dead') { say(NET.srv ? 'Se perdió la conexión con el servidor' : 'Se perdió la conexión con el anfitrión', 'bad'); setTimeout(() => { if (STATE !== 'menu') toMenu(); }, 2500); } else { NET.err = 'Se perdió la conexión.'; } netUI(); }
 }
 
 /* ---------- mensajes ---------- */
@@ -12745,6 +12750,7 @@ function netMsg(o) {
     case 'AQ': if (NET.role === 'guest') { const nm = String(o.n || 'Un jugador').slice(0, 14); urAsk(nm + ' te propone una alianza (hasta 4 jugadores: se ven en el mapa, se mandan señales y pueden abrir sus candados entre sí). Ojo: un aliado también puede traicionarte. ¿Aceptar?', 'ACEPTAR', 'RECHAZAR').then(y => netSend({ t: y ? 'AA' : 'AD' })); } break;
     case 'SGR': if (NET.role === 'guest') { const dx = (+o.x || 0) - P.x, dy = (+o.y || 0) - P.y, dd = Math.round(Math.hypot(dx, dy)), a8 = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)), dir = ['E', 'SE', 'S', 'SO', 'O', 'NO', 'N', 'NE'][((a8 % 8) + 8) % 8]; say('[' + String(o.n || 'Aliado').slice(0, 14) + '] ' + (SIGT[o.k | 0] || '?') + ' · ' + dd + ' m al ' + dir, (o.k | 0) === 3 ? 'bad' : 'tip'); try { sfx('click', 0); } catch (e) { } } break;
     case 'PX': if (NET.role === 'guest') { say(o.k ? 'Mataste a ' + String(o.n || '?').slice(0, 14) : 'Acertaste a ' + String(o.n || '?').slice(0, 14), o.k ? 'good' : 'tip'); try { sfx('hit', 0); } catch (e) { } } break;   /* v15.2: aviso de impacto o baja */
+    case 'AX': netActIn(o); break;
     case 'say': say(o.m, o.c); break;
     case 'end': if (NET.role === 'guest') { const m = o.m || 'La sala se cerró.'; netClose(); netUI(); if (STATE === 'play' || STATE === 'dead') { say(m, 'bad'); setTimeout(() => { if (STATE !== 'menu') toMenu(); }, 2600); } else NET.err = m; } break;
     case 'bye': if (NET.role === 'host') netLost(); break;
@@ -12785,12 +12791,12 @@ async function netGuestLoad() {
     const all = new Uint8Array(rx.got); let o = 0; for (const p of rx.parts) { all.set(p, o); o += p.length; }
     const s = JSON.parse(await gunzip(all, rx.gz)); audioInit();
     withLoading(() => {
-      if (!applySave(s, true)) { netFail('No se pudo cargar el mundo del anfitrión.'); return; }
+      if (!applySave(s, true)) { netFail(NET.srv ? 'No se pudo cargar el mundo de la sala.' : 'No se pudo cargar el mundo del anfitrión.'); return; }
       tipSeen.clear(); tipSeen.add('start'); metaNewRun(); NET.auth = rx.au ? 1 : 0; NET.pvp = rx.pv ? 1 : 0; NET.ali = null; NET.gm = null; const got = guestCharLoad(s.seed, rx.au ? (rx.ch || '') : undefined); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
       NET.rp = { ok: 0, x: s.P.x, y: s.P.y, nx: s.P.x, ny: s.P.y, dir: 0, sp: {}, anim: 0, name: 'Anfitrión' }; netShadowInit();
-      enterGame(); NET.ready = true; NET.st = 'playing'; netSend({ t: 'R' }); $('mpm').hidden = true; netUI(); say(got ? 'Recuperaste tu personaje en este mundo' : 'Te uniste a la partida de tu compañero', 'good'); if (NET.pvp) say('SALA PVP: otros jugadores pueden atacarte. Si mueres, pierdes tu personaje.', 'bad');
+      enterGame(); NET.ready = true; NET.st = 'playing'; netSend({ t: 'R' }); $('mpm').hidden = true; netUI(); say(got ? 'Recuperaste tu personaje en este mundo' : (NET.srv ? 'Entraste a la sala' : 'Te uniste a la partida de tu compañero'), 'good'); if (NET.pvp) say('SALA PVP: otros jugadores pueden atacarte. Si mueres, pierdes tu personaje.', 'bad');
     });
-  } catch (e) { if (typeof console !== 'undefined') console.error(e); netFail('No se pudo leer el mundo del anfitrión.'); }
+  } catch (e) { if (typeof console !== 'undefined') console.error(e); netFail(NET.srv ? 'No se pudo leer el mundo de la sala.' : 'No se pudo leer el mundo del anfitrión.'); }
 }
 
 /* ---------- sincronización genérica del mapa / contenedores / listas ---------- */
@@ -12930,6 +12936,40 @@ function netApplyList(o) {
 
 /* ---------- jugador remoto ---------- */
 function netSpecNow() { const s = pSpec(); const st = { skin: s.skin, shirt: s.shirt, boots: s.boots, glove: s.glove, pants: s.pants, hair: s.hair, wid: s.wid, head: s.head, pack: s.pack, jacket: s.jacket }; return st; }
+/* ===== v15.6 · ACCIONES DE OTROS JUGADORES (golpes y disparos) =====
+   Antes, el golpe o el disparo de otro jugador solo llegaba como una «pose» muestreada unas 7 veces por segundo: un disparo (0,14 s) casi nunca coincidía y un puñetazo se veía a saltos; además la estela de la bala,
+   el fogonazo, el casquillo y el sonido no se enviaban. Ahora cada golpe y cada disparo viaja como un evento «AX»: el anfitrión lo reenvía a los jugadores cercanos y cada uno lo reproduce completo en su pantalla. */
+const AXTR = [];
+function netAct(o) {
+  try {
+    if (!NET.on || !NET.ready || STATE !== 'play' || !P || P.dead) return; o.t = 'AX';
+    if (NET.role === 'guest') netSend(o); else if (NET.role === 'host' && !window.__SRV_HOST) { o.i = 0; o.x = r2(P.x); o.y = r2(P.y); netSend(o); }
+  } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+}
+function netActShow(R, o) {
+  if (!R || !isFinite(R.x) || !P) return; const x = R.x, y = R.y, dist = Math.hypot(x - P.x, y - P.y); if (dist > 48) return;
+  const d = +o.d || 0, now = performance.now(), W_ = o.w && ITEMS[o.w] && ITEMS[o.w].t === 'wpn' ? ITEMS[o.w] : null; R.dir = d;
+  if (o.k === 'm') { R.ax = { t: now, u: Math.max(150, Math.min(2000, +o.u || 320)), k: 'm' }; fx.push({ t: 'arc', a: d, l: .16, L: .16, r: W_ && !W_.gun ? W_.rng : .85, cx: x, cy: y }); sfx('swing', dist, R); }
+  else if (o.k === 'g') {
+    R.ax = { t: now, u: 240, k: 'g' };
+    const L = Array.isArray(o.l) ? o.l.slice(0, 6) : []; for (const q of L) { const a = +q[0] || 0, len = Math.max(.5, Math.min(30, +q[1] || 1)); fx.push({ t: 'tr', x1: x, y1: y, x2: x + Math.cos(a) * len, y2: y + Math.sin(a) * len, l: .09 }); }
+    fx.push({ t: 'fl', x: x + Math.cos(d) * .6, y: y + Math.sin(d) * .6, l: .07 });
+    try { spawnPart('casing', x, y, 1.2, 1, { dir: d + 1.6 }); spawnPart('smoke', x + Math.cos(d) * .7, y + Math.sin(d) * .7, 1.3, 2); } catch (e) { }
+    sfx('shot', dist, R);
+  }
+}
+function netActIn(o) {
+  try {
+    if (o.k !== 'm' && o.k !== 'g') return;
+    if (NET.role === 'host') {
+      const peer = NET.cur; if (!peer || !peer.rp || !peer.rp.ok || peer.rp.dead) return; const now = performance.now(); if (now - (peer.axT || 0) < 60) return; peer.axT = now;
+      const r = peer.rp, x = r.nx !== undefined ? r.nx : r.x, y = r.ny !== undefined ? r.ny : r.y, m = { t: 'AX', i: peer.slot, k: o.k, d: r2(+o.d || 0), w: typeof o.w === 'string' && ITEMS[o.w] ? o.w : '', x: r2(x), y: r2(y) };
+      if (o.k === 'm') m.u = Math.max(150, Math.min(2000, Math.round(+o.u || 320))); else m.l = (Array.isArray(o.l) ? o.l : []).slice(0, 6).map(q => [r2(+q[0] || 0), r2(Math.max(.5, Math.min(30, +q[1] || 1)))]);
+      for (const q of NET.peers) { if (q === peer || !q.ready || !q.rp) continue; const qx = q.rp.nx !== undefined ? q.rp.nx : q.rp.x, qy = q.rp.ny !== undefined ? q.rp.ny : q.rp.y; if (Math.abs(qx - x) > 48 || Math.abs(qy - y) > 48) continue; netSendRaw(q, m); }
+      if (!window.__SRV_HOST) netActShow(r, m);
+    } else if (NET.role === 'guest') { if (!o.i && NET.srv) return; netActShow(o.i ? NET.oth.get(o.i) : NET.rp, o); }
+  } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+}
 function netMyState() {
   const sp = pSpec(); const st = netSpecNow(), sg = JSON.stringify(st);
   const o = { t: 'P', x: r2(P.x), y: r2(P.y), d: r2(P.dir), m: P.moving ? 1 : 0, r: P.run ? 1 : 0, s: P.sneak ? 1 : 0, l: P.light ? 1 : 0, z: P.sleep ? 1 : 0, h: Math.round(P.hp), k: P.dead ? 1 : 0, v: P.drive ? 1 : 0, pose: sp.pose, ph: sp.ph, hu: P.hurt > 0 ? 1 : 0 };
@@ -12952,7 +12992,8 @@ function netOnPlayer(o) {
 function drawRemote(R) {
   if (!R.sp || !R.sp.skin) return;
   const [sx, sy] = w2sRender(R.x, R.y), f = faceOf(R.dir || 0);
-  const sp = Object.assign({ type: 'p', zomb: false, nf: 16, front: f.front, fx: f.fx, frame: R.moving ? (Math.floor(R.anim * 13.8) & 15) : 0, pose: R.pose || 'walk', ph: R.ph || 0, hurt: R.hurt > 0 ? 1 : 0 }, R.sp || {});
+  let pose_ = R.pose || 'walk', ph_ = R.ph || 0; if (R.ax) { const k_ = (performance.now() - R.ax.t) / R.ax.u; if (k_ >= 0 && k_ < 1) { if (R.ax.k === 'm') { pose_ = 'atk'; ph_ = Math.min(5, Math.floor(k_ * 6)); } else if (pose_ !== 'lie') pose_ = 'aim'; } else if (k_ < 1.6 && R.ax.k === 'm' && pose_ === 'atk') { pose_ = 'walk'; ph_ = 0; } }
+  const sp = Object.assign({ type: 'p', zomb: false, nf: 16, front: f.front, fx: f.fx, frame: R.moving ? (Math.floor(R.anim * 13.8) & 15) : 0, pose: pose_, ph: ph_, hurt: R.hurt > 0 ? 1 : 0 }, R.sp || {});
   const spr = humanSprite(sp), X = RP(sx), Y = RP(sy); let bob = 0;
   if (R.pose !== 'lie') { ctx.drawImage(SPR.blob, X - 13, Y - 4); bodyShadow(X, Y); }
   if (R.moving) bob = ((sp.frame & 7) === 4) ? -1 : 0; else if (R.pose !== 'lie') bob = Math.sin(TIME * 2.1 + 1) > .5 ? -1 : 0; if (R.sneak) bob += 1;
@@ -13079,7 +13120,7 @@ function netUI() {
   const code = $('mpCode'); if (code) code.textContent = NET.role === 'host' ? NET.code : '------';
   const hs = $('mpHostSt'); if (hs) hs.textContent = !ing ? '' : NET.role === 'host' ? (NET.st === 'playing' ? 'Tu compañero está conectado.' : NET.st === 'waiting' ? (NET.code ? 'Sala abierta. Dale este código a tu compañero.' : 'Esperando conexión manual.') : 'Conectando…') : NET.role === 'guest' ? 'Estás jugando en la partida de tu compañero.' : 'Abre una sala para jugar con otra persona.';
   if ($('mpOpen')) $('mpOpen').hidden = !(ing && !NET.role && STATE === 'play'); if ($('mpLeave')) $('mpLeave').hidden = !(NET.role && NET.st !== 'off' && ing); if ($('mpCopy')) $('mpCopy').hidden = !(NET.role === 'host' && NET.code); if ($('mpCodeRow')) $('mpCodeRow').hidden = !(NET.role === 'host' && NET.code);
-  const msg = $('mpMsg'); if (msg) { msg.textContent = NET.err || (NET.role === 'guest' && NET.st !== 'playing' ? (NET.st === 'loading' ? 'Descargando el mundo de tu compañero…' : 'Conectando con la sala ' + NET.code + '…') : ''); msg.className = NET.err ? 'hint bad' : 'hint'; }
+  const msg = $('mpMsg'); if (msg) { msg.textContent = NET.err || (NET.role === 'guest' && NET.st !== 'playing' ? (NET.st === 'loading' ? (NET.srv ? 'Descargando el mundo de la sala…' : 'Descargando el mundo de tu compañero…') : 'Conectando con la sala ' + NET.code + '…') : ''); msg.className = NET.err ? 'hint bad' : 'hint'; }
   const jb = $('mpJoin'); if (jb) jb.disabled = NET.role === 'guest' && NET.st !== 'playing' && !NET.err ? true : false;
 }
 function netOpenUI() { $('mpm').hidden = false; netUI(); }
@@ -22650,7 +22691,7 @@ function render(dt) {
       for (let pass = 0; pass < 2; pass++) {
         ctx.strokeStyle = pass ? 'rgba(255,255,255,' + (k * .95).toFixed(2) + ')' : 'rgba(255,240,200,' + (k * .35).toFixed(2) + ')'; ctx.lineWidth = pass ? 1 : 4; ctx.beginPath();
         const rr = pass ? .95 : .85;
-        for (let q = 0; q <= 9; q++) { const an = (pass ? tail : a0) + (a1 - (pass ? tail : a0)) * q / 9, [ax, ay] = w2sRender(P.x + Math.cos(an) * e.r * rr, P.y + Math.sin(an) * e.r * rr); if (q) ctx.lineTo(Math.round(ax), Math.round(ay) - 11); else ctx.moveTo(Math.round(ax), Math.round(ay) - 11); }
+        for (let q = 0; q <= 9; q++) { const an = (pass ? tail : a0) + (a1 - (pass ? tail : a0)) * q / 9, [ax, ay] = w2sRender((e.cx !== undefined ? e.cx : P.x) + Math.cos(an) * e.r * rr, (e.cy !== undefined ? e.cy : P.y) + Math.sin(an) * e.r * rr); if (q) ctx.lineTo(Math.round(ax), Math.round(ay) - 11); else ctx.moveTo(Math.round(ax), Math.round(ay) - 11); }
         ctx.stroke();
       }
       ctx.lineWidth = 1;
@@ -24161,7 +24202,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24202,7 +24243,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24225,7 +24266,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24254,7 +24295,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24288,7 +24329,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24319,7 +24360,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24352,7 +24393,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24381,12 +24422,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.5') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.6') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.5';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.6';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
