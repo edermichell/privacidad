@@ -1,12 +1,14 @@
 # Lanzamiento v15.6 — qué hay en esta carpeta
-1. `GUIA_SUBIR_v15.6.md` ← empieza aquí (orden de pasos y qué hacer según la revisión de la 14.0).
-2. `UltimoRefugio_AndroidStudio_v15.6.zip` — proyecto de la app (versionCode 153, «15.6»), con la política nueva y el resumen de cambios.
+1. `GUIA_SUBIR_v15.7.md` ← empieza aquí (orden de pasos y qué hacer según la revisión de la 14.0).
+2. `UltimoRefugio_AndroidStudio_v15.7.zip` — proyecto de la app (versionCode 154, «15.7»), con la política nueva y el resumen de cambios.
 3. `privacy.html` — política de privacidad **actualizada** (súbela a tu URL pública antes de enviar la app).
-4. `NOVEDADES_PLAY_v15.6.txt` — texto de «novedades» (es + en).
-5. `correo_testers_v156/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
+4. `NOVEDADES_PLAY_v15.7.txt` — texto de «novedades» (es + en).
+5. `correo_testers_v157/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
-7. `CAMBIOS_v14.0_a_v15.6.md` — todo lo que cambió desde la versión que está en revisión.
+7. `CAMBIOS_v14.0_a_v15.7.md` — todo lo que cambió desde la versión que está en revisión.
 
 **IMPORTANTE (v15.5):** corrige el fallo por el que en las salas no se veía a los demás jugadores (solo un «Anfitrión»). Lee `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md` (en la raíz): explica la causa, por qué hay que actualizar la app y la opción mínima **14.0.1**.
 
 **v15.6:** golpes y disparos de los demás jugadores a la vista y salas oficiales sin «anfitrión» (primer jugador = «Jugador 1»). Ver `actualizacion_v156/CAMBIOS_v15.6_y_v14.0.2.md` (incluye la opción mínima **14.0.2**).
+
+**v15.7 (fase 5):** botín que reaparece, bases protegidas con los dueños desconectados y temporadas PvP **funcionan solo con el servidor nuevo** (sirven también para la app 14.0.x). Bandidos y recompensas en PvP. Ver `actualizacion_v157/CAMBIOS_v15.7_fase5.md`.

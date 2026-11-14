@@ -14,7 +14,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null, autoridadPersonaje: true, validarDano: true, versionMinimaApp: 0, muerteBorraPersonaje: 'modo', personajeCaducaDias: 60, alianzaMax: 4, traidorHoras: 24, misionesGrupo: true, parcheAppAntigua: true };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null, autoridadPersonaje: true, validarDano: true, versionMinimaApp: 0, muerteBorraPersonaje: 'modo', personajeCaducaDias: 60, alianzaMax: 4, traidorHoras: 24, misionesGrupo: true, parcheAppAntigua: true, botinReapareceHoras: 3, proteccionBases: true, proteccionBasesMin: 10, temporadaDias: 14 };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -164,6 +164,30 @@ class Room {
     } catch (e) { return { ok: false }; }
     return { ok: false };
   }
+  /* v15.7 · TEMPORADAS (salas PvP): cada «temporadaDias» (14) el mundo se reinicia con avisos 24 h y 1 h antes; se guarda el ranking de bajas */
+  seasonDays() { const d = this.cfg.temporadaDias !== undefined ? +this.cfg.temporadaDias : +CFG.temporadaDias; return this.cfg.pvp && d > 0 ? d : 0; }
+  seasonFile() { return path.join(this.dir, 'temporada.json'); }
+  seasonData() { let o = null; try { o = JSON.parse(fs.readFileSync(this.seasonFile(), 'utf8')); } catch (e) { } if (!o || !(+o.inicio > 0)) { o = { inicio: Date.now(), avisos: {} }; try { fs.writeFileSync(this.seasonFile(), JSON.stringify(o)); } catch (e) { } } return o; }
+  seasonEnd() { const d = this.seasonDays(); if (!d) return 0; return Math.round(this.seasonData().inicio + d * 864e5); }
+  async seasonCheck() {
+    const d = this.seasonDays(); if (!d || this.seasonBusy) return; const o = this.seasonData(), fin = o.inicio + d * 864e5, left = fin - Date.now(); o.avisos = o.avisos || {};
+    const say = async m => { if (this.page && this.status === 'activa') { try { await this.page.evaluate(x => { try { netSend({ t: 'say', m: x, c: 'bad' }); } catch (e) { } }, m); } catch (e) { } } };
+    if (left > 0) {
+      for (const [k, ms, txt] of [['d1', 864e5, 'unas 24 horas'], ['h1', 36e5, '1 hora']]) if (left <= ms && !o.avisos[k] && d * 864e5 > ms) { o.avisos[k] = Date.now(); fs.writeFileSync(this.seasonFile(), JSON.stringify(o)); await say('La temporada termina en ' + txt + ': después el mundo se reinicia y todos empiezan de cero.'); log('[' + this.id + '] aviso de fin de temporada (' + txt + ')'); }
+      return;
+    }
+    this.seasonBusy = true;
+    try {
+      let top = []; try { if (this.page && this.status === 'activa') top = await this.page.evaluate(() => SRV.seasonTop ? SRV.seasonTop() : []); } catch (e) { }
+      if (!top.length) { try { const a = JSON.parse(fs.readFileSync(path.join(this.dir, 'alianzas.json'), 'utf8')); top = Object.entries(a.k || {}).map(([u, v]) => ({ nombre: v.nm || '?', bajas: v.n | 0 })).sort((x, y) => y.bajas - x.bajas).slice(0, 10); } catch (e) { } }
+      const hf = path.join(this.dir, 'temporadas.json'); let h = []; try { h = JSON.parse(fs.readFileSync(hf, 'utf8')); } catch (e) { } h.push({ inicio: new Date(o.inicio).toISOString(), fin: new Date().toISOString(), top: top.slice(0, 10) }); fs.writeFileSync(hf, JSON.stringify(h.slice(-50), null, 1));
+      log('[' + this.id + '] FIN DE TEMPORADA. Más temidos: ' + (top.slice(0, 5).map((q, i) => (i + 1) + '. ' + q.nombre + ' (' + q.bajas + ')').join(' · ') || 'nadie'));
+      await say('¡Fin de la temporada! El mundo se reinicia ahora.'); await new Promise(r => setTimeout(r, 1500));
+      fs.writeFileSync(this.seasonFile(), JSON.stringify({ inicio: Date.now(), avisos: {} }));
+      await this.newWorld();
+    } finally { this.seasonBusy = false; }
+  }
+  /* v15.7 · las alianzas y el ranking se guardan aparte; al empezar temporada nueva se borran con el mundo (newWorld) */
   purgeChars() { try { const dir = path.join(this.dir, 'personajes'), lim = Date.now() - (CFG.personajeCaducaDias > 0 ? CFG.personajeCaducaDias : 60) * 86400000; for (const n of fs.readdirSync(dir)) { const f = path.join(dir, n); try { if (fs.statSync(f).mtimeMs < lim) fs.unlinkSync(f); } catch (e) { } } } catch (e) { } }
   async start() {
     if (this.promise) return this.promise; if (this.status === 'activa') return;
@@ -197,7 +221,7 @@ class Room {
       }
       await page.waitForFunction(() => STATE === 'play', null, { timeout: 90000 });
       await page.waitForTimeout(2500); await page.keyboard.press('Space').catch(() => { }); await page.waitForTimeout(800);
-      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps, aut: c.aut, val: c.val, minB: c.minB, muerte: c.muerte, pvp: c.pvp, amax: c.amax, thoras: c.thoras, gm: c.gm, oldfix: c.oldfix }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor, aut: CFG.autoridadPersonaje !== false, val: CFG.validarDano !== false, minB: Math.max(CFG.versionMinimaApp | 0, this.cfg.pvp ? 152 : 0), muerte: this.cfg.pvp ? true : (CFG.muerteBorraPersonaje === undefined ? 'modo' : CFG.muerteBorraPersonaje), pvp: !!this.cfg.pvp, amax: Math.max(2, Math.min(8, CFG.alianzaMax | 0 || 4)), thoras: CFG.traidorHoras > 0 ? +CFG.traidorHoras : 24, gm: CFG.misionesGrupo !== false, oldfix: CFG.parcheAppAntigua !== false });
+      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps, aut: c.aut, val: c.val, minB: c.minB, muerte: c.muerte, pvp: c.pvp, amax: c.amax, thoras: c.thoras, gm: c.gm, oldfix: c.oldfix, loot: c.loot, prot: c.prot, protMin: c.protMin, tfin: c.tfin }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor, aut: CFG.autoridadPersonaje !== false, val: CFG.validarDano !== false, minB: Math.max(CFG.versionMinimaApp | 0, this.cfg.pvp ? 152 : 0), muerte: this.cfg.pvp ? true : (CFG.muerteBorraPersonaje === undefined ? 'modo' : CFG.muerteBorraPersonaje), pvp: !!this.cfg.pvp, amax: Math.max(2, Math.min(8, CFG.alianzaMax | 0 || 4)), thoras: CFG.traidorHoras > 0 ? +CFG.traidorHoras : 24, gm: CFG.misionesGrupo !== false, oldfix: CFG.parcheAppAntigua !== false, loot: CFG.botinReapareceHoras === undefined ? 3 : +CFG.botinReapareceHoras || 0, prot: CFG.proteccionBases !== false, protMin: +CFG.proteccionBasesMin || 10, tfin: this.cfg.pvp ? this.seasonEnd() : 0 });
       this.startedAt = Date.now(); this.failN = 0; this.lastBusy = Date.now(); this.status = 'activa'; log('[' + this.id + '] sala lista (máx. ' + CFG.maxJugadores + ' jugadores)');
     } catch (e) {
       this.failN++; this.nextTry = Date.now() + Math.min(60000, 5000 * this.failN); this.status = 'dormida'; log('[' + this.id + '] no pudo arrancar:', String(e.message || e).split('\n')[0]);
@@ -239,7 +263,7 @@ class Room {
     else if (!this.nunca && CFG.dormirTrasMin > 0 && Date.now() - this.lastBusy > CFG.dormirTrasMin * 60000) { await this.sleep('sin jugadores ' + CFG.dormirTrasMin + ' min'); return; }
     if ((s.role !== 'host' || s.es === 2) && !s.peers && !s.connecting) { log('[' + this.id + '] la sala no estaba abierta, reabriendo'); try { await this.page.evaluate(() => { if (NET.role) netClose(); netHost(); }); } catch (e) { } }
   }
-  info() { const s = this.state || {}; return { id: this.id, nombre: this.nombre, estado: this.status, jugadores: this.status === 'activa' ? (s.peers || 0) : 0, conectando: s.connecting || 0, max: CFG.maxJugadores, dia: this.status === 'activa' ? s.day : undefined, nombres: this.status === 'activa' ? (s.names || []) : [], zombis: s.z, pausada: !!s.paused, reinicios: this.restarts, ultimoGuardado: this.lastSave ? new Date(this.lastSave).toISOString() : null, errores: s.err || 0, guardada: this.hasSave(), publica: this.publica, plan247: this.plan247, usuario: this.dynamic, pvp: !!this.cfg.pvp, mapa: SIZES[this.cfg.tamano !== undefined ? this.cfg.tamano : CFG.tamano] || 0 }; }
+  info() { const s = this.state || {}; return { id: this.id, nombre: this.nombre, estado: this.status, jugadores: this.status === 'activa' ? (s.peers || 0) : 0, conectando: s.connecting || 0, max: CFG.maxJugadores, dia: this.status === 'activa' ? s.day : undefined, nombres: this.status === 'activa' ? (s.names || []) : [], zombis: s.z, pausada: !!s.paused, reinicios: this.restarts, ultimoGuardado: this.lastSave ? new Date(this.lastSave).toISOString() : null, errores: s.err || 0, guardada: this.hasSave(), publica: this.publica, plan247: this.plan247, usuario: this.dynamic, pvp: !!this.cfg.pvp, temporada: this.cfg.pvp ? this.seasonEnd() || undefined : undefined, mapa: SIZES[this.cfg.tamano !== undefined ? this.cfg.tamano : CFG.tamano] || 0 }; }
 }
 const rooms = new Map(CFG.salas.map(c => [c.id, new Room(c)]));
 const saveUserRooms = () => { try { writeJson('salas_usuario.json', [...rooms.values()].filter(r => r.dynamic).map(r => r.record())); } catch (e) { log('[salas] no se pudo guardar la lista:', e.message); } };
@@ -479,6 +503,7 @@ function bindAll() { listen('127.0.0.1'); if (CFG.escuchar === 'todas') { listen
   setInterval(() => { if (CFG.escuchar !== 'todas') bindAll(); }, 10000);
   maintenance(); setInterval(maintenance, 10 * 60000);
   setInterval(() => { for (const r of rooms.values()) r.watchdog().catch(e => log('[vigilante ' + r.id + ']', e.message)); }, 5000);
+  setInterval(() => { for (const r of rooms.values()) r.seasonCheck().catch(e => log('[temporada ' + r.id + ']', e.message)); }, process.env.URSRV_PRUEBA === '1' || process.env.URSRV_DEBUG === '1' ? 3000 : 60000);
   /* con todas las salas dormidas el navegador no hace falta (~250 MB): se cierra tras 2 min y se vuelve a abrir solo al despertar una sala */
   let idleSince = 0;
   setInterval(() => { try {

@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.6 (versionCode 137 → 153)
+# Último Refugio — cambios de la v14.0 a la v15.7 (versionCode 137 → 154)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -67,3 +67,7 @@
 ## Golpes y disparos de los demás, y salas sin «anfitrión» (v15.6) — ver `actualizacion_v156/CAMBIOS_v15.6_y_v14.0.2.md`
 - Cada golpe y disparo de otro jugador viaja como un evento y se reproduce completo (animación, arco, estela, fogonazo, casquillo, sonido con distancia). Antes solo llegaba una pose ~7 veces por segundo y a veces no se veía.
 - Salas del servidor: jugadores numerados desde «Jugador 1» y textos sin «anfitrión» ni «tu compañero».
+
+## Fase 5: salas vivas (v15.7) — ver `actualizacion_v157/CAMBIOS_v15.7_fase5.md`
+- Servidor (cualquier app): botín que reaparece en muebles vacíos; bases protegidas con los dueños desconectados más de 10 min; temporadas PvP de 14 días con avisos, ranking y mundo nuevo.
+- PvP: bandidos (3 asesinatos en 24 h) con recompensa; los comerciantes no atienden a bandidos ni traidores; nombre naranja «· BANDIDO» y panel con ranking (app 15.7).

@@ -87,10 +87,10 @@ SRV.boot = function (opt) {
      El fuego amistoso está ACTIVO: quien daña a un aliado (o a un exaliado que salió hace < 10 min) queda como TRAIDOR «traidorHoras» (24 h): sale de la alianza, nombre rojo para todos, no puede aliarse y se avisa a su
      alianza. Si el atacado ya había atacado antes a quien le pega (defensa propia, 5 min) o es un Traidor, no hay castigo. Los aliados se ven en el mapa, comparten señales y abren los candados del otro. */
   SRV.AL = { max: Math.max(2, Math.min(8, opt.amax | 0 || 4)), traitMs: (opt.thoras > 0 ? opt.thoras : 24) * 3600e3, leaveMs: 600e3, selfDefMs: 300e3, propMs: 30e3, near: 8, see: 55 };
-  SRV.ali = { g: [], t: {}, l: {} };
+  SRV.ali = { g: [], t: {}, l: {}, b: {}, k: {}, m: {} };
   { let tm = 0; SRV.aliSave = () => { clearTimeout(tm); tm = setTimeout(() => { try { if (typeof window.__srvAli === 'function') window.__srvAli('put', JSON.stringify(SRV.ali)); } catch (e) { } }, 1500); }; }
   if (SRV.pvp && typeof window.__srvAli === 'function') window.__srvAli('get', '').then(r => {
-    try { if (r && r.ok && r.c) { const o = JSON.parse(r.c), ok = u => typeof u === 'string' && /^[a-z0-9]{8,40}$/.test(u), g = []; for (const x of (o.g || [])) { const m = (x.m || []).filter(ok).slice(0, 8); if (m.length >= 2) g.push({ id: String(x.id || Math.random().toString(36).slice(2, 8)).slice(0, 8), m }); } const tt = {}; for (const k in (o.t || {})) if (ok(k) && +o.t[k] > Date.now()) tt[k] = +o.t[k]; SRV.ali = { g, t: tt, l: {} }; } } catch (e) { }
+    try { if (r && r.ok && r.c) { const o = JSON.parse(r.c), ok = u => typeof u === 'string' && /^[a-z0-9]{8,40}$/.test(u), g = []; for (const x of (o.g || [])) { const m = (x.m || []).filter(ok).slice(0, 8); if (m.length >= 2) g.push({ id: String(x.id || Math.random().toString(36).slice(2, 8)).slice(0, 8), m }); } const tt = {}; for (const k in (o.t || {})) if (ok(k) && +o.t[k] > Date.now()) tt[k] = +o.t[k]; const bb = {}; for (const k in (o.b || {})) if (ok(k) && +o.b[k] > Date.now()) bb[k] = +o.b[k]; const kk = {}; for (const k in (o.k || {})) if (ok(k) && o.k[k] && (o.k[k].n | 0) > 0) kk[k] = { n: o.k[k].n | 0, nm: String(o.k[k].nm || '?').slice(0, 14) }; const mm = {}; for (const k in (o.m || {})) if (ok(k) && Array.isArray(o.m[k])) mm[k] = o.m[k].filter(x => +x > Date.now() - 864e5).slice(-10); SRV.ali = { g, t: tt, l: {}, b: bb, k: kk, m: mm }; } } catch (e) { }
   }).catch(() => { });
   const peerByUid = u => NET.peers.find(p => p.ready && p.uid === u), peerBySlot = i => NET.peers.find(p => p.ready && p.slot === i), pname = p => (p && p.rp && p.rp.name) || 'Jugador';
   const ppos = p => [p.rp.nx !== undefined ? p.rp.nx : p.rp.x, p.rp.ny !== undefined ? p.rp.ny : p.rp.y];
@@ -101,10 +101,10 @@ SRV.boot = function (opt) {
   SRV.aliSay = (p, m, c) => { try { netSendRaw(p, { t: 'say', m, c: c || 'tip' }); } catch (e) { } };
   SRV.aliSend = peer => {
     const g = SRV.grp(peer.uid), mem = []; if (g) for (const u of g.m) { if (u === peer.uid) continue; const q = peerByUid(u); mem.push({ i: q ? q.slot : 0, n: q ? pname(q) : '', on: q ? 1 : 0 }); }
-    try { netSendRaw(peer, { t: 'AI', n: g ? g.m.length : 0, max: SRV.AL.max, mem, tr: Math.ceil(SRV.traitLeft(peer.uid) / 60000) }); } catch (e) { }
+    try { netSendRaw(peer, { t: 'AI', n: g ? g.m.length : 0, max: SRV.AL.max, mem, tr: Math.ceil(SRV.traitLeft(peer.uid) / 60000), bd: Math.ceil(SRV.isBandit(peer.uid) / 60000), top: SRV.seasonTop().slice(0, 5).map(q => [q.nombre, q.bajas]), tf: SRV.tfin || 0 }); } catch (e) { }
   };
   SRV.aliSendGroup = u => { const g = SRV.grp(u); if (g) for (const m of g.m) { const q = peerByUid(m); if (q) SRV.aliSend(q); } };
-  SRV.aliJoin = peer => { SRV.aliSend(peer); try { SRV.gmSendTo(peer); } catch (e) { } SRV.aliSendGroup(peer.uid); const tl = SRV.traitLeft(peer.uid); if (tl) SRV.aliSay(peer, 'Sigues marcado como TRAIDOR durante ' + Math.ceil(tl / 3600000) + ' h.', 'bad'); };
+  SRV.aliJoin = peer => { SRV.aliSend(peer); try { SRV.gmSendTo(peer); } catch (e) { } try { if (SRV.tfin) { const dd = Math.max(0, Math.ceil((SRV.tfin - Date.now()) / 864e5)); SRV.aliSay(peer, 'Temporada PvP: quedan ' + dd + ' día' + (dd === 1 ? '' : 's') + '. Después el mundo se reinicia.', 'tip'); } if (SRV.isBandit(peer.uid) > 0) SRV.aliSay(peer, 'Sigues siendo BANDIDO: hay recompensa por tu cabeza.', 'bad'); } catch (e) { } SRV.aliSendGroup(peer.uid); const tl = SRV.traitLeft(peer.uid); if (tl) SRV.aliSay(peer, 'Sigues marcado como TRAIDOR durante ' + Math.ceil(tl / 3600000) + ' h.', 'bad'); };
   SRV.aliPropose = (peer, o) => {
     const tg = peerBySlot(o.i | 0), now = performance.now(); if (!tg || tg === peer || !peer.rp || !tg.rp || peer.chDead || tg.chDead) return;
     const a = ppos(peer), b = ppos(tg), d = Math.hypot(a[0] - b[0], a[1] - b[1]); let why = null; const g = SRV.grp(peer.uid);
@@ -145,7 +145,7 @@ SRV.boot = function (opt) {
   /* en PvP un cliente solo conoce a los jugadores cercanos (y a sus aliados): sin «radar» */
   { const _nof = netOthersFor; netOthersFor = function (peer) {
       const out = _nof.apply(this, arguments); if (!SRV.pvp || !peer.rp) return out; const me = ppos(peer), res = [];
-      for (const a of out) { const q = NET.peers.find(p => p.slot === a.i), ally = !!(q && SRV.allied(peer.uid, q.uid)); if (!ally && Math.hypot(a.x - me[0], a.y - me[1]) > SRV.AL.see) { try { peer.oSeen.delete(a.i); } catch (e) { } continue; } a.al = ally ? 1 : 0; a.tr = q && SRV.traitLeft(q.uid) ? 1 : 0; res.push(a); }
+      for (const a of out) { const q = NET.peers.find(p => p.slot === a.i), ally = !!(q && SRV.allied(peer.uid, q.uid)); if (!ally && Math.hypot(a.x - me[0], a.y - me[1]) > SRV.AL.see) { try { peer.oSeen.delete(a.i); } catch (e) { } continue; } a.al = ally ? 1 : 0; a.tr = q && SRV.traitLeft(q.uid) ? 1 : 0; a.bd = q && SRV.isBandit(q.uid) ? 1 : 0; res.push(a); }
       return res;
     }; }
   /* los candados de un aliado se abren sin código (el cliente manda «ALLY»; si no es aliado no cuenta como intento ni avisa al dueño) */
@@ -207,6 +207,65 @@ SRV.boot = function (opt) {
     }
   };
   setInterval(() => { try { SRV.gmTick(); } catch (e) { slog('error en misiones de grupo: ' + (e && e.message)); } }, 1000);
+  /* ===== v15.7 · FASE 5 =====
+     1) BOTÍN QUE REAPARECE (todas las salas del servidor): un mueble o caja que lleva «botinReapareceHoras» (3) vacío y sin nadie a < 40 casillas vuelve a tener botín (se puede registrar otra vez).
+        No toca lo que construyen los jugadores, lo que tiene candado ni los maleteros. Funciona con cualquier versión de la app.
+     2) BASES PROTEGIDAS CON LOS DUEÑOS DESCONECTADOS (todas las salas): la «base» es lo que está a ≤ 8 casillas de los candados de un jugador. Si todos sus dueños (y, en PvP, sus aliados)
+        llevan más de «proteccionBasesMin» (10) minutos desconectados, no se pueden romper paredes/puertas/muebles ni forzar sus candados. Cualquier versión de la app.
+     3) BANDIDOS Y RECOMPENSAS (PvP): matar a 3 jugadores inocentes en 24 h (ni traidores, ni bandidos, ni en defensa propia) te hace BANDIDO 24 h: nombre naranja, los comerciantes no te atienden,
+        y quien te mate cobra una recompensa (botín extra en tu cuerpo). Morir quita el estado de bandido.
+     4) COMERCIANTES (PvP): no comercian con traidores ni bandidos.
+     5) TEMPORADAS (PvP): fin de temporada y ranking de bajas (los lleva el servidor, servidor.js). */
+  SRV.LOOT = { h: +opt.loot || 0, far: 40 }; SRV.lootEmpty = new Map();
+  SRV.lootTick = () => {
+    if (!(SRV.LOOT.h > 0)) return 0; const now = Date.now(), lim = SRV.LOOT.h * 3600e3, live = NET.peers.filter(p => p.ready && p.rp).map(p => [p.rp.nx !== undefined ? p.rp.nx : p.rp.x, p.rp.ny !== undefined ? p.rp.ny : p.rp.y]); let n = 0;
+    for (const [i, c] of containers) {
+      if (i >= TRUNK_BASE || !c) continue; if (!(Array.isArray(c.items) && c.items.length === 0)) { SRV.lootEmpty.delete(i); continue; } if (BLD.pc.has(i) || LK.codes.has(i)) continue;
+      const t0 = SRV.lootEmpty.get(i); if (!t0) { SRV.lootEmpty.set(i, now); continue; } if (now - t0 < lim) continue;
+      const x = i % W, y = (i / W) | 0; if (live.some(q => Math.abs(q[0] - x) < SRV.LOOT.far && Math.abs(q[1] - y) < SRV.LOOT.far)) continue;
+      c.items = null; SRV.lootEmpty.delete(i); try { netSend({ t: 'C', i, items: null }); } catch (e) { } if (++n >= 400) break;
+    }
+    if (n) slog('botín repuesto en ' + n + ' muebles/cajas vacíos'); return n;
+  };
+  setInterval(() => { try { SRV.lootTick(); } catch (e) { } }, 60000);
+  SRV.PROT = { on: opt.prot !== false, ms: Math.max(1, +opt.protMin || 10) * 60000, r: 8 }; SRV.seen = new Map(); const bootT = Date.now();
+  SRV.isOn = u => NET.peers.some(p => p.ready && p.uid === u);
+  SRV.offFor = u => SRV.isOn(u) ? 0 : Date.now() - (SRV.seen.get(u) || bootT);
+  SRV.baseOwners = i => { const x = i % W, y = (i / W) | 0, own = new Set(); for (const [j, L] of LK.codes) { if (!L || !L.u || L.u[0] === 's') continue; if (Math.abs((j % W) - x) <= SRV.PROT.r && Math.abs(((j / W) | 0) - y) <= SRV.PROT.r) own.add(L.u); } return own; };
+  SRV.isProtected = (i, w) => {
+    if (!SRV.PROT.on) return false; const own = SRV.baseOwners(i); if (!own.size) return false; if (w && w.uid && (own.has(w.uid) || [...own].some(u => SRV.allied && SRV.allied(u, w.uid)))) return false;
+    for (const u of own) { if (SRV.offFor(u) < SRV.PROT.ms) return false; const g = SRV.grp && SRV.grp(u); if (g && g.m.some(m => SRV.offFor(m) < SRV.PROT.ms)) return false; }
+    return true;
+  };
+  const protMsg = w => { try { const p = NET.peers.find(q => q.slot === (w && w.slot)); if (!p) return; const now = performance.now(); if (now - (p.protMsgT || 0) < 6000) return; p.protMsgT = now; netSendRaw(p, { t: 'say', m: 'Base protegida: sus dueños están desconectados. No se puede asaltar ahora.', c: 'bad' }); } catch (e) { } };
+  { const _d = lkDamageH; lkDamageH = function (i, d, w) { if (SRV.isProtected(i, w)) { protMsg(w); return; } return _d.apply(this, arguments); }; }
+  { const _f0 = lkForceStartH; lkForceStartH = function (i, how, w) { if (SRV.isProtected(i, w)) { protMsg(w); return; } return _f0.apply(this, arguments); }; }
+  { const _f1 = lkForceH; lkForceH = function (i, how, w) { if (SRV.isProtected(i, w)) return { ok: false, m: 'Base protegida: sus dueños están desconectados.' }; return _f1.apply(this, arguments); }; }
+  SRV.BAND = { n: 3, win: 864e5, dur: 864e5 };
+  SRV.isBandit = u => { const x = SRV.ali.b && SRV.ali.b[u]; if (!x) return 0; if (x <= Date.now()) { delete SRV.ali.b[u]; SRV.aliSave(); return 0; } return x - Date.now(); };
+  SRV.seasonTop = () => Object.entries(SRV.ali.k || {}).map(([u, v]) => ({ nombre: v.nm || '?', bajas: v.n | 0 })).sort((a, b) => b.bajas - a.bajas).slice(0, 10);
+  SRV.tfin = +opt.tfin || 0;
+  SRV.onKill = (att, vic) => {
+    if (!SRV.pvp || !att || !vic || !att.uid || !vic.uid) return; const now = Date.now(), an = (att.rp && att.rp.name) || 'Jugador', vn = (vic.rp && vic.rp.name) || 'Jugador';
+    SRV.ali.k = SRV.ali.k || {}; SRV.ali.b = SRV.ali.b || {}; SRV.ali.m = SRV.ali.m || {};
+    const k = SRV.ali.k[att.uid] || (SRV.ali.k[att.uid] = { n: 0, nm: an }); k.n++; k.nm = an;
+    const vBand = SRV.isBandit(vic.uid) > 0, vTrait = SRV.traitLeft(vic.uid) > 0, selfDef = !!(att.atkBy && att.atkBy[vic.uid] && performance.now() - att.atkBy[vic.uid] < 300e3);
+    if (vBand) {                                                                       /* recompensa por la cabeza de un bandido */
+      delete SRV.ali.b[vic.uid]; const r = vic.rp, x0 = r ? (r.nx !== undefined ? r.nx : r.x) : 0, y0 = r ? (r.ny !== undefined ? r.ny : r.y) : 0, out = [];
+      const add = (id, c) => { if (!ITEMS[id]) return; const it = mkItem(id, c || 1); if (ITEMS[id].gun) it.a = ITEMS[id].mag; out.push(it); }; add('ammo9', 30); add('ammo762', 10); add('medkit', 1); add('bandage', 3); add(['revolver', 'shotgun', 'rifle'][(Math.random() * 3) | 0], 1);
+      for (const it of out) { const a = Math.random() * 6.283, d = Math.random() * 1.1; floorItems.push({ x: x0 + Math.cos(a) * d, y: y0 + Math.sin(a) * d, it, t0: TIME }); }
+      SRV.aliSay(att, 'Cobraste la recompensa por el bandido ' + vn + ': ' + out.length + ' objetos más en su cuerpo.', 'good'); for (const q of NET.peers) if (q.ready && q !== att) SRV.aliSay(q, an + ' acabó con el bandido ' + vn + ' y cobró la recompensa.', 'tip');
+      slog('RECOMPENSA: ' + an + ' mató al bandido ' + vn);
+    } else if (!vTrait && !selfDef) {                                                  /* asesinato de un inocente */
+      const L = (SRV.ali.m[att.uid] || []).filter(t => t > now - SRV.BAND.win); L.push(now); SRV.ali.m[att.uid] = L.slice(-10);
+      if (L.length >= SRV.BAND.n) { const was = SRV.isBandit(att.uid) > 0; SRV.ali.b[att.uid] = now + SRV.BAND.dur; if (!was) { for (const q of NET.peers) if (q.ready) SRV.aliSay(q, q === att ? 'Has matado a ' + L.length + ' inocentes: eres BANDIDO durante 24 h. Hay recompensa por tu cabeza y los comerciantes no te atienden.' : '⚠ ' + an + ' es ahora un BANDIDO: hay recompensa por su cabeza.', 'bad'); slog('BANDIDO: ' + an + ' (' + L.length + ' asesinatos en 24 h)'); } }
+    }
+    SRV.aliSave(); try { SRV.aliSend(att); } catch (e) { }
+  };
+  { const _no = netNpcOpen; netNpcOpen = function (o) {
+      try { const peer = NET.cur; if (SRV.pvp && peer && peer.uid && (SRV.traitLeft(peer.uid) > 0 || SRV.isBandit(peer.uid) > 0)) { const n = NPCS.find(q => q.id === o.id), T = n && NT[n.type]; if (T && T.shop) { netSend({ t: 'NS', id: o.id, no: 1 }); SRV.aliSay(peer, (n.name || T.n) + ': «No hago tratos con ' + (SRV.isBandit(peer.uid) > 0 ? 'bandidos' : 'traidores') + '.»', 'bad'); return; } } } catch (e) { }
+      return _no.apply(this, arguments);
+    }; }
   { const _m = netMsg; netMsg = function (o) {
       const peer = NET.role === 'host' ? NET.cur : null;
       if (peer && o && typeof o.t === 'string') {
@@ -266,7 +325,7 @@ SRV.boot = function (opt) {
   SRV.pvpKill = (peer, by, quiet, att) => {
     if (peer.chDead) return; peer.chDead = 1; peer.chPend = null; peer.A = 0; const nl = SRV.dropLoot(peer);
     if (!quiet) netSendRaw(peer, { t: 'HP', h: 0, k: 1, by: by ? String(by).slice(0, 14) : undefined }); if (SRV.auth && peer.chAu) charCall('del', peer.uid, '');
-    if (att) { att.pk = (att.pk | 0) + 1; netSendRaw(att, { t: 'PX', n: (peer.rp && peer.rp.name) || '?', k: 1 }); }
+    if (att) { att.pk = (att.pk | 0) + 1; netSendRaw(att, { t: 'PX', n: (peer.rp && peer.rp.name) || '?', k: 1 }); try { SRV.onKill(att, peer); } catch (e) { } }
     slog(who(peer) + ' murió' + (by ? ' (' + by + ')' : '') + (quiet ? ' al desconectarse en combate' : '') + ': personaje borrado, ' + nl + ' objetos en el suelo');
     if (quiet) return;
     setTimeout(() => { try { if (NET.peers.includes(peer) && !(peer.rp && peer.rp.dead)) { netSendRaw(peer, { t: 'end', m: 'Moriste. Tu personaje se perdió.' }); setTimeout(() => { try { netPeerLost(peer, true); } catch (e) { } }, 400); } } catch (e) { } }, 2500);   /* un cliente honrado ya muestra su pantalla de muerte; solo se echa al que no comunicó su muerte */
@@ -314,7 +373,7 @@ SRV.boot = function (opt) {
       try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { if (SRV.pvp) SRV.dropLoot(peer); peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { charCall('del', peer.uid, ''); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
       return r;
     }; }
-  { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
+  { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (peer && peer.uid) SRV.seen.set(peer.uid, Date.now()); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
   { const _pl = SRV.players; SRV.players = () => _pl().map(x => { const p = NET.peers.find(q => q.slot === x.slot); return Object.assign(x, { build: p ? p.build | 0 : 0, rechazos: p ? p.rej | 0 : 0 }); }); }
   /* ===== v15.5 · PALIATIVO PARA LA APP ANTIGUA (anterior a la 15.5, versionCode < 152) =====
      Esas apps tienen un fallo de dibujo: pintan a CUALQUIER jugador cercano con los datos del «anfitrión» (por eso en las salas solo se veía un «Anfitrión» quieto en el punto de entrada y nunca a los demás).
