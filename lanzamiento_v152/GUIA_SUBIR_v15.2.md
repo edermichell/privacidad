@@ -7,9 +7,9 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.2.zip` (app, version
 ## 0. Qué hacer según el estado de la 14.0
 | Estado de la 14.0 | Qué hacer |
 |---|---|
-| **Aprobada** (100 %) | Sigue con los pasos de abajo y sube la 15.1 como una versión nueva en la misma pista (alpha). |
-| **Rechazada / con problemas** | Lee el motivo en *Recibidos* y *Política y programas*. La 15.1 ya incluye la política de privacidad corregida; corrige lo que pida Google y sube la 15.1 (no hace falta arreglar la 14.0). Mándame el texto del rechazo si quieres que lo revisemos. |
-| **Sigue «En revisión» tras 3–4 días** | Opción: en la versión, *Quitar de la revisión* y enviar directamente la 15.1 (reinicia la espera). Decídelo tú; no lo hagas antes. |
+| **Aprobada** (100 %) | Sigue con los pasos de abajo y sube la 15.2 como una versión nueva en la misma pista (alpha). |
+| **Rechazada / con problemas** | Lee el motivo en *Recibidos* y *Política y programas*. La 15.2 ya incluye la política de privacidad corregida; corrige lo que pida Google y sube la 15.1 (no hace falta arreglar la 14.0). Mándame el texto del rechazo si quieres que lo revisemos. |
+| **Sigue «En revisión» tras 3–4 días** | Opción: en la versión, *Quitar de la revisión* y enviar directamente la 15.2 (reinicia la espera). Decídelo tú; no lo hagas antes. |
 
 ## 1. Antes de subir (en este orden)
 1. **Sube `privacy.html` a tu URL pública** (la misma que tienes en Play Console y en la variable `PRIVACY_URL`). La política anterior (v83) decía que *no hay servidores propios ni cuentas*; el multijugador ya no encaja con eso. Compruébalo abriendo la URL desde el teléfono: debe decir «noviembre de 2026 (v15.2)».
@@ -29,7 +29,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.2.zip` (app, version
 4. Revisa los avisos de Play Console (permisos, dispositivos, API) y **Enviar a revisión**.
 5. Mientras revisa, **no cambies más cosas** de la ficha; cada cambio puede reiniciar la espera.
 
-## 3. Cuando la 15.1 esté disponible para los testers
+## 3. Cuando la 15.2 esté disponible para los testers
 1. Manda el correo de `correo_testers_v152/` (rellena enlace, dirección de `/prueba` y horario). Pídeles las pruebas del guion.
 2. En tu PC copia el kit nuevo (`UltimoRefugio_Servidor_Tailscale.zip`) **sin pisar tu `config.json`** y sigue `MAPA_NUEVO_960.md`: cierra el servidor → `MIGRAR_A_MAPA_NUEVO.bat` → `INICIAR_SERVIDOR.bat` → prueba con tu teléfono.
 3. Corre `PRUEBA_DURA.bat` (3 salas, con todo cerrado) y, si quieres más seguridad, una de 30 min: `node herramientas\prueba_dura.js --seg 1800`.
@@ -64,7 +64,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.2.zip` (app, version
 - **Tras actualizar**, el panel se abre una sola vez. En una instalación nueva no molesta.
 - **Aviso automático:** al abrir el menú, la app (Android) pregunta a Google Play si hay una versión más nueva (*actualización dentro de la app*, librería `com.google.android.play:app-update:2.1.0`, ya añadida a `build.gradle`). Si la hay, aparece un aviso abajo («Versión nueva disponible · ACTUALIZAR»), un punto rojo en NOVEDADES y el botón ACTUALIZAR AHORA en el panel. Al pulsar, Google Play hace la actualización (pantalla completa, «inmediata»); si Play no la permite, abre la ficha de la app. El jugador puede descartar el aviso (no vuelve hasta que salga otra versión).
 - **Anuncio desde tu servidor (opcional):** en `config.json` puedes poner `"appUltima": { "codigo": 147, "version": "14.10", "notas": ["Lo nuevo 1", "Lo nuevo 2"] }` (codigo = versionCode de Play). La app lo recibe con la lista de salas y avisa (con esas notas) a quien tenga una versión menor. Sin ese bloque no se anuncia nada; el aviso de Google Play funciona igual. **Cada vez que subas una versión nueva, añade también sus cambios a la lista `UR_NEWS` del juego** (primeras líneas del bloque «v15.2 · NOVEDADES»), o pídeme que lo haga.
-- **Cómo probar el aviso (hay que hacerlo con Google Play, no se puede en el emulador sin Play):** instala la 15.1 desde la pista (alpha/interna) en un teléfono; luego sube **otra compilación con un versionCode mayor** (p. ej. 150) a la misma pista; cuando Play la procese (puede tardar de minutos a horas), abre la app en el teléfono: debe salir el aviso. Con «Compartir app interna» también sirve. Qué mirar: (1) aviso y punto rojo; (2) ACTUALIZAR abre la pantalla de actualización de Play; (3) al terminar, la app arranca en la versión nueva y abre las novedades una vez.
+- **Cómo probar el aviso (hay que hacerlo con Google Play, no se puede en el emulador sin Play):** instala la 15.2 desde la pista (alpha/interna) en un teléfono; luego sube **otra compilación con un versionCode mayor** (p. ej. 150) a la misma pista; cuando Play la procese (puede tardar de minutos a horas), abre la app en el teléfono: debe salir el aviso. Con «Compartir app interna» también sirve. Qué mirar: (1) aviso y punto rojo; (2) ACTUALIZAR abre la pantalla de actualización de Play; (3) al terminar, la app arranca en la versión nueva y abre las novedades una vez.
 - **Aún sin probar en un teléfono real:** el código Java de esta función compila contra una copia de la API de Play hecha por mí, pero **no se ha ejecutado con Google Play real**. Es la primera cosa a revisar con la 15.1 (Android Studio debe descargar la librería `app-update` al sincronizar Gradle; necesita internet).
 
 
@@ -77,7 +77,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.2.zip` (app, version
 1. Cierra el servidor. Copia del kit nuevo: `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** (las opciones nuevas son opcionales y traen buenos valores por defecto).
 2. Arranca. En el registro, al jugar, puedes ver líneas `[SALA1] daño rechazado…` si alguien manda golpes imposibles, y `murió: personaje borrado`. Los personajes quedan en `datos\salas\<SALA>\personajes\`.
 3. Con las salas oficiales en modo `casual`, morir **no** borra el personaje (como ahora). Para una sala con muerte real, pon su `"modo": "full"` en `config.json` (en la propia sala) y cambia de mundo.
-4. **Cuándo exigir la 15.0 (o posterior):** las apps anteriores siguen entrando, pero **sin esta protección**. Cuando tus testers ya tengan la 15.1, pon `"versionMinimaApp": 147` en `config.json` y quien tenga una versión antigua verá «actualiza la app».
+4. **Cuándo exigir la 15.0 (o posterior):** las apps anteriores siguen entrando, pero **sin esta protección**. Cuando tus testers ya tengan la 15.2, pon `"versionMinimaApp": 147` en `config.json` y quien tenga una versión antigua verá «actualiza la app».
 
 **Prueba rápida con 2 testers (10 min):** (1) entrar a una sala, recoger algo y salir/volver a entrar: debe conservar la mochila; (2) en `datos\salas\SALA1\personajes\` aparece un archivo por jugador; (3) en una sala `full`, morir y volver a entrar: personaje nuevo.
 **Política de privacidad:** ya incluye el nuevo punto «Tu personaje en la sala»; súbela a tu URL pública antes de enviar la app (igual que antes).
