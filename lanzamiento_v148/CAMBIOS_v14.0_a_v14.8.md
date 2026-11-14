@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v14.7 (versionCode 137 → 144)
+# Último Refugio — cambios de la v14.0 a la v14.8 (versionCode 137 → 145)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -17,10 +17,14 @@
 - El registro técnico (`servidor.log`) se recorta a **30 días** (lo dice la política de privacidad).
 
 ## Política de privacidad
-- **Actualizada** (v14.7): la anterior (v83) decía que no hay servidores propios ni cuentas. Ahora describe el multijugador con servidor, el identificador anónimo, las salas, reportes, IP/Tailscale y cómo pedir el borrado de datos. **Hay que subir el nuevo `privacy.html` a tu URL pública antes de enviar la app.**
+- **Actualizada** (v14.8): la anterior (v83) decía que no hay servidores propios ni cuentas. Ahora describe el multijugador con servidor, el identificador anónimo, las salas, reportes, IP/Tailscale y cómo pedir el borrado de datos. **Hay que subir el nuevo `privacy.html` a tu URL pública antes de enviar la app.**
 
-## Pulido final (v14.7) — ver `actualizacion_v147/CAMBIOS_v14.7_pulido.md`
+## Pulido final (v14.8) — ver `actualizacion_v148/CAMBIOS_v14.8_pulido.md`
 - Corrige el arco rojo de golpe que podía dejar de dibujarse, evita repetir el aviso de distrito en los límites, y reduce CPU y memoria del servidor (firma de autos; el navegador oculto se cierra tras 2 min con todas las salas dormidas).
 
-## Ritmo de misiones y sucesos (v14.7) — aviso de un tester
-- Antes, desde el **día 1** llegaban casi a la vez ofertas de misiones secundarias (cada 4–7 min), un SOS por radio, un lanzamiento de suministros y un helicóptero. Ahora **no hay nada de eso el día 1**; desde el día 2 hay **una misión a la vez** y, al terminar o rechazar una, **la siguiente llega otro día**. Ver `actualizacion_v147/CAMBIOS_v14.7_ritmo_misiones.md`.
+## Ritmo de misiones y sucesos (v14.8) — aviso de un tester
+- Antes, desde el **día 1** llegaban casi a la vez ofertas de misiones secundarias (cada 4–7 min), un SOS por radio, un lanzamiento de suministros y un helicóptero. Ahora **no hay nada de eso el día 1**; desde el día 2 hay **una misión a la vez** y, al terminar o rechazar una, **la siguiente llega otro día**. Ver `actualizacion_v148/CAMBIOS_v14.8_ritmo_misiones.md`.
+
+## Estabilidad y gama baja (v14.8) — ver `actualizacion_v148/CAMBIOS_v14.8_estable.md`
+- Android: si el sistema mata el WebView por poca memoria, la app se recupera en vez de cerrarse; libera caché ante `onTrimMemory`.
+- Equipos débiles (≤ 2 GB de RAM, o ≤ 4 núcleos y ≤ 4 GB): primer arranque a 30 FPS estables, caché de mapa menor y memoria liberada al pasar a segundo plano.

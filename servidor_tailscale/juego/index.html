@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.7 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.8 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -2266,6 +2266,11 @@ function fixDoors() {
 
 /* ===================== GRÁFICOS PIXEL ART (generados por código) ===================== */
 const SPR = {};
+/* v14.8 · gama baja: «diminuto» = 2 GB de RAM o menos (deviceMemory redondea a potencias de 2); «débil» = diminuto, o ≤ 4 núcleos con ≤ 4 GB.
+   Un PC con Google Play Games (8 GB) no cuenta. Se usa para: límite de 30 FPS en el primer arranque, caché de bloques menor y liberar memoria al pasar a segundo plano. */
+const UR_SRVPAGE = /[?&]srv=1/.test(location.search);   /* el anfitrión del servidor (navegador oculto) nunca cuenta como equipo débil */
+function urTiny() { try { const m = Number(navigator.deviceMemory); return !UR_SRVPAGE && !!(m && m <= 2); } catch (e) { return false; } }
+function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigator.deviceMemory) || 8, c = navigator.hardwareConcurrency || 8; return urTiny() || (c <= 4 && m <= 4); } catch (e) { return false; } }
 const HDKEY = 'ultimo_refugio_hd';
 const RS = (function () { try { const v = +localStorage.getItem(HDKEY); return v === 3 || v === 4 ? v : 2; } catch (e) { return 2; } })(); // resolución interna: píxeles de lienzo por píxel lógico (2 estándar, 3 alta, 4 ultra)
 /* los sprites con .hi están dibujados al doble de resolución: se pintan a media escala en coordenadas lógicas */
@@ -12917,7 +12922,7 @@ function v124GetWorldStats() {
   }
   out.count = n; return out;
 }
-OPT.fps = OPT.fps === 30 || OPT.fps === 0 ? OPT.fps : 60; OPT.showFps = !!OPT.showFps;
+OPT.fps = OPT.fps === 30 || OPT.fps === 0 ? OPT.fps : (OPT.fps === undefined && urWeak() ? 30 : 60); OPT.showFps = !!OPT.showFps;   /* v14.8: en equipos débiles el primer arranque va a 30 FPS estables (se cambia en Ajustes) */
 
 /* lista de techos por construir (los más cercanos primero) y liberación de los muy lejanos */
 function perfRoofScan() {
@@ -21838,7 +21843,7 @@ function getChunk(cx, cy) {
   chunks.set(key, c);
   /* Presupuesto de caché más realista en alta resolución: el mínimo anterior de 48 bloques
      podía superar ~100 MiB en Ultra. Se conserva un anillo suficiente para evitar recálculos constantes. */
-  const lim_ = Math.max(RS >= 4 ? 24 : 32, Math.floor(70e6 / (256 * 128 * RS * RS * 4)));
+  const lim_ = Math.max(RS >= 4 ? 24 : 32, Math.floor((urTiny() ? 40e6 : 70e6) / (256 * 128 * RS * RS * 4)));   /* v14.8: 40 MB en equipos de 2 GB */
   if (chunks.size > lim_) chunks.delete(chunks.keys().next().value);
   return c;
 }
@@ -22603,12 +22608,15 @@ function toMenu() {
   saveGame(); if (NET.on || NET.role) netLeave(); $('inv').hidden = true; $('health').hidden = true; $('craft').hidden = true; $('pause').hidden = true; $('map').hidden = true; PAUSED = false;
   initMenuWorld(); $('menu').hidden = false; $('bCont').hidden = !hasSave(); $('death').hidden = true; document.body.classList.remove('ingame'); if (typeof renderBest === 'function') renderBest(); if (typeof metaMenuInfo === 'function') metaMenuInfo();
 }
+/* v14.8: libera memoria (bloques de mapa cacheados; se vuelven a dibujar solos). Android lo llama con onTrimMemory cuando el sistema anda corto de RAM. */
+function urTrim() { try { chunks.clear(); return true; } catch (e) { typeof dbgc === 'function' && dbgc(e); return false; } }
+window.__urTrim = urTrim;
 function boot() {
   initGfx(); initHi(); initEventSprites(); resize(); initMenuWorld(); resize();
   /* Solicita al contenedor Android una frecuencia coherente con el límite elegido.
      En navegador independiente la llamada no existe y rAF queda bajo control del sistema. */
   try { if (window.AndroidMonet && typeof window.AndroidMonet.setPreferredFps === 'function') window.AndroidMonet.setPreferredFps(OPT.fps || 0); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { saveGame(); if (urWeak()) urTrim(); } });   /* v14.8: en equipos débiles se libera la caché de bloques al pasar a segundo plano */
   window.addEventListener('pagehide', saveGame);
   requestAnimationFrame(frame);
   requestAnimationFrame(() => requestAnimationFrame(() => { const s = document.getElementById('s99splash'); if (s) s.remove(); }));   /* v99: quita la pantalla de carga cuando ya hay imagen */
@@ -23917,7 +23925,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23958,7 +23966,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23981,7 +23989,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24010,7 +24018,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24044,7 +24052,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24075,7 +24083,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24108,7 +24116,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24137,12 +24145,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.7') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.8') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
