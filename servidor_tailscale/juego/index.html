@@ -880,7 +880,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.6 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.7 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -5156,7 +5156,7 @@ function updWorld(dt) {
   if (day >= (OB ? 3 : 2) && GT.nightF > .95 && GT.hordeDay !== day && (!OB || OB.f > .3) && Math.random() < dt * .04) spawnHorde(day);
   updFires(dt); updAlarms(dt); updCrackers(dt); updExplore(dt); updCars(dt); evUpdate(dt); updNpcs(dt); if (OB) obTick(dt); milTick(dt); dcTick(dt); if (DCV) dcFrame(dt);
   GT.flash = Math.max(0, GT.flash - dt * 2.2);
-  GT.heliT -= dt; if (GT.heliT <= 0 && !heli) startHeli(); if (heli) updHeli(dt);
+  GT.heliT -= dt; if (GT.heliT <= 0 && !heli && paceDay() >= 2) startHeli(); if (heli) updHeli(dt);   /* v14.7: no el día 1 */
   GT.spawnT -= dt;
   if (GT.spawnT <= 0) {
     GT.spawnT = (80 + Math.random() * 90) * DIFF.spawn / Math.max(.4, WG.z) / obFrac();
@@ -5645,7 +5645,7 @@ function evUpdate(dt) {
   if (hr >= 9.3 && hr < 12) EV.fogTarget = 0;
   EV.fog += (EV.fogTarget - EV.fog) * Math.min(1, dt * .06);
   // suministros
-  if (!EV.drop) { EV.dropT -= dt; if (EV.dropT <= 0) startDrop(); }
+  if (!EV.drop) { EV.dropT -= dt; if (EV.dropT <= 0) { if (paceDay() >= 2 && GT.min % 1440 >= 540 && !(typeof m76Busy === 'function' && m76Busy())) startDrop(); else EV.dropT = 0; } }   /* v14.7: no el día 1, no antes de las 09:00 (primero la oferta de misión) ni con una misión en curso */
   else {
     const D = EV.drop; D.t += dt;
     if (EV.plane) { const p = EV.plane; p.x += p.vx * dt; p.y += p.vy * dt; p.t += dt; if (Math.random() < dt * .7) sfx('plane', Math.hypot(p.x - P.x, p.y - P.y) * .8, p);
@@ -9258,7 +9258,7 @@ function sosSave() { return SOS ? [+SOS.x.toFixed(1), +SOS.y.toFixed(1), Math.ro
 function sosLoad(a) { SOS = Array.isArray(a) ? { x: +a[0], y: +a[1], t0: +a[2], sp: 0, nm: a[4] || 'Superviviente' } : null; }
 { const _evr = evReset; evReset = function () { SOS = null; return _evr.apply(this, arguments); }; }
 function sosStart() {
-  if (SOS || NET.on || !P || P.dead || GT.min < 1440 * .6) return false;
+  if (SOS || NET.on || !P || P.dead || !(typeof m76Gap === 'function' ? m76Gap() && !m76Busy() : GT.min >= 1440)) return false;
   const s = evFreeSpot(45, 100, 80, true); if (!s) return false;
   const nm = rnd(NAMES_F.concat(NAMES_M)); SOS = { x: s[0], y: s[1], t0: GT.min, sp: 0, nm };
   const dx = s[0] - P.x, dy = s[1] - P.y, d = Math.round(Math.hypot(dx, dy) / 10) * 10;
@@ -17233,11 +17233,21 @@ function m76Offer() {
 }
 const m76Quiet = () => { if (!$('metam').hidden) return false; for (const id of ['intro', 'splash', 'entfx']) { const e = $(id); if (e && !e.hidden && getComputedStyle(e).display !== 'none') return false; } for (const z of Z) if (z.st === 'chase' && Math.hypot(z.x - P.x, z.y - P.y) < 14) return false; return true; };
 
+/* v14.7 · RITMO DE MISIONES Y SUCESOS
+   Antes: ya el día 1 llegaban a la vez ofertas de secundarias (cada 4-7 min), un SOS por radio, un lanzamiento de suministros y un helicóptero.
+   Ahora: nada de eso el día 1 (solo el tutorial y la oferta opcional de la misión principal); desde el día 2 como máximo UNA misión a la vez
+   (secundaria, SOS o encargo de entrega) y, al terminar una, la siguiente no llega hasta OTRO día. Las secundarias se ofrecen de día (07:00–16:00).
+   Los suministros y el helicóptero tampoco empiezan el día 1, y los suministros esperan si hay una misión en curso. */
+function paceDay() { return Math.floor(GT.min / 1440) + 1; }
+function m76Busy() { return !!(M76.card || m76Side() || SOS || (typeof DEL !== 'undefined' && DEL)); }
+function m76Gap() { return paceDay() >= 2 && paceDay() > (M76.sv.side.endDay | 0); }
+function m76PaceOk() { const tod = GT.min % 1440; return m76Gap() && tod >= 420 && tod <= 960 && !m76Busy(); }
 function m76Tick() {
   const now = performance.now(); if (now - M76.tt < 900) return; const dt = Math.min(2, (now - (M76.tt || now)) / 1000); M76.tt = now;
   if (!m76On()) { m76Render(); return; }
   if (!metaTutOn()) M76.pt += dt;
   const sv = M76.sv, a = m76Acc();
+  { const busy = m76Busy(); if (M76.busyPrev && !busy) sv.side.endDay = paceDay(); M76.busyPrev = busy; }   /* v14.7: al terminar (o rechazar) una misión se anota el día */
   /* principal */
   const s = (a === 1) ? m76Stage() : null;
   if (s && s.id !== M76.id) { const first = M76.id === -9; M76.id = s.id; M76.off = false; if (!first) { say('Misión: ' + s.n, 'good'); jlog('Misión: ' + s.n + '.', 'info'); try { sfx('coin', 0); } catch (e) { typeof dbgc === 'function' && dbgc(e); } } }
@@ -17248,13 +17258,13 @@ function m76Tick() {
   /* secundarias */
   const q = m76Side(); if (q) { let ok = false; try { ok = !!q.t(); } catch (e) { typeof dbgc === 'function' && dbgc(e); } if (ok) m76SideDone(q); }
   if (M76.card) { M76.cardT -= dt; if (M76.cardT <= 0) m76SideDecline(M76.card); }
-  else if (!q) { M76.sideT -= dt; if (M76.sideT <= 0 && M76.pt >= 420 && !metaTutOn() && M76.pt - M76.mainAt > 90 && m76Quiet()) { if (!m76SideOffer()) M76.sideT = 120; } }
+  else if (!q) { M76.sideT -= dt; if (M76.sideT <= 0 && M76.pt >= 420 && !metaTutOn() && M76.pt - M76.mainAt > 90 && m76Quiet() && m76PaceOk()) { if (!m76SideOffer()) M76.sideT = 120; } }
   m76Render();
 }
 {
   const _qr = questRender; questRender = function () { _qr.apply(this, arguments); m76Render(); };
   const _qt = questTick; questTick = function () { _qt.apply(this, arguments); m76Tick(); };
-  const _er = evReset; evReset = function () { M76.sv = m76Fresh(); M76.id = -9; M76.off = false; M76.mine = null; M76.st = null; M76.pt = 0; M76.sideT = 420; M76.card = null; M76.mainAt = -1e9; M76.offered = false; return _er.apply(this, arguments); };
+  const _er = evReset; evReset = function () { M76.sv = m76Fresh(); M76.id = -9; M76.off = false; M76.mine = null; M76.st = null; M76.pt = 0; M76.sideT = 420; M76.card = null; M76.mainAt = -1e9; M76.offered = false; M76.busyPrev = false; return _er.apply(this, arguments); };
   const _ms = mechSave; mechSave = function () { const m = _ms.apply(this, arguments); m.m76 = { a: M76.sv.acc, g: M76.sv.g, s: M76.sv.side }; return m; };
   const _ml = mechLoad; mechLoad = function (m) {
     _ml.apply(this, arguments); const f = m76Fresh(), v = m && m.m76;
@@ -23907,7 +23917,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23948,7 +23958,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23971,7 +23981,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24000,7 +24010,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24034,7 +24044,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24065,7 +24075,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24098,7 +24108,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24127,12 +24137,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.6') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.7') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
