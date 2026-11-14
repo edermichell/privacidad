@@ -81,6 +81,77 @@ SRV.boot = function (opt) {
     if (b.s >= 12 && !peer.kicked) { peer.kicked = 1; slog(who(peer) + ' expulsado por daño inválido repetido'); try { netSendRaw(peer, { t: 'end', m: 'Conexión cerrada: actividad sospechosa.' }); } catch (e) { } setTimeout(() => { try { netPeerLost(peer, true); } catch (e) { } }, 300); }
     return false;
   };
+  /* ===== v15.3 · ALIANZAS Y TRAICIÓN (salas PvP) =====
+     Las alianzas viven en el servidor, por identidad (uid), y se guardan en un archivo de la sala. Máximo «alianzaMax» (4). Se forman acercándose (≤ 8 casillas), proponiendo y aceptando.
+     El fuego amistoso está ACTIVO: quien daña a un aliado (o a un exaliado que salió hace < 10 min) queda como TRAIDOR «traidorHoras» (24 h): sale de la alianza, nombre rojo para todos, no puede aliarse y se avisa a su
+     alianza. Si el atacado ya había atacado antes a quien le pega (defensa propia, 5 min) o es un Traidor, no hay castigo. Los aliados se ven en el mapa, comparten señales y abren los candados del otro. */
+  SRV.AL = { max: Math.max(2, Math.min(8, opt.amax | 0 || 4)), traitMs: (opt.thoras > 0 ? opt.thoras : 24) * 3600e3, leaveMs: 600e3, selfDefMs: 300e3, propMs: 30e3, near: 8, see: 55 };
+  SRV.ali = { g: [], t: {}, l: {} };
+  { let tm = 0; SRV.aliSave = () => { clearTimeout(tm); tm = setTimeout(() => { try { if (typeof window.__srvAli === 'function') window.__srvAli('put', JSON.stringify(SRV.ali)); } catch (e) { } }, 1500); }; }
+  if (SRV.pvp && typeof window.__srvAli === 'function') window.__srvAli('get', '').then(r => {
+    try { if (r && r.ok && r.c) { const o = JSON.parse(r.c), ok = u => typeof u === 'string' && /^[a-z0-9]{8,40}$/.test(u), g = []; for (const x of (o.g || [])) { const m = (x.m || []).filter(ok).slice(0, 8); if (m.length >= 2) g.push({ id: String(x.id || Math.random().toString(36).slice(2, 8)).slice(0, 8), m }); } const tt = {}; for (const k in (o.t || {})) if (ok(k) && +o.t[k] > Date.now()) tt[k] = +o.t[k]; SRV.ali = { g, t: tt, l: {} }; } } catch (e) { }
+  }).catch(() => { });
+  const peerByUid = u => NET.peers.find(p => p.ready && p.uid === u), peerBySlot = i => NET.peers.find(p => p.ready && p.slot === i), pname = p => (p && p.rp && p.rp.name) || 'Jugador';
+  const ppos = p => [p.rp.nx !== undefined ? p.rp.nx : p.rp.x, p.rp.ny !== undefined ? p.rp.ny : p.rp.y];
+  SRV.grp = u => SRV.ali.g.find(g => g.m.includes(u));
+  SRV.allied = (a, b) => { if (!a || !b || a === b) return false; const g = SRV.grp(a); return !!(g && g.m.includes(b)); };
+  SRV.traitLeft = u => { const x = SRV.ali.t[u]; if (!x) return 0; if (x <= Date.now()) { delete SRV.ali.t[u]; SRV.aliSave(); return 0; } return x - Date.now(); };
+  SRV.rel = (a, b) => { if (SRV.allied(a, b)) return 'ally'; const now = Date.now(), la = SRV.ali.l[a], lb = SRV.ali.l[b]; if ((la && now - la.t < SRV.AL.leaveMs && la.w.includes(b)) || (lb && now - lb.t < SRV.AL.leaveMs && lb.w.includes(a))) return 'ex'; return null; };
+  SRV.aliSay = (p, m, c) => { try { netSendRaw(p, { t: 'say', m, c: c || 'tip' }); } catch (e) { } };
+  SRV.aliSend = peer => {
+    const g = SRV.grp(peer.uid), mem = []; if (g) for (const u of g.m) { if (u === peer.uid) continue; const q = peerByUid(u); mem.push({ i: q ? q.slot : 0, n: q ? pname(q) : '', on: q ? 1 : 0 }); }
+    try { netSendRaw(peer, { t: 'AI', n: g ? g.m.length : 0, max: SRV.AL.max, mem, tr: Math.ceil(SRV.traitLeft(peer.uid) / 60000) }); } catch (e) { }
+  };
+  SRV.aliSendGroup = u => { const g = SRV.grp(u); if (g) for (const m of g.m) { const q = peerByUid(m); if (q) SRV.aliSend(q); } };
+  SRV.aliJoin = peer => { SRV.aliSend(peer); SRV.aliSendGroup(peer.uid); const tl = SRV.traitLeft(peer.uid); if (tl) SRV.aliSay(peer, 'Sigues marcado como TRAIDOR durante ' + Math.ceil(tl / 3600000) + ' h.', 'bad'); };
+  SRV.aliPropose = (peer, o) => {
+    const tg = peerBySlot(o.i | 0), now = performance.now(); if (!tg || tg === peer || !peer.rp || !tg.rp || peer.chDead || tg.chDead) return;
+    const a = ppos(peer), b = ppos(tg), d = Math.hypot(a[0] - b[0], a[1] - b[1]); let why = null; const g = SRV.grp(peer.uid);
+    if (d > SRV.AL.near) why = 'Está demasiado lejos (acércate a menos de ' + SRV.AL.near + ' casillas).'; else if (SRV.traitLeft(peer.uid)) why = 'Eres Traidor: nadie quiere aliarse contigo.'; else if (SRV.traitLeft(tg.uid)) why = 'Ese jugador es un Traidor.';
+    else if (SRV.grp(tg.uid)) why = 'Ya está en una alianza.'; else if (g && g.m.length >= SRV.AL.max) why = 'Tu alianza está completa (' + SRV.AL.max + ').'; else if (SRV.rel(peer.uid, tg.uid) === 'ex') why = 'Salieron de una alianza hace muy poco.';
+    if (why) return SRV.aliSay(peer, why, 'bad');
+    if (tg.prop && now - tg.prop.t < SRV.AL.propMs) return SRV.aliSay(peer, 'Ya tiene una propuesta pendiente.', 'bad');
+    tg.prop = { from: peer.uid, t: now }; try { netSendRaw(tg, { t: 'AQ', i: peer.slot, n: pname(peer) }); } catch (e) { } SRV.aliSay(peer, 'Propuesta enviada a ' + pname(tg) + '.');
+  };
+  SRV.aliAnswer = (peer, yes) => {
+    const pr = peer.prop; peer.prop = null; if (!pr || performance.now() - pr.t > SRV.AL.propMs + 10000) return; const from = peerByUid(pr.from); if (!from || !from.rp || !peer.rp) return;
+    if (!yes) return SRV.aliSay(from, pname(peer) + ' rechazó la alianza.', 'bad');
+    const a = ppos(from), b = ppos(peer); let g = SRV.grp(from.uid);
+    if (SRV.traitLeft(from.uid) || SRV.traitLeft(peer.uid) || SRV.grp(peer.uid) || Math.hypot(a[0] - b[0], a[1] - b[1]) > SRV.AL.near * 2 || (g && g.m.length >= SRV.AL.max)) return SRV.aliSay(peer, 'La alianza ya no es posible.', 'bad');
+    if (!g) { g = { id: Math.random().toString(36).slice(2, 8), m: [from.uid] }; SRV.ali.g.push(g); } g.m.push(peer.uid); delete SRV.ali.l[from.uid]; delete SRV.ali.l[peer.uid]; SRV.aliSave();
+    for (const u of g.m) { const q = peerByUid(u); if (q) SRV.aliSay(q, q === peer ? 'Te uniste a la alianza de ' + pname(from) + ' (' + g.m.length + '/' + SRV.AL.max + ').' : pname(peer) + ' se unió a la alianza (' + g.m.length + '/' + SRV.AL.max + ').', 'good'); }
+    SRV.aliSendGroup(peer.uid); slog('alianza: ' + pname(from) + ' + ' + pname(peer) + ' (' + g.m.length + ')');
+  };
+  SRV.aliLeave = peer => {
+    const g = SRV.grp(peer.uid); if (!g) return; const rest = g.m.filter(u => u !== peer.uid); g.m = rest; SRV.ali.l[peer.uid] = { t: Date.now(), w: rest.slice() };
+    for (const u of rest) { const q = peerByUid(u); if (q) SRV.aliSay(q, pname(peer) + ' salió de la alianza.', 'bad'); }
+    if (rest.length <= 1) { SRV.ali.g = SRV.ali.g.filter(x => x !== g); for (const u of rest) { const q = peerByUid(u); if (q) { SRV.aliSay(q, 'La alianza se disolvió.', 'bad'); SRV.aliSend(q); } } } else SRV.aliSendGroup(rest[0]);
+    SRV.aliSave(); SRV.aliSend(peer); slog('alianza: ' + pname(peer) + ' salió');
+  };
+  SRV.betray = (att, vic, rel) => {
+    const g = SRV.grp(att.uid), mates = g ? g.m.filter(u => u !== att.uid) : []; SRV.ali.t[att.uid] = Date.now() + SRV.AL.traitMs;
+    if (g) { g.m = mates; if (mates.length <= 1) SRV.ali.g = SRV.ali.g.filter(x => x !== g); } delete SRV.ali.l[att.uid]; SRV.aliSave();
+    const hrs = Math.round(SRV.AL.traitMs / 3600000), m = pname(att) + ' traicionó a ' + pname(vic) + ': ahora es un TRAIDOR durante ' + hrs + ' h.';
+    for (const u of mates.concat([vic.uid])) { const q = peerByUid(u); if (q) { SRV.aliSay(q, m, 'bad'); SRV.aliSend(q); } }
+    SRV.aliSay(att, 'Traicionaste a ' + pname(vic) + '. Eres TRAIDOR durante ' + hrs + ' h: nombre rojo para todos y sin poder aliarte.', 'bad'); SRV.aliSend(att);
+    slog('TRAICIÓN: ' + pname(att) + ' atacó a ' + pname(vic) + ' (' + (rel === 'ally' ? 'aliado' : 'exaliado reciente') + ')');
+  };
+  SRV.aliMsg = (peer, o) => {
+    if (peer.chDead) return;
+    if (o.t === 'AP') SRV.aliPropose(peer, o); else if (o.t === 'AA') SRV.aliAnswer(peer, true); else if (o.t === 'AD') SRV.aliAnswer(peer, false); else if (o.t === 'AL') SRV.aliLeave(peer);
+    else if (o.t === 'SG') { const k = o.k | 0, now = performance.now(); if (k < 0 || k > 3 || now - (peer.sgT || 0) < 1500 || !peer.rp) return; peer.sgT = now; const g = SRV.grp(peer.uid); if (!g) return; const p = ppos(peer); for (const u of g.m) { if (u === peer.uid) continue; const q = peerByUid(u); if (q) { try { netSendRaw(q, { t: 'SGR', i: peer.slot, n: pname(peer), k, x: p[0], y: p[1] }); } catch (e) { } } } }
+  };
+  /* en PvP un cliente solo conoce a los jugadores cercanos (y a sus aliados): sin «radar» */
+  { const _nof = netOthersFor; netOthersFor = function (peer) {
+      const out = _nof.apply(this, arguments); if (!SRV.pvp || !peer.rp) return out; const me = ppos(peer), res = [];
+      for (const a of out) { const q = NET.peers.find(p => p.slot === a.i), ally = !!(q && SRV.allied(peer.uid, q.uid)); if (!ally && Math.hypot(a.x - me[0], a.y - me[1]) > SRV.AL.see) { try { peer.oSeen.delete(a.i); } catch (e) { } continue; } a.al = ally ? 1 : 0; a.tr = q && SRV.traitLeft(q.uid) ? 1 : 0; res.push(a); }
+      return res;
+    }; }
+  /* los candados de un aliado se abren sin código (el cliente manda «ALLY»; si no es aliado no cuenta como intento ni avisa al dueño) */
+  { const _lt = lkTryH; lkTryH = function (i, code, w, remove) {
+      if (SRV.pvp && String(code) === 'ALLY') { const L = LK.codes.get(i); if (!L) return { ok: false, m: 'No tiene candado.' }; if (!lkNear(w, i)) return { ok: false, m: 'Estás muy lejos.' }; if (!remove && w.uid && L.u && SRV.allied(L.u, w.uid)) { if (to[i] === O_DOOR) td[i] &= ~2; return { ok: true, m: 'Abierto (candado de tu aliado).' }; } return { ok: false, m: 'Este candado no es de un aliado tuyo.' }; }
+      return _lt.apply(this, arguments);
+    }; }
   { const _m = netMsg; netMsg = function (o) {
       const peer = NET.role === 'host' ? NET.cur : null;
       if (peer && o && typeof o.t === 'string') {
@@ -97,6 +168,7 @@ SRV.boot = function (opt) {
             return;
           }
         } else if (o.t === 'CHS') { SRV.charPut(peer, o.c); return; }
+        else if (o.t === 'AP' || o.t === 'AA' || o.t === 'AD' || o.t === 'AL' || o.t === 'SG') { if (SRV.pvp) SRV.aliMsg(peer, o); return; }
         else if (o.t === 'PH') { if (SRV.pvp) SRV.pvpAttack(peer, o); return; }
         else if ((o.t === 'HZ' || o.t === 'HN') && SRV.val && !SRV.hitOk(peer, o)) return;
       }
@@ -108,7 +180,7 @@ SRV.boot = function (opt) {
      Si A llega a 0, el anfitrión declara la muerte y borra el personaje del servidor aunque el cliente trucado ignore el aviso o no la comunique. */
   SRV.hpSync = (peer, h) => {
     if (!isFinite(h)) return; const now = performance.now();
-    if (peer.A === undefined) { peer.A = Math.max(0, Math.min(120, h)); peer.bud = 30; peer.hpT = now; peer.protUntil = now + SRV.PV.prot; try { netSendRaw(peer, { t: 'say', m: 'Protección de aparición: ' + Math.round(SRV.PV.prot / 1000) + ' s sin que otros jugadores puedan dañarte (termina si atacas).', c: 'tip' }); } catch (e) { } return; }
+    if (peer.A === undefined) { peer.A = Math.max(0, Math.min(120, h)); peer.bud = 30; peer.hpT = now; peer.protUntil = now + SRV.PV.prot; try { SRV.aliJoin(peer); } catch (e) { } try { netSendRaw(peer, { t: 'say', m: 'Protección de aparición: ' + Math.round(SRV.PV.prot / 1000) + ' s sin que otros jugadores puedan dañarte (termina si atacas).', c: 'tip' }); } catch (e) { } return; }
     const dt = Math.min(2, Math.max(0, (now - peer.hpT) / 1000)); peer.hpT = now; peer.bud = Math.min(80, peer.bud + dt * 2);
     if (h <= peer.A) peer.A = Math.max(0, h);
     else { const inc = h - peer.A, ok = Math.min(inc, peer.bud); peer.A += ok; peer.bud -= ok;
@@ -173,8 +245,11 @@ SRV.boot = function (opt) {
     if (vic.protUntil && now < vic.protUntil) return;                                 /* la víctima está protegida: sin efecto */
     if (SRV.safe(ax, ay) || SRV.safe(vx, vy)) { if (now - (peer.safeMsg || 0) > 5000) { peer.safeMsg = now; netSendRaw(peer, { t: 'say', m: 'Zona segura: aquí no se puede atacar a otros jugadores.', c: 'tip' }); } return; }
     peer.lastCombat = vic.lastCombat = now;
+    vic.atkBy = vic.atkBy || {}; vic.atkBy[peer.uid] = now;                           /* anotado: «peer me atacó» (permite la defensa propia de la víctima) */
     const acc = gun ? Math.max(.4, Math.min(.95, .95 - d * .012)) : .85, np = gun ? (Wp.pellets || 1) : 1; let hits = 0; for (let k = 0; k < np; k++) if (Math.random() < (np > 1 ? acc * Math.max(.25, 1 - d / Wp.rng) : acc)) hits++;
     if (!hits) return;
+    { const rel = SRV.rel(peer.uid, vic.uid), defensa = !!(peer.atkBy && peer.atkBy[vic.uid] && now - peer.atkBy[vic.uid] < SRV.AL.selfDefMs);   /* v15.3: herir a un aliado = traición, salvo defensa propia o si la víctima ya es Traidor */
+      if (rel && !defensa && !SRV.traitLeft(vic.uid) && !SRV.traitLeft(peer.uid)) SRV.betray(peer, vic, rel); }
     const dmg = (Wp ? Wp.dmg : 7) * (gun ? SRV.PV.fGun : SRV.PV.fMelee) * hits * (.85 + Math.random() * .3), vn = (vic.rp && vic.rp.name) || '?', an = (peer.rp && peer.rp.name) || '?';
     const ok = SRV.pvpHurt(vic, dmg, an, peer); if (!ok) return; if (!vic.chDead) netSendRaw(peer, { t: 'PX', n: vn, k: 0 }); slog(an + ' → ' + vn + ': ' + Math.round(dmg) + ' (' + (Wp ? o.w : 'puños') + ', ' + d.toFixed(1) + ' casillas)' + (vic.chDead ? ' · MUERTE' : ''));
   };
@@ -184,7 +259,7 @@ SRV.boot = function (opt) {
       try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { if (SRV.pvp) SRV.dropLoot(peer); peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { charCall('del', peer.uid, ''); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
       return r;
     }; }
-  { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
+  { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
   { const _pl = SRV.players; SRV.players = () => _pl().map(x => { const p = NET.peers.find(q => q.slot === x.slot); return Object.assign(x, { build: p ? p.build | 0 : 0, rechazos: p ? p.rej | 0 : 0 }); }); }
   /* el anfitrión no dibuja: 30 pasos por segundo bastan y gastan menos CPU */
   try { OPT.fps = opt.fps === 0 ? 0 : (opt.fps || 30); frameDeadline = 0; } catch (e) { }

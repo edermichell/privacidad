@@ -1,14 +1,15 @@
-Asunto: Último Refugio v15.2 — mapa nuevo gigante: prueba de 20 minutos
+Asunto: Último Refugio v15.3 — mapa nuevo gigante: prueba de 20 minutos
 
 Hola equipo:
 
-Ya está lista la v15.2 de Último Refugio. La novedad grande es el MAPA NUEVO de 960×960 casillas (más de 5 veces más grande que el de antes) en las 3 salas oficiales. Necesito que lo prueben en teléfonos reales.
+Ya está lista la v15.3 de Último Refugio. La novedad grande es el MAPA NUEVO de 960×960 casillas (más de 5 veces más grande que el de antes) en las 3 salas oficiales. Necesito que lo prueben en teléfonos reales.
 
 QUÉ HAY DE NUEVO
 - 3 salas oficiales con el mapa nuevo (etiqueta MAPA 960), hasta 10 jugadores por sala.
 - Distritos con personalidad: centro denso (más zombis y mejor botín), zona industrial con patios de cajas, PUERTO con mar y muelles de madera, parques con estanque y puentes, barrio residencial y campo con la base militar.
 - Callejones (pasajes de 1 o 2 casillas, cruces y callejones sin salida con botín… y emboscada) y mini-rotondas.
 - Servidor más ligero: hasta 3 salas llenas a la vez sin tirones en mis pruebas.
+- NUEVO EN LA 15.3: ALIANZAS Y TRAICIÓN en la sala PVP. Se proponen con el indicador de la sala (tócalo), la tecla Y o E junto al jugador; los aliados se ven en verde, se mandan señales y abren sus candados. Pero un aliado puede traicionarte: quien hiere a un aliado queda como TRAIDOR 24 h (nombre rojo para todos). Les mando aparte el guion de prueba.
 - NUEVO EN LA 15.2: SALA PVP de prueba (etiqueta roja PVP): pueden atacarse entre ustedes. 20 s de protección al aparecer, zonas seguras junto a los comerciantes, el que muere deja sus cosas en el suelo, y cerrar la app en plena pelea cuenta como morir. Les mando aparte el guion de prueba.
 - NUEVO EN LA 15.1: arreglo de los avisos de confirmación en Android («¿Borrar sala?», «¿Mundo nuevo?», «¿Reiniciar?») que antes no se veían. Si administran una sala, pruébenlo.
 - NUEVO EN LA 15.0: el servidor comprueba los golpes y guarda tu personaje (mochila y habilidades) en el servidor.
@@ -18,7 +19,7 @@ QUÉ HAY DE NUEVO
 
 CÓMO PROBARLO (≈ 25 minutos)
 1. ANTES de jugar, abran en el teléfono [PEGAR AQUÍ LA DIRECCIÓN]/prueba (por ejemplo https://server.tail12bbaa.ts.net/prueba), pulsen EMPEZAR LA PRUEBA y mándenme el resultado (botón COPIAR RESULTADO). Gasta ~8 MB. Si pueden, háganlo con Wi-Fi y con datos móviles.
-2. Instalen la v15.2 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
+2. Instalen la v15.3 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
 3. Caminen por el centro, la zona industrial, el puerto (muelles al final del camino), un parque con estanque y entren a un callejón.
 4. Peleen contra zombis, construyan un muro, abran cajas y salgan y vuelvan a entrar: lo construido debe seguir ahí.
 5. Abran NOVEDADES: debe mostrar la lista de cambios y decir «Tienes la última versión». (Cuando salga una versión posterior, debe aparecer un aviso abajo en el menú con el botón ACTUALIZAR: avísenme si lo ven.)
@@ -35,7 +36,7 @@ CÓMO REPORTAR
 Modelo de teléfono y versión de Android, qué hacían y dónde (centro, puerto…), hora aproximada, Wi-Fi o datos, y captura o video corto. Para jugadores tramposos o tóxicos usen el botón de reportar y avísenme también.
 
 DESCARGA Y HORARIO
-Descarga de la v15.2: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
+Descarga de la v15.3: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
 El servidor estará encendido: [PONER FECHA Y HORARIO]
 (Si instalan encima conservan su partida individual. Las partidas de las salas oficiales anteriores no se conservan con el mapa nuevo.)
 

@@ -14,7 +14,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null, autoridadPersonaje: true, validarDano: true, versionMinimaApp: 0, muerteBorraPersonaje: 'modo', personajeCaducaDias: 60 };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null, autoridadPersonaje: true, validarDano: true, versionMinimaApp: 0, muerteBorraPersonaje: 'modo', personajeCaducaDias: 60, alianzaMax: 4, traidorHoras: 24 };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -140,7 +140,7 @@ class Room {
   async players() { if (!this.page || this.status !== 'activa') return []; try { return await Promise.race([this.page.evaluate(() => SRV.players()), new Promise((_, j) => setTimeout(() => j(new Error('t')), 6000))]); } catch (e) { return []; } }
   async kick(slot, msg) { if (!this.page || this.status !== 'activa') return false; try { return await this.page.evaluate(([a, b]) => SRV.kick(a, b), [slot, msg]); } catch (e) { return false; } }
   async restart() { if (this.promise) await this.promise.catch(() => { }); this.stopping = true; try { await this.saveWorld('cierre'); await this._close(true); } finally { this.stopping = false; } this.status = 'dormida'; this.nextTry = 0; this.wanted = true; this.state = null; log('[' + this.id + '] reiniciada'); await this.start(); }
-  async newWorld() { await this.sleep(); try { fs.rmSync(path.join(this.dir, 'personajes'), { recursive: true, force: true }); } catch (e) { } try { if (this.hasSave()) fs.renameSync(this.save, path.join(this.dir, 'copias', 'anterior_' + Date.now() + '.json')); } catch (e) { } this.nextSeed = this.id.toLowerCase() + '-' + Date.now().toString(36); this.nextTry = 0; this.wanted = true; log('[' + this.id + '] nuevo mundo'); await this.start(); }
+  async newWorld() { await this.sleep(); try { fs.rmSync(path.join(this.dir, 'personajes'), { recursive: true, force: true }); fs.rmSync(path.join(this.dir, 'alianzas.json'), { force: true }); } catch (e) { } try { if (this.hasSave()) fs.renameSync(this.save, path.join(this.dir, 'copias', 'anterior_' + Date.now() + '.json')); } catch (e) { } this.nextSeed = this.id.toLowerCase() + '-' + Date.now().toString(36); this.nextTry = 0; this.wanted = true; log('[' + this.id + '] nuevo mundo'); await this.start(); }
   record() { return { id: this.id, nombre: this.nombre, owner: this.owner, publica: this.publica, plan247: this.plan247, creada: this.creada, lastPlayers: this.lastPlayers, dynamic: true }; }
   world() { const w = {}; for (const k of WORLDKEYS) w[k] = this.cfg[k] !== undefined ? this.cfg[k] : CFG[k]; if (this.nextSeed) { w.semilla = this.nextSeed; this.nextSeed = null; } if (this.cfg.pvp) w.modo = 'full'; return w; }   /* una sala PvP siempre es de modo completo */
   hasSave() { try { return fs.statSync(this.save).size > 1000; } catch (e) { return false; } }
@@ -152,6 +152,15 @@ class Room {
       if (op === 'get') { let raw; try { raw = fs.readFileSync(f, 'utf8'); } catch (e) { return e.code === 'ENOENT' ? { ok: true, c: null } : { ok: false }; } try { const o = JSON.parse(raw); return { ok: true, c: typeof o.c === 'string' ? o.c : null }; } catch (e) { return { ok: false }; } }
       if (op === 'put') { data = String(data || ''); if (data.length > 120000) return { ok: false }; fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(f + '.tmp', JSON.stringify({ t: Date.now(), c: data })); fs.renameSync(f + '.tmp', f); return { ok: true }; }
       if (op === 'del') { try { fs.unlinkSync(f); } catch (e) { } return { ok: true }; }
+    } catch (e) { return { ok: false }; }
+    return { ok: false };
+  }
+  /* v15.3 · alianzas y traidores de la sala (un archivo; solo lo pide el navegador del anfitrión por una función privada) */
+  async aliOp(op, data) {
+    try {
+      const f = path.join(this.dir, 'alianzas.json');
+      if (op === 'get') { try { return { ok: true, c: fs.readFileSync(f, 'utf8') }; } catch (e) { return e.code === 'ENOENT' ? { ok: true, c: null } : { ok: false }; } }
+      if (op === 'put') { data = String(data || ''); if (data.length > 200000) return { ok: false }; fs.mkdirSync(this.dir, { recursive: true }); fs.writeFileSync(f + '.tmp', data); fs.renameSync(f + '.tmp', f); return { ok: true }; }
     } catch (e) { return { ok: false }; }
     return { ok: false };
   }
@@ -172,6 +181,7 @@ class Room {
       await ctx.addInitScript(mode => { if (!/[?&]srv=1/.test(location.search)) return; if (mode === 'parado') { window.requestAnimationFrame = () => 0; } else if (mode === 'timer') { let last = 0; window.requestAnimationFrame = cb => setTimeout(() => { last = performance.now(); cb(last); }, Math.max(0, 33 - (performance.now() - last))); window.cancelAnimationFrame = id => clearTimeout(id); } }, rafMode);
       await ctx.exposeFunction('__srvChar', (op, uid, data) => this.charOp(op, uid, data));
       await ctx.exposeFunction('__srvLog', m => log('[' + this.id + '] ' + String(m).slice(0, 300)));
+      await ctx.exposeFunction('__srvAli', (op, data) => this.aliOp(op, data));
       this.purgeChars();
       const page = await ctx.newPage(); this.page = page;
       if (+process.env.URSRV_CPU > 1) { try { const cdp = await ctx.newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: +process.env.URSRV_CPU }); log('[' + this.id + '] PRUEBA: CPU del anfitrión frenada ×' + process.env.URSRV_CPU); } catch (e) { } }   /* solo para pruebas: imita un PC más lento */
@@ -187,7 +197,7 @@ class Room {
       }
       await page.waitForFunction(() => STATE === 'play', null, { timeout: 90000 });
       await page.waitForTimeout(2500); await page.keyboard.press('Space').catch(() => { }); await page.waitForTimeout(800);
-      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps, aut: c.aut, val: c.val, minB: c.minB, muerte: c.muerte, pvp: c.pvp }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor, aut: CFG.autoridadPersonaje !== false, val: CFG.validarDano !== false, minB: Math.max(CFG.versionMinimaApp | 0, this.cfg.pvp ? 149 : 0), muerte: this.cfg.pvp ? true : (CFG.muerteBorraPersonaje === undefined ? 'modo' : CFG.muerteBorraPersonaje), pvp: !!this.cfg.pvp });
+      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps, aut: c.aut, val: c.val, minB: c.minB, muerte: c.muerte, pvp: c.pvp, amax: c.amax, thoras: c.thoras }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor, aut: CFG.autoridadPersonaje !== false, val: CFG.validarDano !== false, minB: Math.max(CFG.versionMinimaApp | 0, this.cfg.pvp ? 150 : 0), muerte: this.cfg.pvp ? true : (CFG.muerteBorraPersonaje === undefined ? 'modo' : CFG.muerteBorraPersonaje), pvp: !!this.cfg.pvp, amax: Math.max(2, Math.min(8, CFG.alianzaMax | 0 || 4)), thoras: CFG.traidorHoras > 0 ? +CFG.traidorHoras : 24 });
       this.startedAt = Date.now(); this.failN = 0; this.lastBusy = Date.now(); this.status = 'activa'; log('[' + this.id + '] sala lista (máx. ' + CFG.maxJugadores + ' jugadores)');
     } catch (e) {
       this.failN++; this.nextTry = Date.now() + Math.min(60000, 5000 * this.failN); this.status = 'dormida'; log('[' + this.id + '] no pudo arrancar:', String(e.message || e).split('\n')[0]);

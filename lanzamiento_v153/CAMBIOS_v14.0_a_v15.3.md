@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.2 (versionCode 137 → 149)
+# Último Refugio — cambios de la v14.0 a la v15.3 (versionCode 137 → 150)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -49,3 +49,8 @@
 - En las salas `"pvp": true`: golpes y disparos contra otros jugadores decididos por el servidor (propiedad del arma, alcance, línea de visión, cadencia, puntería y daño), protección de aparición (20 s), zonas seguras junto a comerciantes, aparición aleatoria en la costa.
 - Al morir el cuerpo deja todo en el suelo; cortar la conexión en pleno combate (20 s) cuenta como morir.
 - Sin alianzas ni misiones de grupo todavía (fases 3 y 4).
+
+## Alianzas y traición (v15.3) — ver `actualizacion_v153/CAMBIOS_v15.3_alianzas_traicion.md`
+- En salas PvP: alianzas de hasta 4 (se proponen con el indicador de la sala, Y o E), aliados en verde y en el mapa, 4 señales rápidas, candados compartidos.
+- Fuego amistoso activo: herir a un aliado (o exaliado reciente) = TRAIDOR 24 h (nombre rojo para todos, sin poder aliarse, se avisa a su alianza); defensa propia y atacar traidores sin castigo; el cliente no hiere aliados por accidente cuando hay un zombi de por medio.
+- Sin «radar»: en PvP solo se conoce a los jugadores a ≤ 55 casillas y a los aliados.

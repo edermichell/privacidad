@@ -292,6 +292,12 @@ body.touch #bpl{bottom:calc(190px + env(safe-area-inset-bottom,0px))}
 .updbody{overflow:auto;touch-action:pan-y;font-size:19px;line-height:1.08;color:#d7dfd2;padding:2px 4px;max-height:60vh;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;text-align:left}
 .updbody h4{font-family:var(--disp);font-weight:400;font-size:9px;letter-spacing:.1em;color:var(--gold);margin:10px 0 4px;line-height:1.5}.updbody h4 i{font-style:normal;font-size:7px;color:#0a0d0b;background:#a7d86a;padding:1px 5px;border-radius:2px;margin-left:6px;vertical-align:1px}.updbody h4 i.nw{background:#ff8a3c}
 .updbody ul{margin:0;padding-left:16px}
+#netchip.pv{pointer-events:auto;cursor:pointer}#netchip.pv.tr{color:#ffb0a0;box-shadow:0 0 0 1px #d4503c}
+#alim{position:fixed;inset:0;z-index:165;background:#000c;display:grid;place-items:center;padding:12px}#alim[hidden]{display:none}
+#alim .alic{width:min(520px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:12px 14px}#alim h5{margin:6px 0 0;font-family:var(--disp);font-weight:400;font-size:8px;letter-spacing:.12em;color:var(--gold)}
+#alim .alirow{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#0c1510;border:2px solid #000;box-shadow:0 0 0 1px #2e4535;border-radius:4px;font-size:19px;color:#d7dfd2}#alim .alirow span{flex:1;min-width:0}#alim .alirow i{font-style:normal;font-size:7px;font-family:var(--disp);padding:1px 5px;border-radius:2px;margin-left:6px;vertical-align:2px}
+#alim .alirow i.al{background:#3d7a3d;color:#fff}#alim .alirow i.tr{background:#b3261e;color:#fff}#alim button{font-family:var(--disp);font-size:8px;padding:6px 9px;letter-spacing:.05em}
+#alim .alisg{display:flex;gap:6px;flex-wrap:wrap}#alim .alifoot{display:flex;justify-content:flex-end}#alim .hint{font-size:17px;color:#8fa08c;margin:0}
 #askm{position:fixed;inset:0;z-index:170;background:#000d;display:grid;place-items:center;padding:12px}#askm[hidden]{display:none}
 #askm .askc{width:min(440px,100%);padding:14px 16px;display:flex;flex-direction:column;gap:12px}#askm p{margin:0;font-size:20px;line-height:1.1;color:#d7dfd2;text-align:left}
 #askm .askb{display:flex;gap:8px;justify-content:flex-end}#askm .askb button{font-family:var(--disp);font-size:9px;padding:8px 12px;letter-spacing:.06em}#askm #askYes{background:#2b4a2f;color:#fff}.updbody li{margin:0 0 3px}
@@ -896,7 +902,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v15.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v15.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -1099,6 +1105,15 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     <header class="sth"><b>NOVEDADES</b><button id="bUpdX" type="button">LISTO</button></header>
     <div class="updst"><span id="updMsg"></span><span class="updbt"><button id="bUpdGo" type="button" class="updgo" hidden>ACTUALIZAR AHORA</button><button id="bUpdChk" type="button">BUSCAR ACTUALIZACIÓN</button></span></div>
     <div class="updbody" id="updList"></div>
+  </div>
+</div>
+<div id="alim" hidden>
+  <div class="stc alic" role="dialog" aria-label="Alianza">
+    <header class="sth"><b>ALIANZA</b><button id="bAliX" type="button">LISTO</button></header>
+    <div id="aliSt" class="updst"></div>
+    <h5>JUGADORES CERCA</h5><div id="aliNear"></div>
+    <h5>SEÑALES RÁPIDAS A TUS ALIADOS</h5><div class="alisg"><button type="button" data-k="0">ALTO</button><button type="button" data-k="1">AYUDA</button><button type="button" data-k="2">BOTÍN AQUÍ</button><button type="button" data-k="3">PELIGRO</button></div>
+    <div class="alifoot"><button id="bAliLv" type="button">SALIR DE LA ALIANZA</button></div>
   </div>
 </div>
 <div id="askm" hidden>
@@ -2304,8 +2319,13 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 149, UR_VERSION = '15.2', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 150, UR_VERSION = '15.3', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '15.3', t: 'Alianzas y traición (salas PVP)', it: [
+    'En las salas PVP puedes <b>aliarte</b> con otros jugadores (hasta 4): acércate, pulsa <b>E</b> o el botón ALIANZA (tecla <b>Y</b>) y propón la alianza.',
+    'Los aliados se ven en <b>verde</b>, aparecen en el mapa, se mandan <b>señales rápidas</b> (alto, ayuda, botín, peligro) y pueden abrir tus candados.',
+    'Pero un aliado puede <b>traicionarte</b>: quien ataca a un aliado queda como <b>TRAIDOR</b> 24 h (nombre rojo para todos, sin poder aliarse).',
+    'En las salas PVP solo ves a los jugadores que tienes cerca (y a tus aliados).' ] },
   { v: '15.2', t: 'Combate entre jugadores (salas PVP)', it: [
     'En las salas marcadas <b>PVP</b> ya puedes atacar a otros jugadores con golpes y disparos; el servidor decide si aciertas y cuánto daño haces.',
     'Al aparecer tienes <b>20 s de protección</b> y hay <b>zonas seguras</b> junto a los comerciantes.',
@@ -4684,6 +4704,7 @@ function findInteract() {
   for (const f of fires) { if (f.kind !== 'camp') continue; const d = Math.hypot(f.x - px, f.y - py); if (d < 1.8 && d < bs) { bs = d; best = { type: 'fire', f, x: f.x, y: f.y }; } }
   { const dg = dogNear(); if (dg) { const d = Math.hypot(dg.x - px, dg.y - py); const sd = d + Math.abs(angDiff(Math.atan2(dg.y - py, dg.x - px), P.dir)) * .14; if (d < 2.1 && sd < bs) { bs = sd; best = { type: 'dog', x: dg.x, y: dg.y }; } } }
   for (const n of NPCS) { if (n.st === 'dead' || (n.fac === 'hostile' && n.sur !== 1)) continue; const d = Math.hypot(n.x - px, n.y - py); if (d > 2.1) continue; const sn = d + Math.abs(angDiff(Math.atan2(n.y - py, n.x - px), P.dir)) * .14; if (sn < bs) { bs = sn; best = { type: 'npc', n, x: n.x, y: n.y }; } }
+  if (NET.role === 'guest' && NET.pvp) for (const r of NET.oth.values()) { if (!r.ok || r.dead) continue; const d = Math.hypot(r.x - px, r.y - py); if (d < 2.2 && d < bs + .3) { bs = d; best = { type: 'plr', r, x: r.x, y: r.y }; } }   /* v15.3: E sobre un jugador abre la alianza */
   if (typeof baseFind === 'function') { const bf = baseFind(px, py, bs, best); if (bf) best = bf; }
   return best;
 }
@@ -4713,6 +4734,7 @@ function hintFor(t) {
   if (t.type === 'base') return baseHint(t);
   if (t.type === 'trap') return trHint(t.q);
   if (t.type === 'item') return 'Recoger: ' + ITEMS[t.f.it.id].n;
+  if (t.type === 'plr') return 'Alianza con ' + (t.r.name || 'jugador');
   if (t.type === 'dog') return typeof dogHint === 'function' ? dogHint() : (FOODIDS().length ? 'Darle de comer al perro' : 'Perro callejero (necesitas comida)');
   if (t.type === 'npc') return 'Hablar con ' + t.n.name + ' (' + NT[t.n.type].n.toLowerCase() + ')';
   return '';
@@ -4722,6 +4744,7 @@ function doInteract() {
   if (BLD.on) { bldConfirm(); return; }
   const t = findInteract(); if (!t) return;
   if (t.type === 'npc') npcOpenDlg(t.n);
+  else if (t.type === 'plr') aliOpen(true);
   else if (t.type === 'dog') dogFeed();
   else if (t.type === 'base') baseAct(t);
   else if (t.type === 'stn') stationUse(t.o);
@@ -5134,7 +5157,7 @@ function resolveMelee() {
     break;
   }
   if (typeof faMelee === 'function' && faMelee(rng, meleeMod() * base * (1 + sl('str') * .05) * (1 + sl(skn) * .04) * (P.end < 30 ? .7 : 1))) { any = true; if (P.eq && w && Math.random() < .07) { P.eq.c--; if (P.eq.c <= 0) { say('Tu ' + w.n.toLowerCase() + ' se rompió', 'bad'); removeItem(P.eq, 1); } } }
-  if (NET.pvp && NET.role === 'guest') pvpMelee(w);   /* v15.2 */
+  if (NET.pvp && NET.role === 'guest') pvpMelee(w, any);   /* v15.2 */
   if (any) camKick(P.dir, 1.8, true);
   makeNoise(P.x, P.y, (w ? w.noise : 3) * (any ? 1.2 : .8));
 }
@@ -5390,15 +5413,38 @@ function saveGame() {
 /* invitado: su personaje (mochila, necesidades, habilidades) se guarda aparte y se recupera al volver al mismo mundo */
 /* v15.2 · PvP: los golpes y disparos contra OTROS JUGADORES los resuelve el anfitrión; el cliente solo dice a quién apuntó y con qué arma (nunca el daño) */
 const PV = { eq: '', n: -1 };
+/* v15.3 · ALIANZAS Y TRAICIÓN (salas PVP). El servidor lleva las alianzas (por identidad) y decide quién es Traidor; el cliente solo muestra y pide. */
+const SIGT = ['Alto', 'Ayuda', 'Botín aquí', 'Peligro'];
+function aliHas() { return !!(NET.ali && NET.ali.n > 0); }
+function aliNear() { const o = []; if (NET.role !== 'guest' || !NET.pvp) return o; for (const r of NET.oth.values()) { if (!r.ok || r.dead) continue; const d = Math.hypot(r.x - P.x, r.y - P.y); if (d <= 9) o.push({ r, d }); } o.sort((a, b) => a.d - b.d); return o; }
+function aliRender() {
+  const st = $('aliSt'), nr = $('aliNear'); if (!st || !nr) return; const a = NET.ali || { n: 0, max: 4, mem: [], tr: 0 };
+  const names = (a.mem || []).map(m => (m.n || 'Aliado') + (m.on ? '' : ' (desconectado)')).join(', ');
+  st.textContent = a.tr > 0 ? 'ERES TRAIDOR: ' + Math.ceil(a.tr / 60) + ' h restantes. Nadie puede aliarse contigo.' : a.n ? 'Alianza (' + a.n + '/' + a.max + '): tú' + (names ? ', ' + names : '') + '.' : 'Sin alianza. Acércate a otro jugador y propón una.';
+  st.classList.toggle('av', a.tr > 0);
+  const near = aliNear(); nr.innerHTML = near.length ? near.map(({ r, d }) => '<div class="alirow"><span>' + urEsc(r.name || 'Jugador') + (r.al ? '<i class="al">ALIADO</i>' : '') + (r.tr ? '<i class="tr">TRAIDOR</i>' : '') + ' · ' + d.toFixed(0) + ' m</span>' + (!r.al && !r.tr && !(a.tr > 0) && !(a.n >= a.max) ? '<button type="button" data-i="' + r.id + '">PROPONER ALIANZA</button>' : '') + '</div>').join('') : '<p class="hint">No hay jugadores cerca.</p>';
+  $('bAliLv').hidden = !(a.n > 0);
+}
+function aliOpen(on) { const m = $('alim'); if (!m || NET.role !== 'guest' || !NET.pvp) return; m.hidden = !on; if (on) { aliRender(); try { sfx('click', 0); } catch (e) { } } }
+function aliToggle() { const m = $('alim'); if (m) aliOpen(m.hidden); }
+setInterval(() => { try { const c = $('netchip'); if (c) { const on = NET.role === 'guest' && NET.pvp; c.classList.toggle('pv', on); c.classList.toggle('tr', on && !!(NET.ali && NET.ali.tr > 0)); c.title = on ? 'Alianza (Y)' : ''; } const m = $('alim'); if (m && !m.hidden) { if (!NET.pvp || STATE !== 'play') m.hidden = true; else aliRender(); } } catch (e) { } }, 500);
+document.addEventListener('click', e => {
+  const t = e.target; if (!t || !t.closest) return;
+  if (t.closest('#netchip.pv')) { aliToggle(); return; } if (t.closest('#bAliX')) { aliOpen(false); return; } if (t.id === 'alim') { aliOpen(false); return; }
+  if (t.closest('#bAliLv')) { netSend({ t: 'AL' }); return; }
+  const pb = t.closest('#aliNear button[data-i]'); if (pb) { netSend({ t: 'AP', i: +pb.dataset.i }); try { say('Propuesta enviada…', 'tip'); } catch (er) { } return; }
+  const sb = t.closest('#alim .alisg button[data-k]'); if (sb) { netSend({ t: 'SG', k: +sb.dataset.k }); return; }
+});
+window.addEventListener('keydown', e => { const m = $('alim'); if (e.code === 'Escape' && m && !m.hidden) { e.preventDefault(); e.stopImmediatePropagation(); aliOpen(false); } }, true);
 function pvpTargets() { const o = []; if (NET.role !== 'guest' || !NET.pvp || P.dead) return o; for (const r of NET.oth.values()) if (r.ok && !r.dead) o.push(r); return o; }
-function pvpMelee(w) {
+function pvpMelee(w, zHit) {
   const rng = w ? w.rng : .85; let best = null, bd = 1e9;
-  for (const r of pvpTargets()) { const d = Math.hypot(r.x - P.x, r.y - P.y); if (d > rng + .6) continue; if (d > .95 && !losClear(P.x, P.y, r.x, r.y)) continue; if (d > .55 && Math.abs(angDiff(Math.atan2(r.y - P.y, r.x - P.x), P.dir)) > 1.25) continue; if (d < bd) { bd = d; best = r; } }
+  for (const r of pvpTargets()) { if (r.al && zHit) continue; /* v15.3: si el golpe alcanzó a un zombi, el aliado de al lado no cuenta */ const d = Math.hypot(r.x - P.x, r.y - P.y); if (d > rng + .6) continue; if (d > .95 && !losClear(P.x, P.y, r.x, r.y)) continue; if (d > .55 && Math.abs(angDiff(Math.atan2(r.y - P.y, r.x - P.x), P.dir)) > 1.25) continue; if (d < bd) { bd = d; best = r; } }
   if (best) netSend({ t: 'PH', i: best.id, s: 'm', w: P.eq ? P.eq.id : '' });
 }
 function pvpShot(ang, w) {
   let best = null, bd = 1e9; const c = Math.cos(ang), s = Math.sin(ang);
-  for (const r of pvpTargets()) { const dx = r.x - P.x, dy = r.y - P.y, pr = dx * c + dy * s; if (pr < .2 || pr > w.rng) continue; const pe = Math.abs(-dx * s + dy * c); if (pe > .55 + pr * .02) continue; if (pr > 1.1 && !losClear(P.x, P.y, r.x, r.y)) continue; if (pr < bd) { bd = pr; best = r; } }
+  for (const r of pvpTargets()) { const dx = r.x - P.x, dy = r.y - P.y, pr = dx * c + dy * s; if (pr < .2 || pr > w.rng) continue; const pe = Math.abs(-dx * s + dy * c); if (pe > .55 + pr * .02) continue; if (r.al) { let blk = false; for (const z of Z) { if (z.st === 'dead') continue; const zx = z.x - P.x, zy = z.y - P.y, zp = zx * c + zy * s; if (zp > .2 && zp < pr + 3 && Math.abs(-zx * s + zy * c) < .6) { blk = true; break; } } if (blk) continue; }   /* un zombi en la línea (delante o justo detrás del aliado) protege al aliado: apuntar a un zombi no es traición */ if (pr > 1.1 && !losClear(P.x, P.y, r.x, r.y)) continue; if (pr < bd) { bd = pr; best = r; } }
   if (best) netSend({ t: 'PH', i: best.id, s: 'g', w: P.eq.id });
 }
 /* el anfitrión debe conocer mi arma y mi mochila al instante: se manda el personaje cuando cambia el arma o el número de objetos */
@@ -11616,7 +11662,7 @@ window.addEventListener('keydown', e => {
   if (PAUSED) return;
   switch (e.code) {
     case 'KeyE': doInteract(); break; case 'KeyR': if (BLD.on) bldRotate(); else startReload(); break; case 'KeyV': UI.toggleBuild(); break; case 'KeyQ': toggleLight(); break; case 'KeyB': startBarricade(); break;
-    case 'KeyI': case 'Tab': UI.toggleInv(); break; case 'KeyH': UI.toggleHealth(); break; case 'KeyK': UI.toggleCraft(); break; case 'KeyM': UI.toggleMap(); break;
+    case 'KeyI': case 'Tab': UI.toggleInv(); break; case 'KeyH': UI.toggleHealth(); break; case 'KeyK': UI.toggleCraft(); break; case 'KeyM': UI.toggleMap(); break; case 'KeyY': aliToggle(); break;
     case 'KeyC': P.sneak = !P.sneak; break; case 'KeyN': audioInit(); toggleMute(); break; case 'KeyG': throwMolotov(); break; case 'KeyX': cycleWeapon(); break; case 'KeyF': shove(); break;
     case 'Space': IN.atk = true; IN.atkQ = .3; break;
     default: if (/^Digit[1-9]$/.test(e.code)) equipSlot(+e.code.slice(5) - 1);
@@ -12683,6 +12729,9 @@ function netMsg(o) {
     case 'EV': netEvent(o); break;
     case 'DF': if (NET.role === 'host' && EV.dog && EV.dog.st === 'stray') { EV.dog.st = 'pet'; EV.dog.own = 'g'; EV.dog.gid = NET.cur ? NET.cur.slot : 0; EV.dog.sit = 0; } break;
     case 'HP': if (NET.role === 'guest' && P && !P.dead) { if (o.k) { P.hp = 0; die(o.by ? 'Te mató ' + String(o.by).slice(0, 14) : 'Tu cuerpo no resistió'); } else if (isFinite(o.h) && o.h >= 0 && o.h < P.hp) { P.hp = o.h; try { shake = 4; } catch (e) { } if (o.by) say(String(o.by).slice(0, 14) + ' te hirió', 'bad'); } } break;   /* v15.1: el anfitrión manda la vida en salas PvP */
+    case 'AI': if (NET.role === 'guest') { NET.ali = { n: o.n | 0, max: o.max | 0 || 4, mem: Array.isArray(o.mem) ? o.mem.slice(0, 6) : [], tr: +o.tr || 0 }; try { aliRender(); netUI(); } catch (e) { } } break;   /* v15.3: estado de mi alianza */
+    case 'AQ': if (NET.role === 'guest') { const nm = String(o.n || 'Un jugador').slice(0, 14); urAsk(nm + ' te propone una alianza (hasta 4 jugadores: se ven en el mapa, se mandan señales y pueden abrir sus candados entre sí). Ojo: un aliado también puede traicionarte. ¿Aceptar?', 'ACEPTAR', 'RECHAZAR').then(y => netSend({ t: y ? 'AA' : 'AD' })); } break;
+    case 'SGR': if (NET.role === 'guest') { const dx = (+o.x || 0) - P.x, dy = (+o.y || 0) - P.y, dd = Math.round(Math.hypot(dx, dy)), a8 = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)), dir = ['E', 'SE', 'S', 'SO', 'O', 'NO', 'N', 'NE'][((a8 % 8) + 8) % 8]; say('[' + String(o.n || 'Aliado').slice(0, 14) + '] ' + (SIGT[o.k | 0] || '?') + ' · ' + dd + ' m al ' + dir, (o.k | 0) === 3 ? 'bad' : 'tip'); try { sfx('click', 0); } catch (e) { } } break;
     case 'PX': if (NET.role === 'guest') { say(o.k ? 'Mataste a ' + String(o.n || '?').slice(0, 14) : 'Acertaste a ' + String(o.n || '?').slice(0, 14), o.k ? 'good' : 'tip'); try { sfx('hit', 0); } catch (e) { } } break;   /* v15.2: aviso de impacto o baja */
     case 'say': say(o.m, o.c); break;
     case 'end': if (NET.role === 'guest') { const m = o.m || 'La sala se cerró.'; netClose(); netUI(); if (STATE === 'play' || STATE === 'dead') { say(m, 'bad'); setTimeout(() => { if (STATE !== 'menu') toMenu(); }, 2600); } else NET.err = m; } break;
@@ -12725,7 +12774,7 @@ async function netGuestLoad() {
     const s = JSON.parse(await gunzip(all, rx.gz)); audioInit();
     withLoading(() => {
       if (!applySave(s, true)) { netFail('No se pudo cargar el mundo del anfitrión.'); return; }
-      tipSeen.clear(); tipSeen.add('start'); metaNewRun(); NET.auth = rx.au ? 1 : 0; NET.pvp = rx.pv ? 1 : 0; const got = guestCharLoad(s.seed, rx.au ? (rx.ch || '') : undefined); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
+      tipSeen.clear(); tipSeen.add('start'); metaNewRun(); NET.auth = rx.au ? 1 : 0; NET.pvp = rx.pv ? 1 : 0; NET.ali = null; const got = guestCharLoad(s.seed, rx.au ? (rx.ch || '') : undefined); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
       NET.rp = { ok: 0, x: s.P.x, y: s.P.y, nx: s.P.x, ny: s.P.y, dir: 0, sp: {}, anim: 0, name: 'Anfitrión' }; netShadowInit();
       enterGame(); NET.ready = true; NET.st = 'playing'; netSend({ t: 'R' }); $('mpm').hidden = true; netUI(); say(got ? 'Recuperaste tu personaje en este mundo' : 'Te uniste a la partida de tu compañero', 'good'); if (NET.pvp) say('SALA PVP: otros jugadores pueden atacarte. Si mueres, pierdes tu personaje.', 'bad');
     });
@@ -12897,8 +12946,8 @@ function drawRemote(R) {
   if (R.moving) bob = ((sp.frame & 7) === 4) ? -1 : 0; else if (R.pose !== 'lie') bob = Math.sin(TIME * 2.1 + 1) > .5 ? -1 : 0; if (R.sneak) bob += 1;
   ctx.drawImage(spr, X - spr.ox, Y + bob - spr.oy);
   if (R.hurt > 0) { const fl = flashOf(spr); ctx.globalAlpha = .5; ctx.drawImage(fl, X - spr.ox, Y + bob - spr.oy); ctx.globalAlpha = 1; }
-  const top = Y - spr.oy + bob; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.font = '11px VT323, "Courier New", monospace'; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.fillStyle = '#7dff6b';
-  ctx.strokeText(R.name || 'Compañero', X, top - 8); ctx.fillText(R.name || 'Compañero', X, top - 8);
+  const top = Y - spr.oy + bob; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.font = '11px VT323, "Courier New", monospace'; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.fillStyle = NET.pvp ? (R.tr ? '#ff5a4a' : R.al ? '#7dff6b' : '#ffffff') : '#7dff6b';   /* v15.3: en PVP verde = aliado, rojo = traidor */
+  { const nm_ = (R.name || 'Compañero') + (NET.pvp && R.tr ? ' · TRAIDOR' : ''); ctx.strokeText(nm_, X, top - 8); ctx.fillText(nm_, X, top - 8); }
   if (R.hp !== undefined) { const k = clamp(R.hp / 100, 0, 1), bx = X - 8, by = top - 4; ctx.fillStyle = '#000'; ctx.fillRect(bx - 1, by - 1, 18, 4); ctx.fillStyle = k > .5 ? '#7dd36a' : k > .25 ? '#e8c75a' : '#e0503c'; ctx.fillRect(bx, by, Math.round(16 * k), 2); }
   ctx.textAlign = 'left';
 }
@@ -21119,7 +21168,7 @@ netSendWorld = async function () {
         const n = NET.peers.filter(p => p.st === 'playing').length;
         if (chip && NET.on) { chip.textContent = n ? 'COOP ● ' + (n + 1) + ' jugadores' : (NET.peers.length ? 'SALA … conectando' : 'SALA ○ esperando · ' + NET.code); chip.className = n ? 'ok' : ''; }
         const hs = $('mpHostSt'); if (hs && (STATE === 'play' || STATE === 'dead') && n) hs.textContent = 'Conectados: ' + n + ' de ' + NET.max + ' compañeros.' + (n < NET.max ? ' Pueden entrar más con el mismo código.' : ' Sala llena.');
-      } else if (NET.role === 'guest' && NET.st === 'playing' && chip) chip.textContent = (NET.srv ? (NET.pvp ? 'SALA PVP' : 'SALA') : 'COOP') + ' ● ' + ((NET.srv ? 1 : 2) + NET.oth.size) + ' jugadores';
+      } else if (NET.role === 'guest' && NET.st === 'playing' && chip) chip.textContent = (NET.srv ? (NET.pvp ? 'SALA PVP' : 'SALA') : 'COOP') + ' ● ' + ((NET.srv ? 1 : 2) + NET.oth.size) + ' jugadores' + (NET.pvp && NET.ali && NET.ali.tr > 0 ? ' · TRAIDOR' : NET.pvp && NET.ali && NET.ali.n ? ' · ALIANZA ' + NET.ali.n : NET.pvp ? ' · ALIANZA (Y)' : '');
     } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   };
   /* invitado: los demás invitados llegan en la instantánea */
@@ -21130,7 +21179,7 @@ netSendWorld = async function () {
       const seen = new Set();
       for (const a of (o.o || [])) {
         seen.add(a.i); let R = NET.oth.get(a.i); if (!R) { R = { ok: 1, x: a.x, y: a.y, nx: a.x, ny: a.y, sp: {}, anim: 0, name: a.n || ('Jugador ' + a.i), id: a.i }; NET.oth.set(a.i, R); }
-        R.nx = a.x; R.ny = a.y; R.dir = a.d; R.moving = !!a.m; R.run = !!a.r; R.sneak = !!a.s; R.sleep = !!a.z; R.hp = a.hp; R.dead = !!a.k; R.drive = a.v ? 1 : 0; R.pose = a.pose; R.ph = a.ph; R.hurt = a.hu ? .3 : 0; if (a.sp) R.sp = a.sp; if (a.n) R.name = a.n;
+        R.nx = a.x; R.ny = a.y; R.dir = a.d; R.moving = !!a.m; R.run = !!a.r; R.sneak = !!a.s; R.sleep = !!a.z; R.hp = a.hp; R.dead = !!a.k; R.al = a.al ? 1 : 0; R.tr = a.tr ? 1 : 0; R.drive = a.v ? 1 : 0; R.pose = a.pose; R.ph = a.ph; R.hurt = a.hu ? .3 : 0; if (a.sp) R.sp = a.sp; if (a.n) R.name = a.n;
       }
       for (const id of Array.from(NET.oth.keys())) if (!seen.has(id)) NET.oth.delete(id);
       if (NET.oth.size !== NET.othN) { NET.othN = NET.oth.size; netUI(); }
@@ -21688,6 +21737,7 @@ function lkPrompt(t, cont) {
   lkModal('Cerrado con código', '<p>Escribe el código de 4 números.</p>' + lkInput() + '<p id="lkMsg" class="hint"></p>' + (raid ? '<p class="hint">¿No lo sabes? Puedes forzarlo' + (tool ? ' (' + (tool === 'lockpick' ? 'ganzúa: lenta y silenciosa' : 'palanca: rápida y ruidosa') + ')' : ' con una ganzúa o una palanca, o romperlo a golpes') + '. El dueño recibe un aviso.</p>' : ''), [
     ['ABRIR', 'mbp', async () => { const r = await lkCall({ t: 'LKT', i, c: ($('lkIn').value || '').trim() }); if (r.ok) { LK.ok.set(i, Date.now() + 25000); if (to[i] === O_DOOR) td[i] &= ~2; lkClose(); sfx('door', 0); cont.call(null); } else lkSetMsg(r.m || 'Código incorrecto.', true); }],
     ['QUITAR CANDADO', 'mbs', async () => { const r = await lkCall({ t: 'LKR', i, c: ($('lkIn').value || '').trim() }); if (r.ok) { LK.flags.delete(i); if (to[i] === O_DOOR) td[i] &= ~2; addItem(mkItem('padlock', 1)); lkClose(); say('Recuperas el candado.', 'good'); } else lkSetMsg(r.m || 'Código incorrecto.', true); }]]
+      .concat(NET.pvp && aliHas() ? [['ABRIR COMO ALIADO', 'mbs', async () => { const r = await lkCall({ t: 'LKT', i, c: 'ALLY' }); if (r.ok) { LK.ok.set(i, Date.now() + 25000); if (to[i] === O_DOOR) td[i] &= ~2; lkClose(); sfx('door', 0); cont.call(null); } else lkSetMsg(r.m || 'No es de un aliado.'); }]] : [])
       .concat(raid ? [['FORZAR', 'mbs', () => { lkClose(); lkForce(i); }]] : []).concat([['CANCELAR', 'mbs', lkClose]]));
 }
 function lkForce(i) {
@@ -22050,7 +22100,7 @@ function drawMarkers(g, sc, ox, oy, labels) {
     if (labels) { g.font = '9px monospace'; g.textAlign = 'center'; const tw = g.measureText(L.n).width / 2 + 2; let ty = y - 9; for (let tr = 0; tr < 6; tr++) { const dy = tr < 3 ? -9 * (tr + 1) : 9 * (tr - 2); ty = y + dy; if (!placed.some(q => Math.abs(q[0] - x) < q[2] + tw && Math.abs(q[1] - ty) < 9)) break; } placed.push([x, ty, tw]); g.lineWidth = 3; g.strokeStyle = '#000'; g.strokeText(L.n, x, ty); g.fillStyle = L.k === 'home' ? '#9fe08a' : '#f4ecd0'; g.fillText(L.n, x, ty); }
   }
   if (typeof EV !== 'undefined' && EV.drop && EV.drop.landed && !EV.drop.opened) { const x = (EV.drop.x - ox) * sc, y = (EV.drop.y - oy) * sc, r = labels ? 5 : 3; g.fillStyle = '#000'; g.fillRect(x - r - 1, y - r - 1, r * 2 + 2, r * 2 + 2); g.fillStyle = '#ff5a4a'; g.fillRect(x - r, y - r, r * 2, r * 2); if (labels) { g.font = '9px monospace'; g.textAlign = 'center'; g.fillStyle = '#ff9a8a'; g.fillText('SUMINISTROS', x, y - 10); } }
-  if (NET.on) for (const R_ of netRemotes()) if (R_.ok) { const rx = (R_.x - ox) * sc, ry = (R_.y - oy) * sc; g.fillStyle = '#000'; g.fillRect(rx - 3, ry - 3, 6, 6); g.fillStyle = '#7dff6b'; g.fillRect(rx - 2, ry - 2, 4, 4); }
+  if (NET.on) for (const R_ of netRemotes()) if (R_.ok && (!NET.pvp || R_.al)) { const rx = (R_.x - ox) * sc, ry = (R_.y - oy) * sc; g.fillStyle = '#000'; g.fillRect(rx - 3, ry - 3, 6, 6); g.fillStyle = '#7dff6b'; g.fillRect(rx - 2, ry - 2, 4, 4); }
   const Q = curQ(); const px = (Q.x - ox) * sc, py = (Q.y - oy) * sc; g.fillStyle = '#000'; g.fillRect(px - 3, py - 3, 6, 6); g.fillStyle = '#fff'; g.fillRect(px - 2, py - 2, 4, 4); g.fillStyle = '#4af'; g.fillRect(px - 1 + Math.round(Math.cos(Q.dir) * 5), py - 1 + Math.round(Math.sin(Q.dir) * 5), 2, 2);
 }
 function drawMini(dt) {
@@ -24099,7 +24149,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24140,7 +24190,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24163,7 +24213,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24192,7 +24242,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24226,7 +24276,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24257,7 +24307,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24290,7 +24340,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24319,12 +24369,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.2') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.3') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
