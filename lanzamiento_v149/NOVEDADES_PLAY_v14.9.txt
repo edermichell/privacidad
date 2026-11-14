@@ -1,0 +1,19 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) · 440 caracteres ---
+Novedades de la v14.9:
+• Nuevo botón NOVEDADES: mira qué cambió en cada versión.
+• Aviso automático cuando hay una actualización.
+• Mapa nuevo gigante (960×960) en las 3 salas oficiales: centro denso, zona industrial, puerto con mar y muelles, parques y callejones.
+• Multijugador con salas públicas y privadas (hasta 10); candados, cofres y robos.
+• Misiones y sucesos mejor repartidos (nada el día 1).
+• Más estable y fluido en gama baja.
+
+--- English (optional) · 413 characters ---
+What's new in v14.9:
+• New NEWS button: see what changed in each version.
+• Automatic notice when an update is available.
+• Giant new 960×960 map in the 3 official rooms: dense downtown, industrial zone, harbor with piers, parks and alleys.
+• Public/private multiplayer rooms (up to 10); padlocks, chests and theft.
+• Missions and events better paced (none on day 1).
+• More stable and smoother on low-end phones.

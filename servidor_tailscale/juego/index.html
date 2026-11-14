@@ -279,6 +279,19 @@ body.touch #bpl{bottom:calc(190px + env(safe-area-inset-bottom,0px))}
 .htabs{display:flex;gap:4px;flex-wrap:wrap}.htabs button{font-family:var(--disp);font-size:8px;padding:6px 8px;background:#142018;border-color:#000;box-shadow:0 0 0 1px #2e4535;color:#8fa08c;letter-spacing:.06em}.htabs button.on{background:#2b4a2f;color:#fff;box-shadow:0 0 0 2px var(--gold)}
 .hbody{overflow:auto;touch-action:pan-y;font-size:20px;line-height:1.1;color:#d7dfd2;padding:4px 2px;max-height:56vh}.hbody p{margin:0 0 7px}.hbody b{color:var(--gold);font-weight:400}
 .howm:not([hidden]){animation:fadein .2s}
+/* v14.9 · novedades y aviso de actualización */
+#bNews{position:relative}#newsDot{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:#ff5a3c;box-shadow:0 0 0 2px #000,0 0 8px #ff5a3c;animation:newsp 1.4s ease-in-out infinite}@keyframes newsp{50%{transform:scale(1.35)}}
+#updBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(3px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;align-items:center;gap:8px;max-width:min(520px,60vw);padding:3px 6px 3px 10px;background:#1b2d1ff2;border:2px solid #000;box-shadow:0 0 0 2px #b9892b,0 6px 18px #000a;border-radius:5px;font-family:var(--disp);font-size:8px;letter-spacing:.08em;color:var(--gold);line-height:1.5;text-align:left}
+#updBar[hidden]{display:none}#updBar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#updBar button{font-family:var(--disp);font-size:7px;padding:4px 8px;white-space:nowrap}#updBar #bUpdBar{background:#2b4a2f;color:#fff}
+#updm{position:fixed;inset:0;z-index:80;background:#000c;display:grid;place-items:center;padding:12px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+#updm[hidden]{display:none}#updm:not([hidden]){animation:fadein .2s}
+#updm .updc{width:min(620px,100%);max-height:100%;display:flex;flex-direction:column;gap:6px}
+.updst{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:6px 8px;background:#0c1510;border:2px solid #000;box-shadow:0 0 0 1px #2e4535;border-radius:4px;font-size:18px;color:#d7dfd2;line-height:1.05}
+.updst.av{box-shadow:0 0 0 2px #b9892b;color:var(--gold)}.updbt{display:flex;gap:6px;flex-wrap:wrap}
+.updbt button{font-family:var(--disp);font-size:8px;padding:6px 9px;letter-spacing:.06em}.updbt .updgo{background:#2b4a2f;color:#fff}.updbt button[hidden]{display:none}
+.updbody{overflow:auto;touch-action:pan-y;font-size:19px;line-height:1.08;color:#d7dfd2;padding:2px 4px;max-height:60vh;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;text-align:left}
+.updbody h4{font-family:var(--disp);font-weight:400;font-size:9px;letter-spacing:.1em;color:var(--gold);margin:10px 0 4px;line-height:1.5}.updbody h4 i{font-style:normal;font-size:7px;color:#0a0d0b;background:#a7d86a;padding:1px 5px;border-radius:2px;margin-left:6px;vertical-align:1px}.updbody h4 i.nw{background:#ff8a3c}
+.updbody ul{margin:0;padding-left:16px}.updbody li{margin:0 0 3px}
 #tut,#quest{position:fixed;right:calc(8px + env(safe-area-inset-right,0px));top:calc(58px + env(safe-area-inset-top,0px));width:min(250px,44vw);background:#0a1410e8;border:2px solid #000;box-shadow:0 0 0 2px #6a4d12;border-radius:5px;padding:7px 9px;display:flex;flex-direction:column;gap:4px;z-index:12;pointer-events:auto}
 #tut b,#quest b{font-family:var(--disp);font-size:8px;color:var(--gold);letter-spacing:.08em;line-height:1.5}#tut span,#quest span{font-size:17px;line-height:1.05;color:#dfe8d8}
 #tut .tbar,#quest .tbar{height:5px;background:#000;border-radius:3px;overflow:hidden}#tut .tbar i,#quest .tbar i{display:block;height:100%;background:linear-gradient(#a7d86a,#5c9a3a);width:0;transition:width .4s}
@@ -880,7 +893,8 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.8 · isométrico · pixel art</span><span id="mtip"></span><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v14.9 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
       <header class="chd"><b>RASGOS</b><span id="trPts"></span><button id="bTraitX" aria-label="Cerrar">LISTO</button></header>
@@ -1077,6 +1091,13 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </div>
   </div>
 </div>
+<div id="updm" hidden>
+  <div class="stc updc" role="dialog" aria-label="Novedades y actualización">
+    <header class="sth"><b>NOVEDADES</b><button id="bUpdX" type="button">LISTO</button></header>
+    <div class="updst"><span id="updMsg"></span><span class="updbt"><button id="bUpdGo" type="button" class="updgo" hidden>ACTUALIZAR AHORA</button><button id="bUpdChk" type="button">BUSCAR ACTUALIZACIÓN</button></span></div>
+    <div class="updbody" id="updList"></div>
+  </div>
+</div>
 <div id="setm" hidden>
   <div class="stc" role="dialog" aria-label="Ajustes">
     <header class="sth"><b><svg viewBox="0 0 12 12" width="14" height="14" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg>AJUSTES</b><button id="bSetX" type="button">LISTO</button></header>
@@ -1119,6 +1140,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
         <div class="srow"><span>Restablecer ajustes<small>sonido, gráficos y opciones de juego (no borra tu partida)</small></span><button id="bSetRst" type="button">Restablecer</button></div>
         <div class="srow" id="rowDel"><span>Borrar partida guardada<small id="delNote">no se puede deshacer</small></span><button id="bSetDel" type="button" class="danger">Borrar</button></div>
         <div class="srow"><span>Versión<small id="verNote"></small></span><b class="sval" id="verVal"></b></div>
+        <div class="srow"><span>Novedades y actualización<small id="updNote">qué cambió en cada versión y búsqueda de actualizaciones</small></span><button id="bNewsS" type="button">ABRIR</button></div>
       </div>
     </div>
   </div>
@@ -2271,6 +2293,100 @@ const SPR = {};
 const UR_SRVPAGE = /[?&]srv=1/.test(location.search);   /* el anfitrión del servidor (navegador oculto) nunca cuenta como equipo débil */
 function urTiny() { try { const m = Number(navigator.deviceMemory); return !UR_SRVPAGE && !!(m && m <= 2); } catch (e) { return false; } }
 function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigator.deviceMemory) || 8, c = navigator.hardwareConcurrency || 8; return urTiny() || (c <= 4 && m <= 4); } catch (e) { return false; } }
+/* ===== v14.9 · NOVEDADES + aviso de actualización =====
+   · Botón NOVEDADES (menú y Ajustes → Datos): qué cambió en cada versión.
+   · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
+   · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
+     En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
+const UR_BUILD = 146, UR_VERSION = '14.9', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_NEWS = [
+  { v: '14.9', t: 'Novedades y aviso de actualización', it: [
+    'Nuevo botón <b>NOVEDADES</b> (menú principal y Ajustes → Datos): aquí ves qué cambió en cada versión.',
+    'Aviso automático cuando hay una versión nueva en Google Play, con botón para actualizar.',
+    'Al actualizar, estas novedades se abren una sola vez.' ] },
+  { v: '14.8', t: 'Más estable y fluido', it: [
+    'Si Android cierra el motor gráfico por falta de memoria, el juego se recupera y continúa desde tu último guardado.',
+    'Teléfonos de gama baja: primer arranque a 30 FPS estables, menos memoria y se libera al pasar a segundo plano.',
+    'Misiones y sucesos mejor repartidos: el día 1 es tranquilo y desde el día 2 llega una misión a la vez (al terminarla, la siguiente otro día).',
+    'Pulido general: errores corregidos sin cambiar tu partida.' ] },
+  { v: '14.1 – 14.7', t: 'Mapa gigante y multijugador', it: [
+    'Mapa nuevo de <b>960×960</b> en las 3 salas oficiales: centro denso, zona industrial, puerto con mar y muelles, parques con estanque y callejones.',
+    'Salas públicas y privadas de hasta 10 jugadores; el mundo se guarda en el servidor.',
+    'Candados de código, cofres y robos entre jugadores.',
+    'Reportar, expulsar y banear a tramposos; «Buen anfitrión» para crear tus propias salas.',
+    'Notas de supervivientes en los puntos de interés y más detalle en el mapa.' ] },
+  { v: '14.0', t: 'Jugar en línea sin complicaciones', it: [
+    'Conexión por el servidor: ya no hace falta instalar nada para jugar con otras personas.' ] }
+];
+const UPD = { st: 'idle', code: 0, ver: '', notes: null, days: 0, src: '', last: 0, manual: false, timer: 0 };   /* st: idle | checking | none | avail | err */
+const UR_EXISTING = (() => { try { return !!(localStorage.getItem('ultimo_refugio_v3') || localStorage.getItem('ultimo_refugio_opt')); } catch (e) { return false; } })();   /* se mira antes de que el juego guarde nada */
+function urLs(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { } return null; }
+function urEsc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function urNative() { return typeof window.AndroidMonet !== 'undefined'; }
+function urNewsHtml() {
+  let h = '';
+  if (UPD.st === 'avail' && UPD.notes && UPD.notes.length) h += '<h4>' + urEsc(UPD.ver ? 'v' + UPD.ver : 'VERSIÓN NUEVA') + '<i class="nw">NUEVA</i></h4><ul>' + UPD.notes.map(n => '<li>' + urEsc(n) + '</li>').join('') + '</ul>';
+  UR_NEWS.forEach((n, i) => { h += '<h4>v' + n.v + ' · ' + urEsc(n.t) + (i === 0 ? '<i>TU VERSIÓN</i>' : '') + '</h4><ul>' + n.it.map(x => '<li>' + x + '</li>').join('') + '</ul>'; });
+  return h;
+}
+function urUpdRender() {
+  const av = UPD.st === 'avail', ver = UPD.ver ? ' (v' + UPD.ver + ')' : '';
+  const msg = { idle: 'Versión instalada: v' + UR_VERSION + '.', checking: 'Buscando actualizaciones…', none: 'Tienes la última versión (v' + UR_VERSION + ').', avail: '¡Hay una versión nueva disponible' + ver + '!', err: 'No se pudo comprobar ahora. Revisa tu conexión e inténtalo de nuevo.' }[UPD.st] || '';
+  const m = $('updMsg'); if (m) { m.textContent = msg; m.parentNode.classList.toggle('av', av); }
+  const go = $('bUpdGo'); if (go) go.hidden = !av; const ck = $('bUpdChk'); if (ck) { ck.hidden = av; ck.disabled = UPD.st === 'checking'; }
+  const l = $('updList'); if (l && !$('updm').hidden) l.innerHTML = urNewsHtml();
+  const dis = urLs('ur_upd_dis') === String(UPD.code), unseen = urLs('ur_news_seen') !== UR_VERSION;
+  const dot = $('newsDot'); if (dot) dot.hidden = !(av || unseen);
+  const bar = $('updBar'); if (bar) { bar.hidden = !(av && !dis); const t = $('updBarTx'); if (t) t.textContent = 'Versión nueva' + ver + ' disponible'; }
+  const nt = $('updNote'); if (nt) nt.textContent = av ? 'hay una versión nueva disponible' : 'qué cambió en cada versión y búsqueda de actualizaciones';
+  const bs = $('bNewsS'); if (bs) bs.textContent = av ? 'ACTUALIZAR' : 'ABRIR';
+}
+function urNewsOpen(on) {
+  const m = $('updm'); if (!m) return; m.hidden = !on;
+  if (on) { urLs('ur_news_seen', UR_VERSION); urUpdRender(); const l = $('updList'); if (l) { l.innerHTML = urNewsHtml(); l.scrollTop = 0; } try { sfx('click', 0); } catch (e) { } if (UPD.st === 'idle' || (Date.now() - UPD.last > 6 * 3600e3 && UPD.st !== 'avail')) urUpdCheck(false); }
+  else { urUpdRender(); try { sfx('click', 0); } catch (e) { } }
+}
+/* resultado de una comprobación: o = { avail, code, days, ver, notes, err } (lo llama Android con Google Play, o el servidor vía /salas) */
+function urUpdSet(o, src) {
+  o = o || {}; UPD.last = Date.now(); UPD.manual && clearTimeout(UPD.timer);
+  if (o.err) { if (UPD.st !== 'avail') UPD.st = UPD.manual ? 'err' : 'idle'; }
+  else if (o.avail && (+o.code | 0) > UR_BUILD) {
+    const c = +o.code | 0; if (UPD.st !== 'avail' || c >= UPD.code) { UPD.st = 'avail'; UPD.code = c; UPD.ver = o.ver ? String(o.ver).slice(0, 12) : UPD.ver; UPD.days = +o.days | 0; UPD.src = src || ''; if (Array.isArray(o.notes)) UPD.notes = o.notes.slice(0, 8).map(x => String(x).slice(0, 180)); }
+  } else if (UPD.st !== 'avail') UPD.st = 'none';
+  UPD.manual = false; urUpdRender();
+}
+window.__urUpd = o => { try { urUpdSet(o, 'play'); } catch (e) { typeof dbgc === 'function' && dbgc(e); } };
+function urSrvApp(a) { try { if (!urNative() || UR_SRVPAGE || !a || !(+a.codigo > 0)) return; urUpdSet({ avail: +a.codigo > UR_BUILD, code: +a.codigo, ver: a.version, notes: a.notas }, 'srv'); } catch (e) { typeof dbgc === 'function' && dbgc(e); } }
+function urUpdCheck(manual) {
+  if (UR_SRVPAGE || UPD.st === 'checking') return; UPD.manual = !!manual; if (UPD.st !== 'avail') UPD.st = 'checking'; urUpdRender();
+  clearTimeout(UPD.timer); UPD.timer = setTimeout(() => { if (UPD.st === 'checking') { UPD.st = manual ? 'err' : 'idle'; UPD.manual = false; urUpdRender(); } }, 9000);
+  let asked = false; try { if (urNative() && typeof window.AndroidMonet.checkUpdate === 'function') { window.AndroidMonet.checkUpdate(); asked = true; } } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+  /* además, si el servidor ya es conocido: su anuncio llega con la lista de salas (no se hace ninguna petición extra aparte de la manual) */
+  if (urNative() && manual) { try { s138Connect().then(d => { if (d) urSrvApp(d.app); }).catch(() => { }); } catch (e) { } }
+  if (!asked && !(urNative() && manual)) { UPD.st = UPD.st === 'checking' ? 'none' : UPD.st; clearTimeout(UPD.timer); UPD.manual = false; urUpdRender(); }
+}
+function urUpdGo() {
+  try { if (urNative() && typeof window.AndroidMonet.startUpdate === 'function') { window.AndroidMonet.startUpdate(); return; } } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+  try { window.open(UR_STORE, '_blank'); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+}
+/* Esc cierra este panel antes que cualquier otro (se registra ya, antes que el de Ajustes, para cerrar solo lo de arriba) */
+window.addEventListener('keydown', e => { const m = document.getElementById('updm'); if (e.code === 'Escape' && m && !m.hidden) { e.preventDefault(); e.stopImmediatePropagation(); urNewsOpen(false); } }, true);
+function urNewsInit() {
+  const on = (id, f) => { const e = $(id); if (e) e.addEventListener('click', f); };
+  on('bNews', () => { audioInit(); urNewsOpen(true); });
+  on('bNewsS', () => { audioInit(); if (UPD.st === 'avail') urUpdGo(); else urNewsOpen(true); });
+  on('bUpdX', () => urNewsOpen(false)); on('bUpdGo', urUpdGo); on('bUpdBar', urUpdGo);
+  on('bUpdChk', () => urUpdCheck(true));
+  on('bUpdBarX', () => { urLs('ur_upd_dis', String(UPD.code)); urUpdRender(); });
+  const m = $('updm'); if (m) m.addEventListener('click', e => { if (e.target === m) urNewsOpen(false); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && urNative() && UPD.st !== 'avail' && Date.now() - UPD.last > 6 * 3600e3) urUpdCheck(false); });
+  /* actualizado desde otra versión: abre las novedades una vez (instalación nueva: solo se anota) */
+  const seen = urLs('ur_news_seen');
+  if (!seen && !UR_EXISTING) urLs('ur_news_seen', UR_VERSION);
+  else if (seen !== UR_VERSION && !UR_SRVPAGE) setTimeout(() => { if (!$('menu').hidden && !INTRO) urNewsOpen(true); }, 1600);
+  urUpdRender();
+  if (urNative() && !UR_SRVPAGE) setTimeout(() => urUpdCheck(false), 2500);
+}
 const HDKEY = 'ultimo_refugio_hd';
 const RS = (function () { try { const v = +localStorage.getItem(HDKEY); return v === 3 || v === 4 ? v : 2; } catch (e) { return 2; } })(); // resolución interna: píxeles de lienzo por píxel lógico (2 estándar, 3 alta, 4 ultra)
 /* los sprites con .hi están dibujados al doble de resolución: se pintan a media escala en coordenadas lógicas */
@@ -5255,7 +5371,16 @@ function guestCharLoad(seed) {
     return true;
   } catch (e) { return false; }
 }
+/* v14.9: tope de objetos sueltos en el suelo. Sin tope, un mundo que lleva muchos días (servidor 24/7) los acumulaba sin fin: partida guardada más grande y más trabajo por cuadro.
+   Al guardar (solo anfitrión / un jugador; todas las rutas de guardado pasan por buildSave) se descartan los MÁS ANTIGUOS por encima de 3000; las notas de supervivientes nunca. */
+const FLOOR_MAX = 3000;
+function floorTrim() {
+  if (NET.role === 'guest' || floorItems.length <= FLOOR_MAX) return 0; let over = floorItems.length - FLOOR_MAX; const keep = [];
+  for (const f of floorItems) { if (over > 0 && !(f.it && typeof NOTEIDX !== 'undefined' && NOTEIDX[f.it.id] !== undefined)) { over--; continue; } keep.push(f); }
+  const n = floorItems.length - keep.length; floorItems.length = 0; for (const f of keep) floorItems.push(f); return n;   /* en el mismo arreglo: nada que lo referencie se queda con una copia vieja */
+}
 function buildSave() {
+  try { floorTrim(); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   {
     const doors = [], bars = [], trees = [];
     for (let i = 0; i < W * H; i++) { if (to[i] === O_DOOR && (td[i] & 1)) doors.push(i); if (tbar[i] > 0) bars.push([i, tbar[i], tbh[i]]); }
@@ -21290,7 +21415,7 @@ async function s138Refresh(quiet) {
   if (S137.busy) return; let d = null;
   try { if (S137.url) { try { d = await s138Get(S137.url, '/salas', null, 4000); } catch (e) { d = null; } } if (!d) d = await s138Connect(); } catch (e) { d = null; }
   if (!d) { S137.ok = false; s137Render(); s137Msg('No se encontró el servidor. ¿Tailscale activo en este dispositivo y servidor encendido? Puedes escribir otra dirección en «Cambiar servidor».', true); return; }
-  S137.ok = true; S137.rooms = d.salas || []; S137.ice = d.ice || []; S137.plan = d.plan || null; S137.crear = d.crear !== false; if (!quiet || /No se encontró/.test($('mpSrvMsg').textContent)) s137Msg(''); s137Render();
+  S137.ok = true; urSrvApp(d.app); S137.rooms = d.salas || []; S137.ice = d.ice || []; S137.plan = d.plan || null; S137.crear = d.crear !== false; if (!quiet || /No se encontró/.test($('mpSrvMsg').textContent)) s137Msg(''); s137Render();
 }
 const s137Load = s138Refresh;
 function s138Poll() { clearInterval(S137.timer); S137.timer = setInterval(() => { const m = $('mpm'); if (!m || m.hidden || STATE === 'play' || STATE === 'dead') { clearInterval(S137.timer); S137.timer = 0; return; } s138Refresh(true); }, 6000); }
@@ -22611,6 +22736,7 @@ function toMenu() {
 /* v14.8: libera memoria (bloques de mapa cacheados; se vuelven a dibujar solos). Android lo llama con onTrimMemory cuando el sistema anda corto de RAM. */
 function urTrim() { try { chunks.clear(); return true; } catch (e) { typeof dbgc === 'function' && dbgc(e); return false; } }
 window.__urTrim = urTrim;
+try { urNewsInit(); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
 function boot() {
   initGfx(); initHi(); initEventSprites(); resize(); initMenuWorld(); resize();
   /* Solicita al contenedor Android una frecuencia coherente con el límite elegido.
@@ -23925,7 +24051,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -23966,7 +24092,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -23989,7 +24115,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24018,7 +24144,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24052,7 +24178,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+  if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24083,7 +24209,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24116,7 +24242,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24145,12 +24271,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.8') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.9') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.8';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

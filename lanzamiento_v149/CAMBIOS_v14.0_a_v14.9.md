@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v14.8 (versionCode 137 → 145)
+# Último Refugio — cambios de la v14.0 a la v14.9 (versionCode 137 → 146)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -28,3 +28,8 @@
 ## Estabilidad y gama baja (v14.8) — ver `actualizacion_v148/CAMBIOS_v14.8_estable.md`
 - Android: si el sistema mata el WebView por poca memoria, la app se recupera en vez de cerrarse; libera caché ante `onTrimMemory`.
 - Equipos débiles (≤ 2 GB de RAM, o ≤ 4 núcleos y ≤ 4 GB): primer arranque a 30 FPS estables, caché de mapa menor y memoria liberada al pasar a segundo plano.
+
+## Novedades y aviso de actualización (v14.9) — ver `actualizacion_v149/CAMBIOS_v14.9_novedades_aviso.md`
+- Botón **NOVEDADES** (menú y Ajustes → Datos) con los cambios de cada versión; se abre solo una vez tras actualizar.
+- **Aviso automático** de versión nueva (Google Play, actualización dentro de la app; el servidor puede anunciarla también con `appUltima`), con botón ACTUALIZAR.
+- Tope de **3000 objetos sueltos en el suelo** por mundo (mundos muy largos); las notas de supervivientes nunca se descartan.

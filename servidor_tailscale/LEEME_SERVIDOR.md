@@ -82,6 +82,7 @@ Desde la v14.0 el juego se conecta al servidor por **WebSocket** (ya no usa WebR
 | `gratisSalasMax`, `gratisCaducaDias` | Salas gratis por jugador (1) y días sin jugadores antes de borrarla (14). |
 | `salas247Max`, `simular247`, `licenciaSalasPorDefecto` | Cupo de salas 24/7; `simular247: true` hace que el mundo siga corriendo sin jugadores; salas por licencia (3). |
 | `dormirTrasMin` | Minutos sin jugadores antes de dormir la sala (0 = nunca). |
+| `appUltima` | (Opcional) Anuncia la última versión de la app: `{ "codigo": 146, "version": "14.9", "notas": ["…"] }` (`codigo` = versionCode de Google Play). La app Android avisa «hay una versión nueva» a quien tenga un código menor cuando abre la lista de salas. Sin este bloque no se anuncia nada (la app también se entera por Google Play por su cuenta). |
 | `simularSinJugadores` | `false`: sala vacía en pausa. `true`: el mundo sigue sin gente, con el anfitrión aparcado lejos del punto de entrada (los zombis se acumulan con los días). |
 | `fpsServidor` | Pasos por segundo del anfitrión (30 por defecto; menos CPU). |
 | `guardarCadaSeg`, `copias` | Guardado automático (120 s) y copias a conservar (una cada 30 min). |

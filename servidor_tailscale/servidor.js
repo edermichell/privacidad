@@ -14,7 +14,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos' };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -220,6 +220,9 @@ const rooms = new Map(CFG.salas.map(c => [c.id, new Room(c)]));
 const saveUserRooms = () => { try { writeJson('salas_usuario.json', [...rooms.values()].filter(r => r.dynamic).map(r => r.record())); } catch (e) { log('[salas] no se pudo guardar la lista:', e.message); } };
 for (const r of readJson('salas_usuario.json', [])) { if (r && r.id && !rooms.has(r.id)) rooms.set(r.id, new Room(Object.assign({}, r, { dynamic: true }))); }
 const userRooms = uid => [...rooms.values()].filter(r => r.dynamic && r.owner === uid);
+/* v14.9: anuncio de la última versión de la app (opcional). Se publica en /salas y la app (Android) avisa al jugador si su versión es menor.
+   config.json: "appUltima": { "codigo": 146, "version": "14.9", "notas": ["Lo nuevo 1", "Lo nuevo 2"] }   (codigo = versionCode de la app en Google Play). Sin ese bloque no se anuncia nada. */
+const appInfo = () => { const a = CFG.appUltima; if (!a || !(+a.codigo > 0)) return null; return { codigo: Math.floor(+a.codigo), version: String(a.version || '').slice(0, 12), notas: (Array.isArray(a.notas) ? a.notas : []).slice(0, 8).map(x => String(x).slice(0, 180)) }; };
 const max247 = () => Math.min(CFG.salas247Max, Math.max(0, CFG.salasActivasMax - 1));
 function planOf(uid) { const l = licOf(uid), own = userRooms(uid); return { anfitrion: !!l, vence: l ? new Date(l.vence).toISOString() : null, salasMax: l ? l.salas : CFG.gratisSalasMax, salasUsadas: own.length, salas247: own.filter(r => r.plan247).length, gratisMax: CFG.gratisSalasMax, max247: max247(), activas247: [...rooms.values()].filter(r => r.plan247).length }; }
 function createRoom(uid, nombre, publica, want247) {
@@ -330,7 +333,7 @@ function handler(req, res) {
     if (p === '/salas') {
       const a = auth(Q('uid'), Q('tok'), () => (ip === '127.0.0.1' || ip === '::1' || !limited('reg:' + ip, CFG.registrosPorDiezMinIp, 600000))), uid = a.ok ? a.uid : null;
       freshAll().then(() => { const list = [...rooms.values()].filter(r => !r.dynamic || r.publica || (uid && r.owner === uid)).map(r => Object.assign(r.info(), { mia: !!(uid && r.owner === uid) }));
-        list.sort((x, y) => (x.usuario ? 1 : 0) - (y.usuario ? 1 : 0) || (y.jugadores - x.jugadores)); json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), crear: CFG.salasUsuario, plan: uid ? planOf(uid) : { anfitrion: false, salasMax: CFG.gratisSalasMax, salasUsadas: 0, salas247: 0, gratisMax: CFG.gratisSalasMax, max247: max247() }, salas: list }); }); return; }
+        list.sort((x, y) => (x.usuario ? 1 : 0) - (y.usuario ? 1 : 0) || (y.jugadores - x.jugadores)); json(res, 200, { servidor: CFG.nombreServidor, ice: ICE(), crear: CFG.salasUsuario, plan: uid ? planOf(uid) : { anfitrion: false, salasMax: CFG.gratisSalasMax, salasUsadas: 0, salas247: 0, gratisMax: CFG.gratisSalasMax, max247: max247() }, salas: list, app: appInfo() }); }); return; }
     if (p === '/sala/crear') {
       if (limited('crear:' + ip, 12, 3600000)) return json(res, 429, { ok: false, error: 'Demasiadas salas creadas desde este dispositivo. Intenta más tarde.' });
       const a = auth(Q('uid'), Q('tok'), true); if (!a.ok) return json(res, 403, { ok: false, error: a.error });
