@@ -83,6 +83,11 @@ Desde la v14.0 el juego se conecta al servidor por **WebSocket** (ya no usa WebR
 | `salas247Max`, `simular247`, `licenciaSalasPorDefecto` | Cupo de salas 24/7; `simular247: true` hace que el mundo siga corriendo sin jugadores; salas por licencia (3). |
 | `dormirTrasMin` | Minutos sin jugadores antes de dormir la sala (0 = nunca). |
 | `appUltima` | (Opcional) Anuncia la última versión de la app: `{ "codigo": 146, "version": "14.9", "notas": ["…"] }` (`codigo` = versionCode de Google Play). La app Android avisa «hay una versión nueva» a quien tenga un código menor cuando abre la lista de salas. Sin este bloque no se anuncia nada (la app también se entera por Google Play por su cuenta). |
+| `autoridadPersonaje` | `true` (por defecto). **v15.0:** el personaje de cada invitado (mochila, habilidades) se guarda en el servidor, por identidad, en `datos/salas/<SALA>/personajes/`, y se entrega al entrar. El teléfono ya no es la fuente: no sirve editar el guardado ni recuperar un personaje muerto. Las versiones antiguas de la app siguen jugando como antes, sin esta protección. |
+| `muerteBorraPersonaje` | `"modo"` (por defecto): al morir se borra el personaje **solo en salas de modo `full`** (en `casual` se conserva, como hasta ahora). `true` = siempre, `false` = nunca. |
+| `validarDano` | `true` (por defecto). **v15.0:** el servidor comprueba el daño que mandan los invitados (alcance, arma, cadencia). Los golpes imposibles se ignoran y se anotan en el registro (`daño rechazado…`); con muchos seguidos se expulsa al jugador. |
+| `versionMinimaApp` | `0` (por defecto: no exigir). Un número de `versionCode` de la app (la v15.0 es **147**): quien tenga una versión menor no puede entrar y ve «actualiza la app». Úsalo cuando quieras cerrar la puerta a versiones sin protección. |
+| `personajeCaducaDias` | `60`: se borran los personajes guardados que no se han tocado en tantos días. |
 | `simularSinJugadores` | `false`: sala vacía en pausa. `true`: el mundo sigue sin gente, con el anfitrión aparcado lejos del punto de entrada (los zombis se acumulan con los días). |
 | `fpsServidor` | Pasos por segundo del anfitrión (30 por defecto; menos CPU). |
 | `guardarCadaSeg`, `copias` | Guardado automático (120 s) y copias a conservar (una cada 30 min). |

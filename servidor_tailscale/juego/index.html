@@ -893,7 +893,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v14.9 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v15.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2298,8 +2298,12 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 146, UR_VERSION = '14.9', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 147, UR_VERSION = '15.0', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '15.0', t: 'Salas más seguras', it: [
+    'El servidor ahora <b>comprueba los golpes y disparos</b> que se hacen en las salas (alcance, arma y cadencia): menos tramposos.',
+    'Tu personaje de las salas se guarda <b>en el servidor</b>: ya no se puede recuperar un personaje muerto ni inventar objetos desde el teléfono.',
+    'En las salas de modo completo, al morir pierdes el personaje de esa sala.' ] },
   { v: '14.9', t: 'Novedades y aviso de actualización', it: [
     'Nuevo botón <b>NOVEDADES</b> (menú principal y Ajustes → Datos): aquí ves qué cambió en cada versión.',
     'Aviso automático cuando hay una versión nueva en Google Play, con botón para actualizar.',
@@ -4434,7 +4438,7 @@ function spawnZombies(list) {
 const DROPS = [['rag', 3], ['bandage', 1.2], ['pills', 1], ['matches', 1.2], ['bar', 1.2], ['chips', 1], ['soda', 1], ['alcohol', .6], ['battery', .6]];
 function damageZombie(z, dmg, o) {
   o = o || {};
-  if (NET.role === 'guest' && !o.remote) { netSend({ t: 'HZ', id: z.id, dmg, o: { kd: o.kd, big: o.big, crit: o.crit, noPush: o.noPush, fire: o.fire } }); o = Object.assign({}, o, { vis: 1 }); }
+  if (NET.role === 'guest' && !o.remote) { netSend({ t: 'HZ', id: z.id, dmg, o: { kd: o.kd, big: o.big, crit: o.crit, noPush: o.noPush, fire: o.fire, src: o.src, w: o.src && P.eq ? P.eq.id : undefined } }); o = Object.assign({}, o, { vis: 1 }); }
   const F = o.from || P;
   z.hp -= dmg; z.hitT = performance.now(); z.hitDir = ((F.x - F.y) > (z.x - z.y)) ? 1 : -1;
   if (!o.fire) {
@@ -5090,7 +5094,7 @@ function resolveMelee() {
     if (Math.random() < ch) {
       any = true; let dmg = meleeMod() * base * (1 + sl('str') * .05) * (1 + sl(skn) * .04) * (P.end < 30 ? .7 : 1) * (.85 + Math.random() * .3);
       const crit = Math.random() < .08 + sl(skn) * .01; if (crit) dmg *= 2; if (z.st === 'down') dmg *= 2.2;
-      damageZombie(z, dmg, { kd: w ? w.kd : .05, big: z.type === 'brute', crit }); addXP(skn, 3);
+      damageZombie(z, dmg, { kd: w ? w.kd : .05, big: z.type === 'brute', crit, src: 'm' }); addXP(skn, 3);
       hitStop = Math.max(hitStop, crit ? .09 : .05); shake = Math.max(shake, crit ? 4 : 2);
       if (P.eq && w && Math.random() < .07) { P.eq.c--; if (P.eq.c <= 0) { say('Tu ' + w.n.toLowerCase() + ' se rompió', 'bad'); removeItem(P.eq, 1); } }
     } else { sfx('swing', 0); if (typeof spawnText === 'function') spawnText(z.x, z.y, 'falló', '#9aa0a8'); }
@@ -5138,7 +5142,7 @@ function fireGun(w) {
     fx.push({ t: 'tr', x1: P.x, y1: P.y, x2: P.x + c * len, y2: P.y + s * len, l: .09 });
     if (hit) {
       const ch = clamp(.9 + sl('aim') * .02 - hd * .008 - P.pain * .0015, .5, .98);
-      if (Math.random() < ch) { const dm = w.dmg * (.85 + Math.random() * .3) * (n > 1 ? clamp(1 - hd / 10, .35, 1) : 1); if (hit.npc) damageNpc(hit, dm, { by: 'p' }); else if (hit.fa) faHit(hit, dm); else damageZombie(hit, dm, { kd: .5, noPush: false }); addXP('aim', 2); }
+      if (Math.random() < ch) { const dm = w.dmg * (.85 + Math.random() * .3) * (n > 1 ? clamp(1 - hd / 10, .35, 1) : 1); if (hit.npc) damageNpc(hit, dm, { by: 'p', src: 'g' }); else if (hit.fa) faHit(hit, dm); else damageZombie(hit, dm, { kd: .5, noPush: false, src: 'g' }); addXP('aim', 2); }
     } else if (len < w.rng) spawnPart('spark', P.x + c * len, P.y + s * len, 1, 3);
   }
   fx.push({ t: 'fl', x: P.x + Math.cos(ang) * .6, y: P.y + Math.sin(ang) * .6, l: .07 });
@@ -5359,11 +5363,11 @@ function saveGame() {
 }
 /* invitado: su personaje (mochila, necesidades, habilidades) se guarda aparte y se recupera al volver al mismo mundo */
 function guestCharSave() {
-  try { const s = buildSave(); localStorage.setItem('UR_GUEST', JSON.stringify({ seed: s.seed, P: s.P })); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+  try { const s = buildSave(), c = JSON.stringify({ seed: s.seed, P: s.P }); if (NET.auth) netSend({ t: 'CHS', c }); else localStorage.setItem('UR_GUEST', c); } catch (e) { typeof dbgc === 'function' && dbgc(e); }   /* v15.0: con «autoridad» el personaje vive en el servidor y el teléfono no es la fuente */
 }
-function guestCharLoad(seed) {
+function guestCharLoad(seed, raw) {
   try {
-    const o = JSON.parse(localStorage.getItem('UR_GUEST') || 'null'); if (!o || o.seed !== seed || !o.P || !Array.isArray(o.P.inv)) return false; const sp = o.P;
+    const o = JSON.parse(raw === undefined ? (localStorage.getItem('UR_GUEST') || 'null') : (raw || 'null')); if (!o || o.seed !== seed || !o.P || !Array.isArray(o.P.inv)) return false; const sp = o.P;
     if (!o.P.inv.every(okIt)) return false;
     Object.assign(P, { dir: sp.dir, hp: sp.hp, hun: sp.hun, thi: sp.thi, fat: sp.fat, end: sp.end, inf: sp.inf, wounds: sp.wounds || [], inv: sp.inv, light: sp.light, sk: sp.sk || P.sk, kills: sp.kills || 0, painkill: sp.painkill, sick: sp.sick || 0, wet: sp.wet || 0, shirt: sp.shirt || P.shirt, cold: sp.cold || 20, prof: sp.prof || 'none', rep: sp.rep || 0 });
     for (const k in SK) if (!P.sk[k]) P.sk[k] = { l: 0, xp: 0 };
@@ -6459,7 +6463,7 @@ function npcProvoke(n) {
 }
 function damageNpc(n, dmg, o) {
   o = o || {}; if (n.st === 'dead') return;
-  if (NET.role === 'guest' && !o.remote) { netSend({ t: 'HN', id: n.id, dmg, o: { noPush: o.noPush } }); n.hp -= dmg; n.hitT = performance.now(); n.stun = .22; sfx('hit', 0); spawnPart('blood', n.x, n.y, 1.2, 6, { dir: Math.atan2(n.y - P.y, n.x - P.x) }); spawnText(n.x, n.y, '-' + Math.round(dmg), '#ffe2b0'); return; }
+  if (NET.role === 'guest' && !o.remote) { netSend({ t: 'HN', id: n.id, dmg, o: { noPush: o.noPush, src: o.src, w: o.src && P.eq ? P.eq.id : undefined } }); n.hp -= dmg; n.hitT = performance.now(); n.stun = .22; sfx('hit', 0); spawnPart('blood', n.x, n.y, 1.2, 6, { dir: Math.atan2(n.y - P.y, n.x - P.x) }); spawnText(n.x, n.y, '-' + Math.round(dmg), '#ffe2b0'); return; }
   n.hp -= dmg; n.hitT = performance.now(); n.stun = .22; sfx('hit', Math.hypot(n.x - P.x, n.y - P.y), n);
   spawnPart('blood', n.x, n.y, 1.2, 6, { dir: Math.atan2(n.y - P.y, n.x - P.x) }); spawnText(n.x, n.y, '-' + Math.round(dmg), '#ffe2b0');
   if (o.by === 'p' && !o.noPush) { const a = Math.atan2(n.y - P.y, n.x - P.x); n.kx = Math.cos(a) * 3.2; n.ky = Math.sin(a) * 3.2; }
@@ -12525,7 +12529,7 @@ function netMkPc() {
 }
 function netBind(ch) {
   NET.ch = ch; ch.binaryType = 'arraybuffer';
-  ch.onopen = () => { NET.lastRx = performance.now(); NET.st = 'linked'; netUI(); if (NET.role === 'guest') netSend({ t: 'hi', n: NET.name || 'Jugador 2' }); };
+  ch.onopen = () => { NET.lastRx = performance.now(); NET.st = 'linked'; netUI(); if (NET.role === 'guest') netSend({ t: 'hi', n: NET.name || 'Jugador 2', b: UR_BUILD }); };
   ch.onclose = () => { netLost(); };
   ch.onmessage = e => { NET.lastRx = performance.now(); if (typeof e.data === 'string') { NET.rxBytes += e.data.length; try { netMsg(JSON.parse(e.data)); } catch (er) { if (typeof console !== 'undefined') console.error('net', er); } } else netBin(e.data); };
 }
@@ -12611,7 +12615,7 @@ function netLost() {
 function netMsg(o) {
   switch (o.t) {
     case 'hi': if (NET.role === 'host' && !NET.sending) { NET.sending = 1; NET.rpName = String(o.n || 'Jugador 2').slice(0, 14); netSendWorld().then(() => { NET.sending = 0; }); } break;                       // (anfitrión) el invitado llegó
-    case 'W0': NET.rx = { n: o.n, gz: o.gz, parts: [], got: 0 }; if (NET.role === 'guest') { NET.st = 'loading'; netUI(); } break;
+    case 'W0': NET.rx = { n: o.n, gz: o.gz, parts: [], got: 0, au: o.au | 0, ch: typeof o.ch === 'string' ? o.ch : null }; if (NET.role === 'guest') { NET.st = 'loading'; netUI(); } break;
     case 'W1': netGuestLoad(); break;
     case 'R': if (NET.role === 'host') { NET.ready = true; NET.st = 'playing'; NET.rp = Object.assign(NET.rp || {}, { ok: 1, name: NET.rpName || 'Jugador 2' }); netUI(); say((NET.rpName || 'Jugador 2') + ' se unió a la partida', 'good'); netSnap(); } break;
     case 'P': netOnPlayer(o); break;
@@ -12678,7 +12682,7 @@ async function netGuestLoad() {
     const s = JSON.parse(await gunzip(all, rx.gz)); audioInit();
     withLoading(() => {
       if (!applySave(s, true)) { netFail('No se pudo cargar el mundo del anfitrión.'); return; }
-      tipSeen.clear(); tipSeen.add('start'); metaNewRun(); const got = guestCharLoad(s.seed); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
+      tipSeen.clear(); tipSeen.add('start'); metaNewRun(); NET.auth = rx.au ? 1 : 0; const got = guestCharLoad(s.seed, rx.au ? (rx.ch || '') : undefined); NET.zm.clear(); NET.nm.clear(); NET.cm.clear(); Z = []; NPCS = [];
       NET.rp = { ok: 0, x: s.P.x, y: s.P.y, nx: s.P.x, ny: s.P.y, dir: 0, sp: {}, anim: 0, name: 'Anfitrión' }; netShadowInit();
       enterGame(); NET.ready = true; NET.st = 'playing'; netSend({ t: 'R' }); $('mpm').hidden = true; netUI(); say(got ? 'Recuperaste tu personaje en este mundo' : 'Te uniste a la partida de tu compañero', 'good');
     });
@@ -21043,7 +21047,7 @@ netSendWorld = async function () {
     const s = buildSave(); s.ex = ''; s.Z = []; s.drv = -1; s.P = { x: P.x, y: P.y }; s.dog = null;
     const { d, gz } = await gzip(JSON.stringify(s));
     if (!NET.peers.includes(peer) || !peer.ch) return;
-    netSendRaw(peer, { t: 'W0', n: d.length, gz }); const CH = 60000;
+    netSendRaw(peer, { t: 'W0', n: d.length, gz, au: peer.chAu ? 1 : 0, ch: peer.chRec || null });   /* v15.0: personaje guardado en el servidor */ const CH = 60000;
     for (let i = 0; i < d.length; i += CH) { while (peer.ch && peer.ch.bufferedAmount > 1500000) await new Promise(r => setTimeout(r, 30)); if (!peer.ch || !NET.peers.includes(peer)) return; peer.ch.send(d.slice(i, i + CH).buffer); }
     netSendRaw(peer, { t: 'W1' });
   } catch (e) { if (typeof console !== 'undefined') console.error(e); netPeerFail(peer, 'No se pudo enviar el mundo.'); }
@@ -24051,7 +24055,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24092,7 +24096,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24115,7 +24119,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24144,7 +24148,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24178,7 +24182,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24209,7 +24213,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24242,7 +24246,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24271,12 +24275,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 14.9') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.0') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 14.9';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

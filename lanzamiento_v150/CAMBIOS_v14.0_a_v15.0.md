@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v14.9 (versionCode 137 → 146)
+# Último Refugio — cambios de la v14.0 a la v15.0 (versionCode 137 → 147)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -33,3 +33,8 @@
 - Botón **NOVEDADES** (menú y Ajustes → Datos) con los cambios de cada versión; se abre solo una vez tras actualizar.
 - **Aviso automático** de versión nueva (Google Play, actualización dentro de la app; el servidor puede anunciarla también con `appUltima`), con botón ACTUALIZAR.
 - Tope de **3000 objetos sueltos en el suelo** por mundo (mundos muy largos); las notas de supervivientes nunca se descartan.
+
+## Autoridad del servidor (v15.0) — ver `actualizacion_v150/CAMBIOS_v15.0_autoridad.md`
+- El servidor **valida los golpes y disparos** de los jugadores (alcance, arma, cadencia) y expulsa a quien manda daño imposible repetidamente.
+- El **personaje del invitado se guarda en el servidor** (no en el teléfono): no se puede editar la mochila ni recuperar un personaje muerto. En salas de modo `full`, morir lo borra.
+- Política de privacidad actualizada; opciones nuevas del servidor: `autoridadPersonaje`, `validarDano`, `versionMinimaApp`, `muerteBorraPersonaje`, `personajeCaducaDias`.

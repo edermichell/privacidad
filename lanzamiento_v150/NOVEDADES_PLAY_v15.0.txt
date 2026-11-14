@@ -1,0 +1,19 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) · 413 caracteres ---
+Novedades de la v15.0:
+• Salas más seguras: el servidor comprueba los golpes y guarda tu personaje.
+• Botón NOVEDADES y aviso automático de actualización.
+• Mapa nuevo gigante (960×960) en las 3 salas oficiales: centro denso, zona industrial, puerto con mar, parques y callejones.
+• Salas públicas y privadas (hasta 10); candados, cofres y robos.
+• Misiones y sucesos mejor repartidos.
+• Más estable en gama baja.
+
+--- English (optional) · 362 characters ---
+What's new in v15.0:
+• Safer rooms: the server checks hits and stores your character.
+• NEWS button and automatic update notice.
+• Giant new 960×960 map in the 3 official rooms: downtown, industrial zone, harbor, parks and alleys.
+• Public/private rooms (up to 10); padlocks, chests and theft.
+• Missions and events better paced.
+• More stable on low-end phones.
