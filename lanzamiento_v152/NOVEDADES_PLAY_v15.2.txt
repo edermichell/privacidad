@@ -1,0 +1,19 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) · 401 caracteres ---
+Novedades de la v15.2:
+• Salas PVP: combate entre jugadores con golpes y disparos; el servidor decide los aciertos. Protección al aparecer y zonas seguras junto a los comerciantes.
+• El servidor comprueba los golpes y guarda tu personaje.
+• Botón NOVEDADES y aviso de actualización.
+• Mapa gigante (960×960) en las 3 salas oficiales.
+• Salas públicas y privadas (hasta 10).
+• Más estable en gama baja.
+
+--- English (optional) · 347 characters ---
+What's new in v15.2:
+• PVP rooms: player-vs-player combat with melee and guns; the server decides hits. Spawn protection and safe zones near traders.
+• The server checks hits and stores your character.
+• NEWS button and update notice.
+• Giant 960×960 map in the 3 official rooms.
+• Public/private rooms (up to 10).
+• More stable on low-end phones.

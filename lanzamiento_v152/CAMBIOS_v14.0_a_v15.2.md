@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.1 (versionCode 137 → 148)
+# Último Refugio — cambios de la v14.0 a la v15.2 (versionCode 137 → 149)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -44,3 +44,8 @@
 - En salas PvP el servidor lleva la vida de cada jugador (solo sube con un presupuesto de curación) y da por muerto al que llegue a 0 aunque el cliente trucado no lo comunique.
 - **Arreglo en Android:** los avisos de confirmación (borrar sala, mundo nuevo, reiniciar, banear) no aparecían y la acción se cancelaba sola; ahora se muestran.
 - Aún sin daño entre jugadores (fase 2).
+
+## Combate entre jugadores (v15.2) — ver `actualizacion_v152/CAMBIOS_v15.2_combate_pvp.md`
+- En las salas `"pvp": true`: golpes y disparos contra otros jugadores decididos por el servidor (propiedad del arma, alcance, línea de visión, cadencia, puntería y daño), protección de aparición (20 s), zonas seguras junto a comerciantes, aparición aleatoria en la costa.
+- Al morir el cuerpo deja todo en el suelo; cortar la conexión en pleno combate (20 s) cuenta como morir.
+- Sin alianzas ni misiones de grupo todavía (fases 3 y 4).

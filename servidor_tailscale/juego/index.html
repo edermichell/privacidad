@@ -896,7 +896,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v15.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v15.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2304,8 +2304,12 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 148, UR_VERSION = '15.1', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 149, UR_VERSION = '15.2', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '15.2', t: 'Combate entre jugadores (salas PVP)', it: [
+    'En las salas marcadas <b>PVP</b> ya puedes atacar a otros jugadores con golpes y disparos; el servidor decide si aciertas y cuánto daño haces.',
+    'Al aparecer tienes <b>20 s de protección</b> y hay <b>zonas seguras</b> junto a los comerciantes.',
+    'Quien muere deja sus cosas en el suelo; si te desconectas en pleno combate, mueres.' ] },
   { v: '15.1', t: 'Más seguridad y confirmaciones', it: [
     'En las salas con reglas especiales, el servidor controla tu <b>vida</b>: no se puede ignorar el daño ni curarse sin límite.',
     'Las confirmaciones («¿Borrar esta sala?», «¿Empezar un mundo nuevo?»…) ahora aparecen en pantalla en Android: antes no se mostraban y la acción se cancelaba sola.' ] },
@@ -5130,6 +5134,7 @@ function resolveMelee() {
     break;
   }
   if (typeof faMelee === 'function' && faMelee(rng, meleeMod() * base * (1 + sl('str') * .05) * (1 + sl(skn) * .04) * (P.end < 30 ? .7 : 1))) { any = true; if (P.eq && w && Math.random() < .07) { P.eq.c--; if (P.eq.c <= 0) { say('Tu ' + w.n.toLowerCase() + ' se rompió', 'bad'); removeItem(P.eq, 1); } } }
+  if (NET.pvp && NET.role === 'guest') pvpMelee(w);   /* v15.2 */
   if (any) camKick(P.dir, 1.8, true);
   makeNoise(P.x, P.y, (w ? w.noise : 3) * (any ? 1.2 : .8));
 }
@@ -5151,6 +5156,7 @@ function fireGun(w) {
   const it = P.eq;
   if (it.a <= 0) { say('Sin munición. Recarga (R)', 'bad'); P.atkCd = .4; sfx('click', 0); return false; }
   it.a--; P.atkCd = w.spd; const ang = aimAngle(); P.dir = ang; P.atk = .0001; P.atkDur = .25; P.hitDone = true;
+  if (NET.pvp && NET.role === 'guest') pvpShot(ang, w);   /* v15.2 */
   const n = w.pellets || 1; const sp = Math.max(.015, .06 - sl('aim') * .005) * (1 + (P.stress || 0) * .01) * s96Acc();   /* v96: puntería según brazos, manos y ojos */
   for (let p = 0; p < n; p++) {
     const a = ang + (Math.random() - .5) * (n > 1 ? .4 : sp * 2), c = Math.cos(a), s = Math.sin(a);
@@ -5382,6 +5388,21 @@ function saveGame() {
   try { localStorage.setItem(SAVEKEY, JSON.stringify(buildSave())); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
 }
 /* invitado: su personaje (mochila, necesidades, habilidades) se guarda aparte y se recupera al volver al mismo mundo */
+/* v15.2 · PvP: los golpes y disparos contra OTROS JUGADORES los resuelve el anfitrión; el cliente solo dice a quién apuntó y con qué arma (nunca el daño) */
+const PV = { eq: '', n: -1 };
+function pvpTargets() { const o = []; if (NET.role !== 'guest' || !NET.pvp || P.dead) return o; for (const r of NET.oth.values()) if (r.ok && !r.dead) o.push(r); return o; }
+function pvpMelee(w) {
+  const rng = w ? w.rng : .85; let best = null, bd = 1e9;
+  for (const r of pvpTargets()) { const d = Math.hypot(r.x - P.x, r.y - P.y); if (d > rng + .6) continue; if (d > .95 && !losClear(P.x, P.y, r.x, r.y)) continue; if (d > .55 && Math.abs(angDiff(Math.atan2(r.y - P.y, r.x - P.x), P.dir)) > 1.25) continue; if (d < bd) { bd = d; best = r; } }
+  if (best) netSend({ t: 'PH', i: best.id, s: 'm', w: P.eq ? P.eq.id : '' });
+}
+function pvpShot(ang, w) {
+  let best = null, bd = 1e9; const c = Math.cos(ang), s = Math.sin(ang);
+  for (const r of pvpTargets()) { const dx = r.x - P.x, dy = r.y - P.y, pr = dx * c + dy * s; if (pr < .2 || pr > w.rng) continue; const pe = Math.abs(-dx * s + dy * c); if (pe > .55 + pr * .02) continue; if (pr > 1.1 && !losClear(P.x, P.y, r.x, r.y)) continue; if (pr < bd) { bd = pr; best = r; } }
+  if (best) netSend({ t: 'PH', i: best.id, s: 'g', w: P.eq.id });
+}
+/* el anfitrión debe conocer mi arma y mi mochila al instante: se manda el personaje cuando cambia el arma o el número de objetos */
+setInterval(() => { try { if (NET.role === 'guest' && NET.pvp && NET.auth && STATE === 'play' && P && !P.dead) { const id = P.eq ? P.eq.id : '', n = P.inv.length; if (id !== PV.eq || n !== PV.n) { PV.eq = id; PV.n = n; guestCharSave(); } } } catch (e) { } }, 400);
 function guestCharSave() {
   try { const s = buildSave(), c = JSON.stringify({ seed: s.seed, P: s.P }); if (NET.auth) netSend({ t: 'CHS', c }); else localStorage.setItem('UR_GUEST', c); } catch (e) { typeof dbgc === 'function' && dbgc(e); }   /* v15.0: con «autoridad» el personaje vive en el servidor y el teléfono no es la fuente */
 }
@@ -12661,7 +12682,8 @@ function netMsg(o) {
     case 'NK': if (NET.role === 'guest') { P.kills++; addXP('aim', 1); } break;
     case 'EV': netEvent(o); break;
     case 'DF': if (NET.role === 'host' && EV.dog && EV.dog.st === 'stray') { EV.dog.st = 'pet'; EV.dog.own = 'g'; EV.dog.gid = NET.cur ? NET.cur.slot : 0; EV.dog.sit = 0; } break;
-    case 'HP': if (NET.role === 'guest' && P && !P.dead) { if (o.k) { P.hp = 0; die(o.by ? 'Te mató ' + String(o.by).slice(0, 14) : 'Tu cuerpo no resistió'); } else if (isFinite(o.h) && o.h >= 0 && o.h < P.hp) { P.hp = o.h; try { shake = 4; } catch (e) { } } } break;   /* v15.1: el anfitrión manda la vida en salas PvP */
+    case 'HP': if (NET.role === 'guest' && P && !P.dead) { if (o.k) { P.hp = 0; die(o.by ? 'Te mató ' + String(o.by).slice(0, 14) : 'Tu cuerpo no resistió'); } else if (isFinite(o.h) && o.h >= 0 && o.h < P.hp) { P.hp = o.h; try { shake = 4; } catch (e) { } if (o.by) say(String(o.by).slice(0, 14) + ' te hirió', 'bad'); } } break;   /* v15.1: el anfitrión manda la vida en salas PvP */
+    case 'PX': if (NET.role === 'guest') { say(o.k ? 'Mataste a ' + String(o.n || '?').slice(0, 14) : 'Acertaste a ' + String(o.n || '?').slice(0, 14), o.k ? 'good' : 'tip'); try { sfx('hit', 0); } catch (e) { } } break;   /* v15.2: aviso de impacto o baja */
     case 'say': say(o.m, o.c); break;
     case 'end': if (NET.role === 'guest') { const m = o.m || 'La sala se cerró.'; netClose(); netUI(); if (STATE === 'play' || STATE === 'dead') { say(m, 'bad'); setTimeout(() => { if (STATE !== 'menu') toMenu(); }, 2600); } else NET.err = m; } break;
     case 'bye': if (NET.role === 'host') netLost(); break;
@@ -24077,7 +24099,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24118,7 +24140,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24141,7 +24163,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24170,7 +24192,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24204,7 +24226,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24235,7 +24257,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24268,7 +24290,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24297,12 +24319,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.1') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 15.2') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 15.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
