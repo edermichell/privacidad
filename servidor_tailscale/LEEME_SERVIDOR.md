@@ -88,6 +88,7 @@ Desde la v14.0 el juego se conecta al servidor por **WebSocket** (ya no usa WebR
 | `validarDano` | `true` (por defecto). **v15.0:** el servidor comprueba el daño que mandan los invitados (alcance, arma, cadencia). Los golpes imposibles se ignoran y se anotan en el registro (`daño rechazado…`); con muchos seguidos se expulsa al jugador. |
 | `versionMinimaApp` | `0` (por defecto: no exigir). Un número de `versionCode` de la app (la v15.0 es **147**): quien tenga una versión menor no puede entrar y ve «actualiza la app». Úsalo cuando quieras cerrar la puerta a versiones sin protección. |
 | `personajeCaducaDias` | `60`: se borran los personajes guardados que no se han tocado en tantos días. |
+| `pvp` (en una sala) | **v15.1:** `{ "id": "SALA4", "nombre": "Frontera PvP", "pvp": true }`. Sala PvP: modo completo forzado, morir borra el personaje, exige la app 15.1+ (`versionCode 148`), etiqueta PVP y aviso en la app, y el servidor lleva la vida de cada jugador (solo sube con un presupuesto de curación; si llega a 0 el jugador muere aunque su cliente lo ignore). **Aún sin daño entre jugadores (v15.2): no la abras al público todavía.** |
 | `simularSinJugadores` | `false`: sala vacía en pausa. `true`: el mundo sigue sin gente, con el anfitrión aparcado lejos del punto de entrada (los zombis se acumulan con los días). |
 | `fpsServidor` | Pasos por segundo del anfitrión (30 por defecto; menos CPU). |
 | `guardarCadaSeg`, `copias` | Guardado automático (120 s) y copias a conservar (una cada 30 min). |

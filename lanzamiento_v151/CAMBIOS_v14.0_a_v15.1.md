@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.0 (versionCode 137 → 147)
+# Último Refugio — cambios de la v14.0 a la v15.1 (versionCode 137 → 148)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -38,3 +38,9 @@
 - El servidor **valida los golpes y disparos** de los jugadores (alcance, arma, cadencia) y expulsa a quien manda daño imposible repetidamente.
 - El **personaje del invitado se guarda en el servidor** (no en el teléfono): no se puede editar la mochila ni recuperar un personaje muerto. En salas de modo `full`, morir lo borra.
 - Política de privacidad actualizada; opciones nuevas del servidor: `autoridadPersonaje`, `validarDano`, `versionMinimaApp`, `muerteBorraPersonaje`, `personajeCaducaDias`.
+
+## Sala PvP y vida con autoridad del servidor (v15.1) — ver `actualizacion_v151/CAMBIOS_v15.1_sala_pvp_vida.md`
+- Atributo `pvp` de sala (modo completo forzado, morir borra el personaje, exige app 15.1), etiqueta PVP y aviso al entrar.
+- En salas PvP el servidor lleva la vida de cada jugador (solo sube con un presupuesto de curación) y da por muerto al que llegue a 0 aunque el cliente trucado no lo comunique.
+- **Arreglo en Android:** los avisos de confirmación (borrar sala, mundo nuevo, reiniciar, banear) no aparecían y la acción se cancelaba sola; ahora se muestran.
+- Aún sin daño entre jugadores (fase 2).

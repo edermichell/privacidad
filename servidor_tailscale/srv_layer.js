@@ -47,6 +47,7 @@ SRV.boot = function (opt) {
         Se entrega con el mundo al entrar, se guarda cada pocos segundos y, si el modo es completo, se borra al morir.
      Las versiones anteriores de la app (sin «b» en el saludo) siguen jugando como antes, sin esta protección (se pueden excluir con «versionMinimaApp»). */
   SRV.auth = opt.aut !== false && typeof window.__srvChar === 'function'; SRV.val = opt.val !== false; SRV.minB = opt.minB | 0; SRV.muerte = opt.muerte === undefined ? 'modo' : opt.muerte;
+  SRV.pvp = !!opt.pvp; if (SRV.pvp) NET.pvpRoom = 1;   /* v15.1: sala PvP (el servidor la fuerza a modo completo, con muerte que borra el personaje) */
   const slog = m => { try { if (typeof window.__srvLog === 'function') window.__srvLog(m); } catch (e) { } };
   const who = p => 'jugador ' + (p.slot || '?') + ' (' + String(p.uid || '').slice(0, 6) + ')';
   const charCall = async (op, uid, data) => { try { return await Promise.race([window.__srvChar(op, uid, data || ''), new Promise((_, j) => setTimeout(() => j(new Error('t')), 3000))]); } catch (e) { return { ok: false }; } };
@@ -99,8 +100,32 @@ SRV.boot = function (opt) {
       }
       return _m.apply(this, arguments);
     }; }
+  /* ----- v15.1 · VIDA CON AUTORIDAD DEL SERVIDOR (salas PvP) -----
+     El anfitrión lleva su propia cuenta de la vida de cada jugador («A»): puede bajar con lo que el cliente cuente (daño que se hace a sí mismo), pero solo SUBE hasta un presupuesto de curación
+     (30 al entrar, +2 por segundo, máximo 80): una curación legítima cabe, un «vida infinita» no. El daño entre jugadores (fase 2) se aplica aquí, con SRV.pvpHurt.
+     Si A llega a 0, el anfitrión declara la muerte y borra el personaje del servidor aunque el cliente trucado ignore el aviso o no la comunique. */
+  SRV.hpSync = (peer, h) => {
+    if (!isFinite(h)) return; const now = performance.now();
+    if (peer.A === undefined) { peer.A = Math.max(0, Math.min(120, h)); peer.bud = 30; peer.hpT = now; return; }
+    const dt = Math.min(2, Math.max(0, (now - peer.hpT) / 1000)); peer.hpT = now; peer.bud = Math.min(80, peer.bud + dt * 2);
+    if (h <= peer.A) peer.A = Math.max(0, h);
+    else { const inc = h - peer.A, ok = Math.min(inc, peer.bud); peer.A += ok; peer.bud -= ok;
+      if (inc > ok + 2 && now - (peer.hpMsgT || 0) > 1000) { peer.hpMsgT = now; peer.hpFix = (peer.hpFix | 0) + 1; netSendRaw(peer, { t: 'HP', h: Math.round(peer.A) }); if (peer.hpFix <= 3 || peer.hpFix % 20 === 0) slog('vida corregida de ' + who(peer) + ' (decía ' + Math.round(h) + ', permitido ' + Math.round(peer.A) + ')'); } }
+    if (peer.A <= 0) SRV.pvpKill(peer, null);
+  };
+  SRV.pvpHurt = (peer, dmg, by) => {
+    if (!SRV.pvp || !peer || peer.A === undefined || peer.chDead || !(dmg > 0)) return false; peer.A = Math.max(0, peer.A - dmg);
+    if (peer.A <= 0) SRV.pvpKill(peer, by); else netSendRaw(peer, { t: 'HP', h: Math.round(peer.A), by: by ? String(by).slice(0, 14) : undefined }); return true;
+  };
+  SRV.pvpKill = (peer, by) => {
+    if (peer.chDead) return; peer.chDead = 1; peer.chPend = null; peer.A = 0;
+    netSendRaw(peer, { t: 'HP', h: 0, k: 1, by: by ? String(by).slice(0, 14) : undefined }); if (SRV.auth && peer.chAu) charCall('del', peer.uid, '');
+    slog(who(peer) + ' murió' + (by ? ' (' + by + ')' : '') + ': personaje borrado');
+    setTimeout(() => { try { if (NET.peers.includes(peer) && !(peer.rp && peer.rp.dead)) { netSendRaw(peer, { t: 'end', m: 'Moriste. Tu personaje se perdió.' }); setTimeout(() => { try { netPeerLost(peer, true); } catch (e) { } }, 400); } } catch (e) { } }, 2500);   /* un cliente honrado ya muestra su pantalla de muerte; solo se echa al que no comunicó su muerte */
+  };
   { const _op = netOnPlayer; netOnPlayer = function (o) {
       const r = _op.apply(this, arguments);
+      try { const pe = NET.cur; if (SRV.pvp && pe && o && !pe.chDead && !o.k) SRV.hpSync(pe, +o.h); } catch (e) { }
       try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { charCall('del', peer.uid, ''); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
       return r;
     }; }
