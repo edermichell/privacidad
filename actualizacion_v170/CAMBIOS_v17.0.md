@@ -50,3 +50,6 @@ Al empezar el brote, el ejército intentó contenerlo: **selló el hospital con 
 
 ## Opciones del servidor (config.json, todas opcionales)
 `zonasRojas` (true), `armarioHerramientas` (true), `armarioRadio` (12), `armarioMax` (3), `mantenimientoHoras` (6), `reaparicionSeg` (10), `reaparicionExtraSeg` (15), `reaparicionMaxSeg` (90). En una sala concreta, `"proteccionBases": true/false` manda sobre el valor por defecto (PvP: sin protección).
+
+## Arreglo: menú de pausa en pantallas bajas
+- En algunos teléfonos el menú de pausa no cabía y no se veía «Guardar y salir al menú». Ahora la cabecera (día, hora, zombis) queda fija y **los botones se deslizan con el dedo**; si hay más abajo aparece «▼ DESLIZA PARA VER MÁS». Comprobado en 640×320, 740×360, 800×360, 915×412, 1032×600 y 1280×800: el menú siempre cabe en la pantalla y se llega al botón de salir (`prueba_menu_pausa_v170.js`).

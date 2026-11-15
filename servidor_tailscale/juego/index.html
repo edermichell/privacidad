@@ -23252,6 +23252,16 @@ function zr17Tick(dt) {
   }; }
 { const _nl = netLeave; netLeave = function () { try { if (NET.role === 'guest') { ZR17.tcz = []; ZR17.tcm = new Map(); ZR17.zr = []; ZR17.inZ = null; LK.rh.clear(); } } catch (e) { } return _nl.apply(this, arguments); }; }
 
+/* v17.0: menú de pausa deslizable (en algunos teléfonos no se veía «Guardar y salir al menú») */
+(function pz170() {
+  const pz = document.getElementById('pause'), b = pz && pz.querySelector('.pz-b'); if (!b) return;
+  const m = document.createElement('div'); m.id = 'pzMore'; m.innerHTML = '<i>&#9660;</i>DESLIZA PARA VER MÁS'; pz.appendChild(m);
+  const upd = () => { const more = b.scrollHeight - b.clientHeight - b.scrollTop > 6; m.classList.toggle('on', !pz.hidden && more); };
+  b.addEventListener('scroll', upd, { passive: true }); addEventListener('resize', () => setTimeout(upd, 60));
+  for (const ev of ['touchstart', 'touchmove']) b.addEventListener(ev, e => e.stopPropagation(), { passive: true });   /* que el juego no se quede el gesto */
+  new MutationObserver(() => { if (!pz.hidden) { b.scrollTop = 0; setTimeout(upd, 30); setTimeout(upd, 400); } else m.classList.remove('on'); }).observe(pz, { attributes: true, attributeFilter: ['hidden'] });
+  new MutationObserver(() => setTimeout(upd, 30)).observe(b, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+})();
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
   key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
@@ -25030,6 +25040,16 @@ body #tut button,body #quest button{border-radius:999px}
 #spPanel .spn{font-size:16px;color:var(--dim);margin-top:8px;line-height:1.1}#spPanel .spn b{color:var(--bone);font-weight:normal}
 #spPanel .spa{margin-top:8px}#spPanel .spa[hidden]{display:none}#spPanel .spa .mbp small{display:block;font-family:var(--font);font-size:15px;letter-spacing:0;margin-top:2px;color:#2a1a04}
 @media (max-height:520px){#spPanel{padding:6px 8px}#spPanel .spl{max-height:30vh;gap:4px}#spPanel .spb{padding:5px 9px}#spPanel .sps{margin:1px 0 4px;font-size:15px}}
+</style>
+<style id="pz170">
+/* v17.0: el menú de pausa cabe en cualquier pantalla: cabecera fija y botones deslizables */
+body #pause{display:flex;flex-direction:column;max-height:calc(100vh - 12px);max-height:calc(100dvh - 12px);overflow:hidden}
+body #pause .pz-h,body #pause .pz-s{flex:none}
+body #pause .pz-b{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#3d5a45 transparent}
+body #pause .pz-b::-webkit-scrollbar{width:6px}body #pause .pz-b::-webkit-scrollbar-thumb{background:#3d5a45;border-radius:3px}
+#pzMore{position:absolute;left:0;right:0;bottom:0;height:34px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;pointer-events:none;background:linear-gradient(transparent,#0c130eee 70%);font-family:var(--disp);font-size:8px;letter-spacing:.18em;color:var(--amber);text-shadow:1px 1px 0 #000;transition:opacity .2s;opacity:0}
+#pzMore.on{opacity:1}#pzMore i{font-style:normal;display:inline-block;margin-right:6px;animation:pzm 1.1s ease-in-out infinite}@keyframes pzm{50%{transform:translateY(3px)}}
+@media (max-height:420px){body #pause .pz-h small{display:none}body #pause .pz-h{padding:5px 12px 4px}body #pause .pz-s b{font-size:17px}}
 </style>
 </body>
 </html>
