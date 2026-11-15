@@ -1,17 +1,17 @@
 PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
 
 --- Español (Latinoamérica / España) ---
-Novedades de la v16.0:
+Novedades de la v16.1:
 • Interfaz renovada: menús, botones y ventanas más limpios y fáciles de leer.
+• Partidas largas más fluidas: menos cálculo con miles de zombis.
 • Pon tu nombre en las salas: los demás lo ven y nadie más puede usarlo.
 • Duerme en una cama y volverás a aparecer en ella; si no, donde lo dejaste.
 • Salas PVP más justas: el servidor sabe de dónde sale cada arma y cada bala.
-• Ves el uniforme de los zombis policía y soldado, con su botín.
 
 --- English (optional) ---
-What's new in v16.0:
+What's new in v16.1:
 • Refreshed interface: cleaner, easier-to-read menus, buttons and windows.
+• Smoother long games: less work with thousands of zombies.
 • Set your name in rooms: others see it and nobody else can use it.
 • Sleep in a bed and you will respawn there; otherwise where you left.
 • Fairer PVP rooms: the server knows where every gun and bullet comes from.
-• See police and soldier zombie uniforms, with their loot.

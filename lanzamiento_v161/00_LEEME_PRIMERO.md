@@ -1,11 +1,11 @@
-# Lanzamiento v16.0 — qué hay en esta carpeta
-1. `GUIA_SUBIR_v16.0.md` ← **empieza aquí: los 8 pasos para lanzar la 16.0** (política, compilar, subir a Play, servidor).
-2. `UltimoRefugio_AndroidStudio_v16.0.zip` — proyecto de la app (versionCode 157, «16.0»), con la política nueva y el resumen de cambios.
+# Lanzamiento v16.1 — qué hay en esta carpeta
+1. `GUIA_SUBIR_v16.1.md` ← **empieza aquí: los 8 pasos para lanzar la 16.1** (política, compilar, subir a Play, servidor).
+2. `UltimoRefugio_AndroidStudio_v16.1.zip` — proyecto de la app (versionCode 158, «16.1»), con la política nueva y el resumen de cambios.
 3. `privacy.html` — política de privacidad **actualizada (v15.9)** (súbela a tu URL pública antes de enviar la app).
-4. `NOVEDADES_PLAY_v16.0.txt` — texto de «novedades» (es + en).
-5. `correo_testers_v160/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
+4. `NOVEDADES_PLAY_v16.1.txt` — texto de «novedades» (es + en).
+5. `correo_testers_v161/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
-7. `CAMBIOS_v14.0_a_v16.0.md` — todo lo que cambió desde la versión que está en revisión.
+7. `CAMBIOS_v14.0_a_v16.1.md` — todo lo que cambió desde la versión que está en revisión.
 
 **IMPORTANTE (v15.5):** corrige el fallo por el que en las salas no se veía a los demás jugadores (solo un «Anfitrión»). Lee `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md` (en la raíz): explica la causa, por qué hay que actualizar la app y la opción mínima **14.0.1**.
 
@@ -17,4 +17,6 @@
 
 **v15.9:** cada jugador puede poner **su nombre** (único en el servidor; botón «Quitar nombre» en el panel). Al volver a una sala aparece **en su cama** si durmió en una, si no **donde lo dejó**, y tras morir **en un lugar al azar** (esto último funciona con el servidor nuevo desde la app 15.0). Ver `actualizacion_v159/CAMBIOS_v15.9.md`. **Si todavía no subiste la 15.8, sube directamente la 15.9: incluye todo.**
 
-**v16.0:** interfaz renovada (menús, botones y ventanas limpios; arregla los solapes del menú en el teléfono). Solo cambia el aspecto. Ver `actualizacion_v160/` (incluye `antes_y_despues.jpg`). **Si todavía no subiste la 15.8 ni la 15.9, sube directamente la 16.0: incluye todo.**
+**v16.0:** interfaz renovada (menús, botones y ventanas limpios; arregla los solapes del menú en el teléfono). Solo cambia el aspecto. Ver `actualizacion_v160/` (incluye `antes_y_despues.jpg`). 
+
+**v16.1:** partidas largas más fluidas (−18 % de cálculo con miles de zombis). Ver `actualizacion_v161/INFORME_RENDIMIENTO_v16.1.md`. **Si todavía no subiste ninguna de las 15.8–16.0, sube directamente la 16.1: incluye todo.**

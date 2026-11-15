@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v16.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v16.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2325,8 +2325,11 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 157, UR_VERSION = '16.0', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 158, UR_VERSION = '16.1', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '16.1', t: 'Partidas largas más fluidas', it: [
+    'Con miles de zombis en el mapa (a partir del día 4–5) el juego <b>calcula mucho menos</b>: solo se ocupa en detalle de los que están cerca de algún jugador.',
+    'Las hordas amontonadas y las hogueras ya no frenan el juego.' ] },
   { v: '16.0', t: 'Interfaz renovada', it: [
     'Menús y botones <b>más limpios</b>: un botón principal claro, los demás iguales y el color de cada sección en su icono.',
     'Ventanas, ajustes y multijugador con un diseño más ordenado y fácil de leer.',
@@ -5092,7 +5095,9 @@ function updFires(dt) {
     if (dp < r + .15) { P.hp -= (f.kind === 'camp' ? 5 : 8) * dt; P.pain = Math.min(100, P.pain + 10 * dt); P.hurt = Math.max(P.hurt, .25); P.burnT -= dt; if (P.burnT <= 0) { P.burnT = 2; say('¡Te quemas!', 'bad'); } if (P.hp <= 0) die('Moriste quemado'); }
     if (f.kind === 'camp' && dp < 2.4) P.wet = Math.max(0, P.wet - 8 * dt);
   }
+  let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9; if (bf) for (let k = 0; k < bf.length; k += 2) { const f = bf[k]; if (f.x < bx0) bx0 = f.x; if (f.x > bx1) bx1 = f.x; if (f.y < by0) by0 = f.y; if (f.y > by1) by1 = f.y; } bx0 -= 1.2; bx1 += 1.2; by0 -= 1.2; by1 += 1.2;   /* v16.1 */
   if (bf) for (const z of Z) {
+    if (z.x < bx0 || z.x > bx1 || z.y < by0 || z.y > by1) continue;
     if (z.st === 'dead') continue;
     for (let k = 0; k < bf.length; k += 2) { const f = bf[k], dx = z.x - f.x; if (dx > 1.2 || dx < -1.2) continue; if (Math.hypot(dx, z.y - f.y) < bf[k + 1]) { z.burn = Math.max(z.burn, 3); break; } }
   }
@@ -6645,7 +6650,10 @@ function npcShoot(n, tx, ty, tgt) {
    Se construye una vez por actualización del mundo y reutiliza los buckets;
    así los compañeros no recorren la horda completa por cada escaneo. */
 const NPC_Z_CELL = 8, NPC_Z_GRID = new Map(), NPC_Z_GRID_KEYS = [], NPC_Z_ORDER = new WeakMap();
+const NPCZ161 = { dirty: 0 };
+function npcGridEnsure() { if (NPCZ161.dirty) { NPCZ161.dirty = 0; npcBuildZombieGrid(); } }
 function npcBuildZombieGrid() {
+  NPCZ161.dirty = 0;
   for (let i = 0; i < NPC_Z_GRID_KEYS.length; i++) {
     const bucket = NPC_Z_GRID.get(NPC_Z_GRID_KEYS[i]); if (bucket) bucket.length = 0;
   }
@@ -6653,6 +6661,7 @@ function npcBuildZombieGrid() {
   for (let zi = 0; zi < Z.length; zi++) {
     const z = Z[zi];
     if (z.st === 'dead') continue;
+    if ((Math.abs(z.x - P.x) > 100 || Math.abs(z.y - P.y) > 100) && !netNear(z.x, z.y, 100)) continue;   /* v16.1 */
     NPC_Z_ORDER.set(z, zi); // mantiene el desempate original por orden de Z sin añadir campos serializables
     const cx = Math.floor(z.x / NPC_Z_CELL), cy = Math.floor(z.y / NPC_Z_CELL), key = cy * 65536 + cx;
     let bucket = NPC_Z_GRID.get(key);
@@ -6662,6 +6671,7 @@ function npcBuildZombieGrid() {
   }
 }
 function npcGridEachNear(x, y, radius, visit) {
+  npcGridEnsure();
   const x0 = Math.floor((x - radius) / NPC_Z_CELL), x1 = Math.floor((x + radius) / NPC_Z_CELL);
   const y0 = Math.floor((y - radius) / NPC_Z_CELL), y1 = Math.floor((y + radius) / NPC_Z_CELL);
   for (let cy = y0; cy <= y1; cy++) for (let cx = x0; cx <= x1; cx++) {
@@ -6675,6 +6685,7 @@ function npcGridEachNear(x, y, radius, visit) {
 const NPC_AI126 = { threatScans: 0, threatCandidates: 0, attractScans: 0, attractCandidates: 0, biteScans: 0, biteCandidates: 0, biteHits: 0 };
 function npcAiTrack126() { return !!(window.__UR_PERF && window.__UR_PERF.diagOn); }
 function npcThreat(n) {
+  npcGridEnsure();
   let best = null, bd = 99;
   const track = npcAiTrack126(); if (track) NPC_AI126.threatScans++;
   const x0 = Math.floor((n.x - 10) / NPC_Z_CELL), x1 = Math.floor((n.x + 10) / NPC_Z_CELL);
@@ -6693,6 +6704,7 @@ function npcThreat(n) {
   n.thr = best; n.thrD = bd;
 }
 function npcZombieAttract(n) {
+  npcGridEnsure();
   const track = npcAiTrack126(); if (track) NPC_AI126.attractScans++;
   const x0 = Math.floor((n.x - 8) / NPC_Z_CELL), x1 = Math.floor((n.x + 8) / NPC_Z_CELL);
   const y0 = Math.floor((n.y - 8) / NPC_Z_CELL), y1 = Math.floor((n.y + 8) / NPC_Z_CELL);
@@ -6708,6 +6720,7 @@ function npcZombieAttract(n) {
   }
 }
 function npcZombieBites(n) {
+  npcGridEnsure();
   const track = npcAiTrack126(); if (track) NPC_AI126.biteScans++;
   const x0 = Math.floor((n.x - 1) / NPC_Z_CELL), x1 = Math.floor((n.x + 1) / NPC_Z_CELL);
   const y0 = Math.floor((n.y - 1) / NPC_Z_CELL), y1 = Math.floor((n.y + 1) / NPC_Z_CELL);
@@ -6848,7 +6861,7 @@ function npcMarkCamp(c) {
 }
 function updNpcs(dt) {
   if (!P || P.dead) return;
-  npcBuildZombieGrid();
+  NPCZ161.dirty = 1;   /* v16.1: se construye al primer uso */
   NFT -= dt; if (NEED_F && NFT <= 0) { if (!NFB || NFB.length !== W * H) NFB = new Uint16Array(W * H); NF = bfs(Math.floor(P.x), Math.floor(P.y), 40, NFB); if (NET.role === 'host' && NET.peers.length) netBuildNpcFields(); NFT = .4; } NEED_F = false;
   for (const n of NPCS) { if (n.st === 'dead') continue; if (!n.follow && (Math.abs(n.x - P.x) > 64 || Math.abs(n.y - P.y) > 64) && !netNear(n.x, n.y, 64)) continue; updNpc(n, dt); }
   for (let i = NPCS.length - 1; i >= 0; i--) { const n = NPCS[i]; if (n.wander && !n.follow && n.st !== 'dead' && (Math.abs(n.x - P.x) > 85 || Math.abs(n.y - P.y) > 85) && !netNear(n.x, n.y, 85)) NPCS.splice(i, 1); }
@@ -16923,14 +16936,14 @@ function zsep69(dt) {
     a.push(z);
   }
   if (list.length < 2) return;
-  const MIN = .5; ZS69.n = 0;
+  const MIN = .5; ZS69.n = 0; ZS69.tk = ((ZS69.tk | 0) + 1) % 997;
   for (const z of list) {
     if (z.kx || z.ky || z.boss || z.wb) continue;
-    const cx = Math.floor(z.x), cy = Math.floor(z.y); let ox = 0, oy = 0, c = 0;
+    const cx = Math.floor(z.x), cy = Math.floor(z.y); let ox = 0, oy = 0, c = 0, nb = 0;   /* v16.1: nb = vecinos mirados */
     for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
       const arr = g.get((cx + a + 1000) * 4096 + cy + b + 1000); if (!arr) continue;
-      for (const q of arr) {
-        if (q === z) continue; let dx = z.x - q.x, dy = z.y - q.y; const d2 = dx * dx + dy * dy; if (d2 >= MIN * MIN) continue;
+      for (let qi = 0, qn = arr.length, q0 = qn > 40 ? ((z.id | 0) * 7 + ZS69.tk) % qn : 0; qi < qn; qi++) { const q = arr[(q0 + qi) % qn];   /* v16.1: en un montón, cada zombi mira como mucho 40 vecinos distintos */
+        if (q === z) continue; if (++nb > 40) break; let dx = z.x - q.x, dy = z.y - q.y; const d2 = dx * dx + dy * dy; if (d2 >= MIN * MIN) continue;
         let d = Math.sqrt(d2);
         if (d < .02) { const an = ((z.id | 0) * 2.399 + (q.id | 0) * .7) % 6.2832; dx = Math.cos(an); dy = Math.sin(an); d = .02; } else { dx /= d; dy /= d; }
         const w = (MIN - d) / MIN; ox += dx * w; oy += dy * w; c++;
@@ -16988,6 +17001,7 @@ function rayLen71(x0, y0, ux, uy, len) {
      orden de preferencia: objetivo visible más cercano; si no hay visión, objetivo oculto
      solo para NPC desarmados/no hostiles. */
   npcThreat = function (n) {
+    npcGridEnsure();
     let best = null, bd = 99, bestOrder = Infinity, vis = null, vd = 99, visOrder = Infinity;
     const x0 = Math.floor((n.x - 10) / NPC_Z_CELL), x1 = Math.floor((n.x + 10) / NPC_Z_CELL);
     const y0 = Math.floor((n.y - 10) / NPC_Z_CELL), y1 = Math.floor((n.y + 10) / NPC_Z_CELL);
@@ -24236,7 +24250,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24277,7 +24291,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24300,7 +24314,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+  if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24329,7 +24343,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24363,7 +24377,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+  if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24394,7 +24408,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24427,7 +24441,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24456,12 +24470,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.0') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.1') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

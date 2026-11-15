@@ -83,3 +83,6 @@
 
 ## Interfaz renovada (v16.0) — ver `actualizacion_v160/CAMBIOS_v16.0.md`
 - Un solo sistema de botones y ventanas, color de sección en los iconos, MULTIJUGADOR destacado y sin cortes, menú del teléfono sin solapes.
+
+## Partidas largas más fluidas (v16.1) — ver `actualizacion_v161/INFORME_RENDIMIENTO_v16.1.md`
+- Menos cálculo con miles de zombis (cuadrícula de supervivientes bajo demanda, hogueras y hordas amontonadas): −18 % en la simulación del día 7.
