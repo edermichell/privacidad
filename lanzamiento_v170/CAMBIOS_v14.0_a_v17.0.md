@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v15.7 (versionCode 137 → 154)
+# Último Refugio — cambios de la v14.0 a la v17.0 (versionCode 137 → 161)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -93,3 +93,10 @@
 ## Chat de voz y sala PvP oficial (v16.3) — ver `actualizacion_v163/CAMBIOS_v16.3.md`
 - Chat de voz de proximidad en las salas (40 casillas, volumen por distancia, los zombis lo oyen, silenciar jugadores, apagar en Ajustes; nada se graba).
 - Herramienta para añadir la sala oficial «Frontera PvP».
+
+## Zona Roja (v17.0) — ver `actualizacion_v170/CAMBIOS_v17.0.md`
+- Lo construido tiene vida visible (barra al golpearlo) y se repara con el martillo en la mano (1 tablón + 2 clavos), nunca en pleno asalto.
+- Armario de herramientas: zona de construcción con mantenimiento (tablones y clavos dentro); el servidor rechaza construir o desmontar en zona ajena.
+- Saco de dormir y camas propias: al morir en una sala eliges dónde reaparecer; la espera crece con las muertes de la última hora; un anuncio permite volver al instante.
+- Zonas Rojas: hospital, comisaría y depósito en cuarentena con gas, saqueadores armados y cajas militares; se ven en el mapa.
+- Sala PvP: las bases ya no se protegen cuando sus dueños se desconectan.

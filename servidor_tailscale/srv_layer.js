@@ -433,7 +433,7 @@ SRV.boot = function (opt) {
       const b = peer.chBlob; b.P.x = Math.round(x * 100) / 100; b.P.y = Math.round(y * 100) / 100; if (Array.isArray(peer.bed)) b.srvBed = peer.bed; peer.chPend = JSON.stringify(b); } catch (e) { }
   };
   { const _np2 = netPeerLost; netPeerLost = function (peer) { try { SRV.posFlush(peer); } catch (e) { } return _np2.apply(this, arguments); }; }
-  { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
+  { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'saco' ? 'Apareces en tu saco de dormir.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
   /* ===== v16.3 · CHAT DE VOZ: posiciones para el servidor, aviso al jugador y ruido para los zombis ===== */
   SRV.voz = opt.voz !== false; SRV.vozR = +opt.vozR || 40;
   setInterval(() => { try { if (!SRV.ctl || SRV.ctl.readyState !== 1) return; const l = [];
@@ -561,6 +561,191 @@ SRV.boot = function (opt) {
     }; }
   { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (peer && peer.uid) SRV.seen.set(peer.uid, Date.now()); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
   { const _pl = SRV.players; SRV.players = () => _pl().map(x => { const p = NET.peers.find(q => q.slot === x.slot); return Object.assign(x, { build: p ? p.build | 0 : 0, rechazos: p ? p.rej | 0 : 0 }); }); }
+  /* ===== v17.0 · ZONA ROJA (lado del servidor) =====
+     A) Paredes, puertas y muebles construidos con vida visible: cada golpe se anuncia a todos (LKH) y se reparan con martillo (WRP), nunca en pleno asalto.
+     B) Armario de herramientas: zona de construcción (radio SRV.TC.r) de su dueño y de quien se autorice en él; se paga con tablones y clavos dentro.
+        Sin mantenimiento la zona caduca (la base NO se cae: solo deja de impedir que otros construyan cerca).
+     C) Sacos de dormir y camas propias como puntos de reaparición; la espera crece con las muertes de la última hora; un anuncio permite volver al instante (cada 10 min).
+     D) Zonas Rojas: hospital, comisaría y depósito en cuarentena, con gas (lo aplica el teléfono), saqueadores armados que se reponen y cajas militares con botín propio. */
+  SRV.F17 = 161;
+  const v17 = p => p && p.ready && (p.build | 0) >= SRV.F17;
+  const toV17 = (o, skip) => { for (const p of NET.peers) if (p !== skip && v17(p)) { try { netSendRaw(p, o); } catch (e) { } } };
+  const toAny = o => { for (const p of NET.peers) if (p.ready) { try { netSendRaw(p, o); } catch (e) { } } };
+  const pNear = (x, y, R) => NET.peers.some(p => p.ready && p.rp && p.rp.ok && Math.abs(p.rp.x - x) < R && Math.abs(p.rp.y - y) < R);
+  const tXY = i => [i % W, (i / W) | 0];
+  /* ---- A) vida de lo construido y reparación ---- */
+  SRV.lkHit = new Map(); SRV.REP = { amt: 100, quiet: 15000 };
+  { const _d = lkDamageH; lkDamageH = function (i, d, w) {
+      const t0 = to[i], h0 = LK.rh.has(i) ? LK.rh.get(i) : lkHpOf(t0); const r = _d.apply(this, arguments);
+      try { if (to[i] !== t0) { SRV.lkHit.delete(i); toV17({ t: 'LKH', i, h: 0, m: 0 }); } else if (LK.rh.has(i) && LK.rh.get(i) !== h0) { SRV.lkHit.set(i, Date.now()); toV17({ t: 'LKH', i, h: Math.round(LK.rh.get(i)), m: lkHpOf(t0) }); } } catch (e) { }
+      return r;
+    }; }
+  SRV.wallRepair = (peer, o) => {
+    const i = o.i | 0, re = r => netSendRaw(peer, Object.assign({ t: 'WRPa', q: o.q, i }, r));
+    if (!(i >= 0 && i < W * H) || !lkRaidable(i)) return re({ ok: false, m: 'Eso no se puede reparar.' });
+    const w = lkWho(); if (!lkNear(w, i)) return re({ ok: false, m: 'Acércate más para repararlo.' });
+    const mx = lkHpOf(to[i]), h = LK.rh.has(i) ? LK.rh.get(i) : mx; if (h >= mx) return re({ ok: false, m: 'No está dañado.', h: mx, mx });
+    if (Date.now() - (SRV.lkHit.get(i) || 0) < SRV.REP.quiet) return re({ ok: false, m: 'Lo están golpeando: no se puede reparar en pleno asalto. Espera unos segundos.' });
+    const [x, y] = tXY(i), cl = SRV.tcBlock(x, y, peer.uid); if (cl) return re({ ok: false, m: 'Esta base tiene el armario de herramientas de otro superviviente: solo sus dueños pueden repararla.' });
+    const nh = Math.min(mx, h + SRV.REP.amt); if (nh >= mx) LK.rh.delete(i); else LK.rh.set(i, nh);
+    toV17({ t: 'LKH', i, h: Math.round(nh), m: mx }); re({ ok: true, h: Math.round(nh), mx });
+  };
+  /* ---- B) armario de herramientas ---- */
+  SRV.TC = { on: opt.tc !== false, r: Math.max(6, Math.min(30, +opt.tcR || 12)), max: Math.max(1, Math.min(10, +opt.tcMax || 3)), h: Math.max(1, Math.min(48, +opt.tcH || 6)) };
+  SRV.tcList = () => { const o = []; for (const r of BLD.list) if (r && r.k === 'p' && r.c === 'tc' && to[r.i] === O_LOCKER) o.push(r); return o; };
+  SRV.tcActive = r => !!r.u && r.on !== 0;
+  SRV.tcAuth = (r, uid) => !!uid && (r.u === uid || (Array.isArray(r.au) && r.au.includes(uid)) || !!(SRV.allied && SRV.allied(r.u, uid)));
+  SRV.tcBlock = (x, y, uid) => { if (!SRV.TC.on) return null; for (const r of SRV.tcList()) { if (!SRV.tcActive(r) || SRV.tcAuth(r, uid)) continue; const [cx, cy] = tXY(r.i); if (Math.hypot(cx - x, cy - y) <= SRV.TC.r) return r; } return null; };
+  SRV.tcInfo = r => {
+    const c = containers.get(r.i), it = (c && Array.isArray(c.items)) ? c.items : []; let pl = 0, na = 0; for (const q of it) { if (q.id === 'plank') pl += q.n | 0; else if (q.id === 'nails') na += q.n | 0; }
+    const per = Math.min(pl, Math.floor(na / 2)), left = Math.max(0, (r.pt || 0) - Date.now()) / 3600e3; return Math.round(left + per * SRV.TC.h);
+  };
+  SRV.tcSend = p => {
+    if (!SRV.TC.on || !p || !p.ready || (p.build | 0) < SRV.F17 || !p.rp) return; const q = SRV.vpos ? SRV.vpos(p) : [p.rp.x, p.rp.y], z = [];
+    for (const r of SRV.tcList()) { const own = r.u && r.u === p.uid ? 2 : SRV.tcAuth(r, p.uid) ? 1 : 0, [x, y] = tXY(r.i); if (!own && Math.hypot(x - q[0], y - q[1]) > SRV.TC.r * 3 + 30) continue; z.push([r.i, own, own ? SRV.tcInfo(r) : 0, SRV.tcActive(r) ? 1 : 0]); if (z.length >= 300) break; }
+    try { netSendRaw(p, { t: 'TCZ', r: SRV.TC.r, mx: SRV.TC.max, z }); } catch (e) { }
+  };
+  SRV.tcSendAll = () => { for (const p of NET.peers) SRV.tcSend(p); };
+  SRV.tcUpkeep = () => {
+    if (!SRV.TC.on) return; const now = Date.now(), per = SRV.TC.h * 3600e3;
+    for (const r of SRV.tcList()) {
+      if (!r.u) continue; if (!r.pt) r.pt = now + per; if (now < r.pt) continue;
+      const c = containers.get(r.i); let paid = false;
+      if (c && Array.isArray(c.items)) {
+        const pl = c.items.find(q => q.id === 'plank' && (q.n | 0) >= 1), na = c.items.filter(q => q.id === 'nails').reduce((a, q) => a + (q.n | 0), 0);
+        if (pl && na >= 2) { pl.n -= 1; let need = 2; for (const q of c.items) { if (q.id !== 'nails' || need <= 0) continue; const u = Math.min(need, q.n | 0); q.n -= u; need -= u; } c.items = c.items.filter(q => !(ITEMS[q.id] && ITEMS[q.id].stack) || (q.n | 0) > 0); paid = true; toAny({ t: 'C', i: r.i, items: c.items }); }
+      }
+      const [x, y] = tXY(r.i), own = NET.peers.find(p => p.ready && p.uid === r.u);
+      if (paid) { r.pt = Math.max(r.pt, now - 60e3) + per; if (r.on === 0) { r.on = 1; slog('armario de herramientas de nuevo activo en ' + x + ',' + y); } }
+      else if (r.on !== 0) { r.on = 0; slog('armario de herramientas sin mantenimiento en ' + x + ',' + y + ': su zona ya no protege'); if (own) SRV.aliSay(own, 'Tu armario de herramientas se quedó sin mantenimiento: ya no impide que otros construyan junto a tu base. Mete tablones y clavos.', 'bad'); }
+      if (paid && own && SRV.tcInfo(r) < SRV.TC.h && now - (r.wT || 0) > 2 * 3600e3) { r.wT = now; SRV.aliSay(own, 'A tu armario de herramientas le queda poco mantenimiento (menos de ' + SRV.TC.h + ' h). Mete tablones y clavos.', 'tip'); }
+    }
+  };
+  /* tiles que toca un mensaje de construcción */
+  const bTiles = o => {
+    if (o.k === 'p' || o.k === 'dp' || o.k === 'dw') return (o.i >= 0 && o.i < W * H) ? [tXY(o.i | 0)] : [];
+    if (o.k === 'h' && isFinite(o.x) && isFinite(o.y) && isFinite(o.w) && isFinite(o.h)) return [[o.x, o.y], [o.x + o.w - 1, o.y], [o.x, o.y + o.h - 1], [o.x + o.w - 1, o.y + o.h - 1], [o.x + (o.w >> 1), o.y + (o.h >> 1)]];
+    if (o.k === 'dh') { const b = buildings.find(q => q.player && !q.dead && q.x === o.x && q.y === o.y); return b ? [[b.x, b.y], [b.x + b.w - 1, b.y], [b.x, b.y + b.h - 1], [b.x + b.w - 1, b.y + b.h - 1]] : []; }
+    return [];
+  };
+  SRV.tcDeny = (peer, o) => {
+    if (!SRV.TC.on || !o || (o.k !== 'p' && o.k !== 'h' && o.k !== 'dp' && o.k !== 'dw' && o.k !== 'dh')) return '';
+    for (const [x, y] of bTiles(o)) if (SRV.tcBlock(x, y, peer.uid)) return o.k[0] === 'd' ? 'No puedes desmontar aquí: es la zona del armario de herramientas de otro superviviente.' : 'No puedes construir aquí: es la zona del armario de herramientas de otro superviviente.';
+    if (o.k === 'p' && o.c === 'tc') { if (!peer.uid) return 'Necesitas una identidad para poner un armario de herramientas.'; const n = SRV.tcList().filter(r => r.u === peer.uid && SRV.tcActive(r)).length; if (n >= SRV.TC.max) return 'Ya tienes ' + n + ' armarios de herramientas activos (máximo ' + SRV.TC.max + ').'; }
+    return '';
+  };
+  SRV.bldReject = (peer, o, why) => {
+    try { const A = netArrs(), sh = NET.sh, L = [];   /* se fuerza a reenviar esas casillas: el teléfono vuelve a ver lo que hay de verdad */
+      if (o.k === 'h' || o.k === 'dh') { const b = o.k === 'dh' ? buildings.find(q => q.player && !q.dead && q.x === o.x && q.y === o.y) : o; if (b) for (let y = b.y - 1; y <= b.y + b.h; y++) for (let x = b.x - 1; x <= b.x + b.w; x++) if (inb(x, y)) L.push(idx(x, y)); }
+      else if (o.i >= 0 && o.i < W * H) L.push(o.i | 0);
+      if (sh) for (const i of L) for (let k = 0; k < A.length; k++) if (sh[k]) sh[k][i] = A[k][i] === 0 ? 1 : 0;
+      for (const i of L) { const c = containers.get(i); if (c && (o.k === 'dp' || o.k === 'dw')) netSendRaw(peer, { t: 'C', i, items: c.items }); }
+    } catch (e) { }
+    try { if (o.k === 'p' || o.k === 'h') { const c = o.k === 'p' ? BCID[o.c] : (o.w >= 9 ? BCID.h3 : o.w >= 7 ? BCID.h4 : BCID.h1); const now = Date.now(); peer.cr = peer.cr || []; if (c) for (const [id, n] of c.cost) peer.cr.push({ id, n, t: now }); } } catch (e) { }   /* lo que el teléfono devuelve no cuenta como «sin origen» */
+    try { netSendRaw(peer, { t: 'BRJ', k: o.k, i: o.i, x: o.x, y: o.y, c: o.c, m: why }); } catch (e) { }
+    slog('construcción rechazada a ' + who(peer) + ': ' + why);
+  };
+  { const _ba = netBldApply; netBldApply = function (o) {
+      const peer = NET.role === 'host' ? NET.cur : null;
+      if (peer && o) { const why = SRV.tcDeny(peer, o); if (why) { SRV.bldReject(peer, o, why); return; } }
+      const n0 = BLD.list.length, r = _ba.apply(this, arguments);
+      try {
+        if (peer && o) {
+          if (o.k === 'p') { const rec = BLD.pc.get(o.i); if (rec) { rec.u = peer.uid || ''; if (rec.c === 'tc') { rec.au = peer.uid ? [peer.uid] : []; rec.pt = Date.now() + SRV.TC.h * 3600e3; rec.on = 1; SRV.tcDirty = 1; slog(who(peer) + ' puso un armario de herramientas en ' + tXY(o.i).join(',')); } else if (rec.c === 'bag' || rec.c === 'bed') slog(who(peer) + ' puso ' + (rec.c === 'bag' ? 'un saco de dormir' : 'una cama') + ' en ' + tXY(o.i).join(',')); } }
+          else if (o.k === 'h' && BLD.list.length > n0) { const rec = BLD.list[BLD.list.length - 1]; if (rec && rec.k === 'h') rec.u = peer.uid || ''; }
+          /* los demás teléfonos se enteran de la pieza (antes solo veían la casilla y no podían asaltarla ni repararla) */
+          if (o.k === 'p' || o.k === 'dp' || o.k === 'dw') toV17(Object.assign({ t: 'B' }, o), peer);
+          else if (o.k === 'h') toV17({ t: 'BHR', x: o.x, y: o.y, w: o.w, h: o.h }, peer);
+          if (o.k === 'dp' || o.k === 'dw') SRV.tcDirty = 1;
+        }
+      } catch (e) { }
+      return r;
+    }; }
+  /* quien abre el candado del armario (o lo abre sin candado) queda autorizado en él */
+  SRV.tcAuthAdd = (peer, i) => { const r = BLD.pc.get(i); if (!r || r.c !== 'tc' || !peer.uid) return false; r.au = Array.isArray(r.au) ? r.au : []; if (!r.au.includes(peer.uid)) { if (r.au.length >= 16) r.au.shift(); r.au.push(peer.uid); SRV.aliSay(peer, 'Quedas autorizado en este armario de herramientas: puedes construir y reparar a su alrededor.', 'good'); slog(who(peer) + ' se autorizó en un armario de herramientas'); } SRV.tcSend(peer); return true; };
+  { const _lt = lkTryH; lkTryH = function (i, code, w, remove) { const r = _lt.apply(this, arguments); try { if (r && r.ok && NET.cur) SRV.tcAuthAdd(NET.cur, i); } catch (e) { } return r; }; }
+  /* ---- C) reaparición: sacos de dormir, camas, espera creciente y anuncio ---- */
+  SRV.SP = { b: +opt.spB >= 0 ? +opt.spB : 10, s: +opt.spS >= 0 ? +opt.spS : 15, m: +opt.spM > 0 ? +opt.spM : 90, win: 3600e3, ad: 600e3 };
+  SRV.dth = new Map(); SRV.adT = new Map();
+  SRV.spDeaths = uid => { const now = Date.now(), l = (SRV.dth.get(uid) || []).filter(t => now - t < SRV.SP.win); if (l.length) SRV.dth.set(uid, l); else SRV.dth.delete(uid); return l; };
+  SRV.spWait = n => n > 0 ? Math.min(SRV.SP.m, SRV.SP.b + SRV.SP.s * (n - 1)) : 0;
+  SRV.spPoints = peer => {
+    const uid = peer && peer.uid, out = []; if (!uid) return out;
+    for (const r of BLD.list) { if (!r || r.k !== 'p' || r.u !== uid || (r.c !== 'bag' && r.c !== 'bed')) continue; if (to[r.i] !== (r.c === 'bag' ? O_BAG : O_BED)) continue; out.push([r.i, r.c === 'bag' ? 'saco' : 'cama']); if (out.length >= 8) break; }
+    return out.map(([i, k]) => { const [x, y] = tXY(i); return [i, k, x, y]; });
+  };
+  SRV.spOffer = peer => {
+    if (!peer || !peer.uid || peer.spSent || (peer.build | 0) < SRV.F17) return; peer.spSent = 1;
+    const now = Date.now(), l = SRV.spDeaths(peer.uid); l.push(now); SRV.dth.set(peer.uid, l);
+    const n = l.length, w = SRV.spWait(n), ad = now - (SRV.adT.get(peer.uid) || 0) > SRV.SP.ad ? 1 : 0;
+    setTimeout(() => { try { if (NET.peers.includes(peer)) netSendRaw(peer, { t: 'SPL', l: SRV.spPoints(peer), w, n, ad }); } catch (e) { } }, 300);
+    slog(who(peer) + ': ' + n + (n === 1 ? ' muerte' : ' muertes') + ' en la última hora, reaparece en ' + w + ' s');
+  };
+  { const _pk = SRV.pvpKill; SRV.pvpKill = function (peer, by, quiet) { const was = peer && peer.chDead; const r = _pk.apply(this, arguments); try { if (!was && !quiet) SRV.spOffer(peer); } catch (e) { } return r; }; }
+  { const _op9 = netOnPlayer; netOnPlayer = function (o) { const r = _op9.apply(this, arguments); try { if (NET.cur && o && o.k) SRV.spOffer(NET.cur); } catch (e) { } return r; }; }
+  { const _sf = SRV.spawnFor; SRV.spawnFor = function (peer) {
+      try { const q = peer && peer.spReq;
+        if (q && q.sp >= 0) { const pt = SRV.spPoints(peer).find(p => p[0] === q.sp); if (pt) { const f = SRV.bedFree(pt[2], pt[3]); if (f) return { p: f, why: pt[1] }; } }
+        if (q && (q.sp === -1 || q.sp >= 0)) return { p: SRV.pickSpawn(), why: 'muerte' };
+      } catch (e) { }
+      return _sf.apply(this, arguments);
+    }; }
+  /* ---- D) Zonas Rojas ---- */
+  SRV.ZR = { on: opt.zr !== false, z: null };
+  const ZRN = { hospital: 'Hospital en cuarentena', police: 'Comisaría tomada', ware: 'Depósito del ejército' };
+  SRV.zrPick = () => {
+    if (SRV.ZR.z) return SRV.ZR.z; const sp = SRV.spawn || [W / 2, H / 2], out = [];
+    const cand = buildings.filter(b => b && !b.player && !b.dead && ZRN[b.kind] && b.w >= 6 && b.h >= 6).sort((a, b) => ((a.x * 73 + a.y * 151) % 1009) - ((b.x * 73 + b.y * 151) % 1009));
+    const ok = b => { const x = b.x + b.w / 2, y = b.y + b.h / 2; if (Math.hypot(x - sp[0], y - sp[1]) < 50) return false; return out.every(z => Math.hypot(z.x - x, z.y - y) >= 90); };
+    for (const pass of [0, 1]) for (const b of cand) { if (out.length >= 3) break; if (out.some(z => z.b === b.id)) continue; if (pass === 0 && out.some(z => z.k === b.kind)) continue; if (!ok(b)) continue;
+      out.push({ id: out.length + 1, b: b.id, k: b.kind, x: b.x + b.w / 2, y: b.y + b.h / 2, r: Math.round(Math.max(10, Math.max(b.w, b.h) * .5 + 5)), n: ZRN[b.kind], crates: [], gT: 0 }); }
+    if (out.length) out[0].boss = 1; SRV.ZR.z = out; if (out.length) slog('Zonas Rojas: ' + out.map(z => z.n + ' (' + Math.round(z.x) + ',' + Math.round(z.y) + ')').join(', ')); return out;
+  };
+  SRV.zrCrates = z => {
+    const b = buildings.find(q => q.id === z.b); if (!b) return; const have = [];
+    for (let y = b.y + 1; y < b.y + b.h - 1; y++) for (let x = b.x + 1; x < b.x + b.w - 1; x++) { const i = idx(x, y), c = containers.get(i); if (to[i] === O_MCRATE && c && c.bk === 'zr') have.push(i); }
+    for (let t = 0; t < 300 && have.length < 3; t++) {
+      const x = b.x + 2 + ((Math.random() * Math.max(1, b.w - 4)) | 0), y = b.y + 2 + ((Math.random() * Math.max(1, b.h - 4)) | 0), i = idx(x, y);
+      if (!inb(x, y) || to[i] !== O_NONE || tb[i] !== b.id || tg[i] === G_WATER) continue; if ((b.doors || []).some(d => Math.abs(d[0] - x) + Math.abs(d[1] - y) < 3)) continue;
+      let free = 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (!solidTile(x + dx, y + dy)) free++; if (free < 3) continue;   /* no tapa pasillos */
+      to[i] = O_MCRATE; tv[i] = 0; td[i] = 0; tbar[i] = 0; tbh[i] = 0; containers.set(i, { k: O_MCRATE, bk: 'zr', items: genLoot(O_MCRATE, 'zr') }); invalidateChunkAt(x, y); have.push(i); toAny({ t: 'C', i, items: containers.get(i).items });
+    }
+    z.crates = have;
+  };
+  SRV.zrEmpty = new Map();
+  SRV.zrRefill = z => { const now = Date.now(); for (const i of z.crates) { const c = containers.get(i); if (!c || to[i] !== O_MCRATE) continue; if (Array.isArray(c.items) && c.items.length === 0) { const t0 = SRV.zrEmpty.get(i); if (!t0) SRV.zrEmpty.set(i, now); else if (now - t0 > 40 * 60e3 && !pNear(z.x, z.y, 30)) { c.items = genLoot(O_MCRATE, 'zr'); SRV.zrEmpty.delete(i); toAny({ t: 'C', i, items: c.items }); } } else SRV.zrEmpty.delete(i); } };
+  SRV.zrGuards = (z, force) => {
+    const now = Date.now(), live = NPCS.filter(n => n.zr === z.id && n.st !== 'dead'), want = z.boss ? 5 : 4;
+    if (live.length >= want || (!force && (pNear(z.x, z.y, 35) || (z.gT && now - z.gT < 12 * 60e3)))) return 0; z.gT = now; let n = 0;
+    for (let k = live.length; k < want; k++) { const type = z.boss && !live.some(q => q.type === 'boss') && k === want - 1 ? 'boss' : (k % 2 ? 'bandit' : 'gunman'), s = npcSpot(z.x, z.y, z.r * .85, 80); if (!s) continue; const q = mkNpc(type, s[0], s[1], { hx: z.x, hy: z.y, hr: Math.max(5, z.r * .7) }); q.zr = z.id; n++; }
+    let nz = 0; for (const q of Z) if (q.st !== 'dead' && Math.abs(q.x - z.x) < z.r && Math.abs(q.y - z.y) < z.r) nz++;
+    for (let k = nz; k < 6; k++) { const s = npcSpot(z.x, z.y, z.r, 30); if (s) Z.push(mkZombie(s[0], s[1], k < 2 ? 'toxic' : undefined)); }
+    return n;
+  };
+  SRV.zrSend = p => { if (!SRV.ZR.on || !p || (p.build | 0) < SRV.F17) return; const z = SRV.zrPick(); try { netSendRaw(p, { t: 'ZRL', z: z.map(q => [q.id, Math.round(q.x * 10) / 10, Math.round(q.y * 10) / 10, q.r, q.n, q.k]) }); } catch (e) { } };
+  SRV.zrTick = () => { if (!SRV.ZR.on) return; for (const z of SRV.zrPick()) { try { if (!z.crates.length || Math.random() < .2) SRV.zrCrates(z); SRV.zrRefill(z); SRV.zrGuards(z); } catch (e) { } } };
+  { const _lt = SRV.lootTick; SRV.lootTick = function () { const hid = []; try { for (const z of (SRV.ZR.z || [])) for (const i of z.crates) { const c = containers.get(i); if (c) { hid.push([i, c]); containers.delete(i); } } return _lt.apply(this, arguments); } finally { for (const [i, c] of hid) containers.set(i, c); } }; }   /* las cajas de la Zona Roja tienen su propio botín */
+  /* ---- mensajes ---- */
+  { const _m9 = netMsg; netMsg = function (o) {
+      const peer = NET.role === 'host' ? NET.cur : null;
+      if (peer && o && typeof o.t === 'string') {
+        if (o.t === 'hi') {
+          peer.spReq = (typeof o.sp === 'number' && isFinite(o.sp)) ? { sp: o.sp | 0, ad: o.ad ? 1 : 0 } : null;
+          if ((o.b | 0) >= SRV.F17 && peer.uid) {
+            const l = SRV.spDeaths(peer.uid), last = l.length ? l[l.length - 1] : 0, w = SRV.spWait(l.length), left = last + w * 1000 - Date.now(), now = Date.now();
+            const adOk = !!(peer.spReq && peer.spReq.ad && now - (SRV.adT.get(peer.uid) || 0) > SRV.SP.ad);
+            if (left > 3000 && !adOk) { try { netSendRaw(peer, { t: 'end', m: 'Aún no puedes reaparecer: espera ' + Math.ceil(left / 1000) + ' s. Cuantas más veces mueres en poco tiempo, más tardas en volver.' }); } catch (e) { } setTimeout(() => { try { netPeerLost(peer, true); } catch (e) { } }, 400); slog(who(peer) + ' intentó volver antes de tiempo (' + Math.ceil(left / 1000) + ' s)'); return; }
+            if (left > 3000 && adOk) { SRV.adT.set(peer.uid, now); slog(who(peer) + ' vio un anuncio para reaparecer ya'); }
+          }
+        } else if (o.t === 'WRP') { try { SRV.wallRepair(peer, o); } catch (e) { } return; }
+        else if (o.t === 'TCA') { try { const i = o.i | 0; if (i >= 0 && i < W * H && lkNear(lkWho(), i) && !LK.codes.has(i)) SRV.tcAuthAdd(peer, i); } catch (e) { } return; }
+      }
+      const r = _m9.apply(this, arguments);
+      try { if (peer && o && o.t === 'R' && (peer.build | 0) >= SRV.F17) setTimeout(() => { try { SRV.zrSend(peer); SRV.tcSend(peer); } catch (e) { } }, 1200); } catch (e) { }
+      return r;
+    }; }
+  { let k = 0; setInterval(() => { try { k++; if (SRV.tcDirty || k % 3 === 0) { SRV.tcDirty = 0; SRV.tcSendAll(); } if (k % 3 === 0) SRV.tcUpkeep(); if (k % 3 === 1) SRV.zrTick(); if (k % 6 === 2 && SRV.ZR.on) for (const p of NET.peers) if (v17(p)) SRV.zrSend(p); } catch (e) { } }, 20000); }
+  setTimeout(() => { try { SRV.zrTick(); } catch (e) { } }, 15000);
   /* ===== v15.5 · PALIATIVO PARA LA APP ANTIGUA (anterior a la 15.5, versionCode < 152) =====
      Esas apps tienen un fallo de dibujo: pintan a CUALQUIER jugador cercano con los datos del «anfitrión» (por eso en las salas solo se veía un «Anfitrión» quieto en el punto de entrada y nunca a los demás).
      No se puede arreglar una app ya instalada, pero sí decidir qué «anfitrión» recibe: a esas apps se les manda, como si fuera el anfitrión, el JUGADOR MÁS CERCANO (posición, movimiento y aspecto reales).

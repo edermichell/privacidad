@@ -1,85 +1,85 @@
-# Lanzar la v16.3 en Google Play · paso a paso
+# Lanzar la v17.0 «Zona Roja» en Google Play · paso a paso
 
-**Qué subes:** la app **16.3** (versionCode **160**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
+**Qué subes:** la app **17.0** (versionCode **161**) a la misma pista de **prueba cerrada (alpha)**. Después actualizas el servidor de tu PC.
 **Tiempo:** ~1 h de trabajo tuyo + la revisión de Google (de horas a varios días).
+**Si todavía no subiste la 16.3, sube directamente la 17.0:** incluye todo (también el chat de voz y su permiso de micrófono).
 
 ## Archivos de esta carpeta
 | Archivo | Para qué |
 |---|---|
-| `UltimoRefugio_AndroidStudio_v16.3.zip` | Proyecto de Android Studio (versionCode 160, versionName «16.3») |
-| `privacy.html` | Política de privacidad actualizada («noviembre de 2026 (v16.3)») |
-| `NOVEDADES_PLAY_v16.3.txt` | Texto de «Novedades» para Play (español 356 caracteres, inglés 322; máximo 500) |
+| `UltimoRefugio_AndroidStudio_v17.0.zip` | Proyecto de Android Studio (versionCode 161, versionName «17.0») |
+| `privacy.html` | Política de privacidad («noviembre de 2026 (v16.3)»; la 17.0 no la cambia) |
+| `NOVEDADES_PLAY_v17.0.txt` | Texto de «Novedades» para Play (español e inglés, por debajo de 500 caracteres) |
 | `UltimoRefugio_Servidor_Tailscale.zip` | Kit del servidor nuevo (se instala **después**, paso 7) |
-| `correo_testers_v163/` | Correo para testers (HTML con imágenes y texto) |
-| `CAMBIOS_v14.0_a_v16.3.md` | Todo lo que cambió desde la 14.0 aprobada |
+| `correo_testers_v170/` | Correo para testers (HTML con imágenes y texto) |
+| `CAMBIOS_v14.0_a_v17.0.md` | Todo lo que cambió desde la 14.0 aprobada |
+| `PROBAR_SERVIDOR.html` | Página para comprobar tu servidor desde el navegador |
 
 ---
 
-## Paso 1 · Política de privacidad (5 min)
-1. Sube `privacy.html` a **tu URL pública de siempre** (la que está en Play Console → Contenido de la app → Política de privacidad, y en la variable `PRIVACY_URL`), sustituyendo la anterior.
-2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v16.3)»** (la 16.3 añade el chat de voz y quita la frase «No usamos micrófono»).
+## Paso 1 · Política de privacidad (solo si no subiste la de la 16.3)
+La 17.0 **no recoge datos nuevos**: el anuncio para reaparecer usa el mismo Unity Ads que ya declaraste, y el saco, la cama o el armario de herramientas se guardan en el mundo de la sala, igual que los candados.
+- Si ya subiste la política de la 16.3 (arriba dice **«noviembre de 2026 (v16.3)»**), no hagas nada.
+- Si no, sube `privacy.html` a tu URL pública de siempre (la de Play Console → Contenido de la app → Política de privacidad).
 
-## Paso 2 · Formularios de Play Console (solo si no los actualizaste con la 15.x)
-Desde la 15.9 hay un dato nuevo: **el nombre de jugador que cada uno elige** (visible para los demás, guardado en tu servidor). Si aún no lo declaraste, añádelo en Seguridad de los datos (ver abajo). **La 16.3 añade el chat de voz:** declara también la voz (ver abajo).
-- **Seguridad de los datos:** *ID de usuario* (identificador anónimo del multijugador **y el nombre de jugador que elige**; si el formulario lo pide aparte, decláralo como *Otros contenidos generados por el usuario*) e *Interacciones/actividad en la app*: recopilados, finalidad «Funcionalidad de la app» (y «Prevención de fraudes y seguridad» si el formulario la ofrece), **no compartidos**, cifrados en tránsito, y se puede pedir el borrado por correo. Lo de Unity Ads y las compras sigue igual. Comprueba cada casilla con el formulario actual.
-- **Voz (nuevo en la 16.3):** en *Seguridad de los datos* añade **Audio → Grabaciones de voz o sonido**: recopilado, **procesado de forma efímera** (solo se reenvía en tiempo real, no se guarda), finalidad «Funcionalidad de la app», **opcional**, cifrado en tránsito si tu servidor usa https (Tailscale Funnel lo usa). No es «compartido»: lo envía el propio usuario a otros jugadores. El permiso `RECORD_AUDIO` aparece en la ficha; no necesita formulario especial.
-- **Clasificación de contenido (IARC):** los usuarios interactúan entre sí (multijugador por salas **con chat de voz**, sin chat de texto), hay violencia de fantasía contra zombis y combate entre jugadores en la sala PvP.
+## Paso 2 · Formularios de Play Console (solo si no los actualizaste con la 16.3)
+- **Seguridad de los datos:** igual que la 16.3 (ID de usuario y nombre de jugador; **Audio → Grabaciones de voz**, procesado de forma efímera, opcional). La 17.0 no añade nada.
+- **Clasificación (IARC):** igual que la 16.3 (multijugador con chat de voz, violencia de fantasía y combate entre jugadores en la sala PvP).
+- **Anuncios:** la app ya declara que contiene anuncios. El anuncio recompensado nuevo (reaparecer ya) es **opcional** para el jugador.
 
 ## Paso 3 · Compilar el AAB firmado (15–30 min)
-1. Descomprime `UltimoRefugio_AndroidStudio_v16.3.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
-2. Revisa `app/build.gradle`: debe tener `versionCode 160` y `versionName "16.3"`.
-3. Revisa tus valores de compilación (los mismos de la 14.0): `UNITY_TEST_MODE=false`, `PRIVACY_URL` con tu dirección real, `UNITY_GAME_ID` y la firma (`KEYSTORE_FILE`…).
-4. **Build ▸ Generate Signed Bundle / APK… ▸ Android App Bundle**, con **la misma llave `.jks` de la 14.0** (si usas otra, Play la rechaza) ▸ **release** ▸ Finish. El archivo queda en `app/release/app-release.aab`.
-5. Si Gradle da un error, mándame el texto exacto. El código Java (actualización dentro de la app y recuperación del WebView) es distinto del de la 14.0 y no pude compilarlo con el SDK real.
+1. Descomprime `UltimoRefugio_AndroidStudio_v17.0.zip` y abre `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle.
+2. Revisa `app/build.gradle`: `versionCode 161` y `versionName "17.0"`.
+3. Tus valores de siempre: `UNITY_TEST_MODE=false`, `PRIVACY_URL`, `UNITY_GAME_ID` y la firma.
+4. **Build ▸ Generate Signed Bundle / APK… ▸ Android App Bundle**, con **la misma llave `.jks`** ▸ **release**.
+5. La 17.0 **no cambia el código Java** respecto a la 16.3. Si nunca compilaste la 16.3, el permiso del micrófono es lo nuevo en Java: si Gradle da error, mándame el texto exacto.
 
-## Paso 4 · Probar en tu teléfono antes de subir (15 min)
-Instala la compilación release en un teléfono (o súbela primero a **Prueba interna**) y comprueba:
-1. Que el juego abre, se puede jugar una partida individual y se conserva el guardado anterior.
-2. **MULTIJUGADOR:** aparecen las salas y puedes entrar a una (con el servidor encendido).
-3. Una compra de prueba, un anuncio recompensado y la pantalla de consentimiento.
-4. **NOVEDADES:** la primera entrada de la lista es la 16.3, «Chat de voz de proximidad».
-7. **Chat de voz:** entra a una sala con otro teléfono cerca, pulsa VOZ: Android pide el permiso de micrófono; el otro debe oírte. **Esta es la parte nueva de Java: si algo falla al compilar o el permiso no aparece, mándame el error.**
-6. **Arranque rápido:** cierra la app del todo y ábrela otra vez: la segunda vez debe llegar al menú bastante antes.
-5. **MULTIJUGADOR → TU NOMBRE:** escribe un nombre, entra a una sala y comprueba que otro jugador lo ve sobre tu personaje.
+## Paso 4 · Probar en tu teléfono antes de subir (20 min)
+Con el **servidor ya actualizado en tu PC** (paso 7; puedes hacerlo antes en una copia, o probar justo después de actualizarlo):
+1. El juego abre y la partida individual va como siempre.
+2. **NOVEDADES:** la primera entrada es la 17.0, «Zona Roja».
+3. **Saco de dormir:** en una sala, V ▸ Muebles ▸ «Saco de dormir» (3 trapos + 1 sábana). Aléjate y muere (o pide a otro que te mate en la sala PvP): debe salir **ELIGE DÓNDE REAPARECER** con tu saco, «Lugar al azar», la cuenta atrás y el botón del anuncio.
+4. **Anuncio para reaparecer:** pulsa «VER ANUNCIO · REAPARECER YA»: con `UNITY_TEST_MODE=false` debe salir un anuncio real; al terminar vuelves a la sala junto a tu saco.
+5. **Armario de herramientas:** V ▸ Almacenaje (6 tablones, 8 clavos, 4 chatarra). Ábrelo: dice «mantenimiento 6 h». Mete tablones y clavos: las horas suben. Con otro teléfono, intenta construir cerca: no debe dejar.
+6. **Reparar:** golpea una pared tuya (aparece la barra), espera 15 s, ponte el martillo en la mano y pulsa USAR frente a la pared.
+7. **Zona Roja:** abre el mapa: verás círculos rojos «ZONA ROJA». Entra en una: la pantalla se tiñe, sale el rótulo y pierdes vida sin máscara antigás. Cuidado con los saqueadores armados.
 
 ## Paso 5 · Subir a Play Console (10 min)
-1. Play Console → tu app → **Pruebas → Prueba cerrada (alpha)** → **Crear nueva versión**.
-2. Sube `app-release.aab`. Nombre de la versión: **16.3 (160)**.
-3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v16.3.txt` (es-419 / es-ES y en-US).
-4. **Siguiente → Revisar versión**: lee los avisos (permisos, API objetivo, dispositivos). Los avisos amarillos no impiden publicar; los rojos sí (mándamelos).
-5. **Guardar → Enviar cambios a revisión** (en *Resumen de la publicación*).
-6. Mientras dure la revisión **no cambies la ficha ni los formularios**, porque cada cambio puede alargar la espera.
+1. Play Console → **Pruebas → Prueba cerrada (alpha)** → **Crear nueva versión**.
+2. Sube `app-release.aab`. Nombre: **17.0 (161)**.
+3. Pega los dos bloques de `NOVEDADES_PLAY_v17.0.txt`.
+4. **Revisar versión** (los avisos rojos, mándamelos) → **Guardar → Enviar cambios a revisión**.
+5. Mientras dure la revisión, no cambies la ficha ni los formularios.
 
 ## Paso 6 · Cuando Google la apruebe
-1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 16.3. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
-2. Manda el correo de `correo_testers_v163/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
+1. Comprueba en un teléfono de tester que Play ofrece la 17.0 (la app avisa sola en el menú).
+2. Manda el correo de `correo_testers_v170/` rellenando los `[PEGAR AQUÍ…]`.
 
-## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 16.3
-**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 15.8 o posterior** y el **chat de voz necesita la 16.3**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 16.3 esté en Play.
-1. Cierra el servidor (ventana de `INICIAR_SERVIDOR.bat` → Ctrl+C).
-2. Haz una copia de la carpeta del servidor (por seguridad).
-3. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo estos archivos: `servidor.js`, `srv_layer.js`, `admin.html`, `LEEME_SERVIDOR.md`, `juego\index.html`, `AGREGAR_SALA_PVP.bat` y `herramientas\agregar_sala_pvp.js`. **No pises tu `config.json`** ni la carpeta `datos`.
-4. **Sala PvP oficial:** ejecuta `AGREGAR_SALA_PVP.bat` (con el servidor cerrado) y escribe SI: añade «Frontera PvP» a tu `config.json` con copia de seguridad, sin tocar tus 3 salas.
-5. Abre `INICIAR_SERVIDOR.bat` y entra con tu teléfono a una sala normal y a «Frontera PvP».
-6. Opcional: `PRUEBA_DURA.bat` con todo cerrado. Debe decir **APROBADO**.
-7. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 160, "version": "16.3", "notas": ["Chat de voz de proximidad", "Nueva sala PVP oficial"] }`.
+## Paso 7 · Actualizar el servidor de tu PC (10 min)
+**Qué cambia para todos al actualizar:** en la **sala PvP las bases ya no se protegen** con los dueños desconectados (en las salas normales sí, como antes), y las **Zonas Rojas** aparecen en todas las salas. Las apps antiguas siguen entrando, pero sin ver barras, armario, zonas ni la pantalla de reaparición: conviene actualizar el servidor **cuando la 17.0 ya esté en Play**.
+1. Cierra el servidor (ventana de `INICIAR_SERVIDOR.bat` → Ctrl+C) y haz una copia de la carpeta.
+2. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo: `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** ni la carpeta `datos` (las opciones nuevas traen buenos valores por defecto).
+3. Si aún no tienes la sala PvP oficial: `AGREGAR_SALA_PVP.bat` (ver la guía de la 16.3 en el anexo).
+4. Arranca. En el registro verás `Zonas Rojas: Hospital en cuarentena (x,y), …` al despertar cada sala.
+5. Opcional, para que Play avise a todos: en `config.json`, `"appUltima": { "codigo": 161, "version": "17.0", "notas": ["Zonas Rojas", "Saco de dormir y elegir dónde reaparecer", "Armario de herramientas"] }`.
+6. **Ajustes opcionales** en `config.json` (detalle en `LEEME_SERVIDOR.md`): `"zonasRojas": false` las quita; `"armarioRadio": 12`, `"mantenimientoHoras": 6`, `"armarioMax": 3`; espera al reaparecer `"reaparicionSeg": 10`, `"reaparicionExtraSeg": 15`, `"reaparicionMaxSeg": 90`; para volver a proteger las bases en la sala PvP, pon `"proteccionBases": true` dentro de esa sala.
 
 ## Paso 8 · Vigilar 2–3 días
-- **Play Console → Android vitals:** cierres y ANR de la 16.3.
-- **Panel `/admin` del servidor:** memoria y pasos/s.
-- **Registro del servidor:** si ves `INVENTARIO SOSPECHOSO de jugador N` o `movimiento imposible` de alguien que juega limpio, mándame esas líneas y qué estaba haciendo. Mientras tanto puedes apagar el control con `"auditarInventario": false` o `"validarMovimiento": false` en `config.json`.
-- Cuando la alpha vaya bien 1–2 semanas, puedes **promover la versión a producción** desde la misma pantalla (Play exige haber cumplido los requisitos de prueba cerrada de tu cuenta).
+- **Play Console → Android vitals:** cierres y ANR de la 17.0.
+- **Registro del servidor:** `construcción rechazada a jugador N` (alguien intentó construir en zona ajena), `N muertes en la última hora, reaparece en X s`, `vio un anuncio para reaparecer ya`, `armario de herramientas sin mantenimiento`.
+- **Unity Ads:** mira cuántos anuncios recompensados de «reaparecer» se ven al día.
+- Pregunta a los testers si la espera al reaparecer (10 s, +15 por muerte, máx. 90) y el gas (unos 90 s sin máscara) les parecen bien; se ajustan desde `config.json` sin actualizar la app (el gas no: ese está en la app).
 
 ## Si algo sale mal
 | Problema | Qué hacer |
 |---|---|
-| Play rechaza la versión | Copia el motivo (*Recibidos* / *Política y programas*) y mándamelo |
-| «Clave de firma incorrecta» | Usaste otra llave: compila con la `.jks` de la 14.0 |
-| «Version code 160 ya usado» | Ya subiste un 160 antes: dime y lo paso a 160 |
-| La sala PvP no deja entrar | Ese teléfono tiene una app anterior a la 15.8 (es lo esperado) |
-| No aparece el botón VOZ | Ese teléfono no tiene la 16.3, o el servidor no se actualizó, o está apagado en Ajustes → Sonido |
-| VOZ dice «falta el permiso» | Ajustes del teléfono → Aplicaciones → Último Refugio → Permisos → Micrófono → Permitir |
-| Fallo del servidor nuevo | Restaura la copia del paso 7.2 y mándame el registro |
+| Play rechaza la versión | Copia el motivo y mándamelo |
+| «Clave de firma incorrecta» | Compila con la `.jks` de siempre |
+| «Version code 161 ya usado» | Dime y lo paso a 162 |
+| No sale la pantalla de reaparecer | Ese teléfono no tiene la 17.0 o el servidor no se actualizó |
+| «Aún no puedes reaparecer: espera N s» | Es lo esperado si alguien vuelve a la sala antes de su espera |
+| Un tester no puede construir en su propia base | Otro puso un armario cerca: que abra ese armario (si no tiene candado) o lo rompa; o que pongas `"armarioHerramientas": false` |
+| Fallo del servidor nuevo | Restaura la copia del paso 7.1 y mándame el registro |
 
 ---
 
@@ -211,3 +211,8 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 - **Sala PvP oficial:** `AGREGAR_SALA_PVP.bat` añade «Frontera PvP» (mapa 480) a tu config.
 - Opciones en `config.json`: `"chatVoz": false` lo apaga; `"radioVoz": 40` es la distancia en casillas. En cada sala, `"voz": false` lo apaga solo ahí.
 - Detalle y pruebas: `actualizacion_v163/CAMBIOS_v16.3.md`.
+
+## Zona Roja (nuevo en la 17.0)
+- **Vida y reparación** de lo construido; **armario de herramientas** con mantenimiento; **saco de dormir y camas** para elegir dónde reaparecer, con espera creciente y anuncio recompensado; **Zonas Rojas** con gas, saqueadores y cajas militares; **sin protección de bases desconectadas en PvP**.
+- **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Opciones nuevas: `zonasRojas`, `armarioHerramientas`, `armarioRadio`, `armarioMax`, `mantenimientoHoras`, `reaparicionSeg`, `reaparicionExtraSeg`, `reaparicionMaxSeg`.
+- Detalle y pruebas: `actualizacion_v170/CAMBIOS_v17.0.md`.

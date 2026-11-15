@@ -1,11 +1,11 @@
-# Lanzamiento v16.3 — qué hay en esta carpeta
-1. `GUIA_SUBIR_v16.3.md` ← **empieza aquí: los 8 pasos para lanzar la 16.3** (política, compilar, subir a Play, servidor).
-2. `UltimoRefugio_AndroidStudio_v16.3.zip` — proyecto de la app (versionCode 160, «16.3»), con la política nueva y el resumen de cambios.
-3. `privacy.html` — política de privacidad **actualizada (v16.3)** (súbela a tu URL pública antes de enviar la app).
-4. `NOVEDADES_PLAY_v16.3.txt` — texto de «novedades» (es + en).
-5. `correo_testers_v163/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
+# Lanzamiento v17.0 «Zona Roja» — qué hay en esta carpeta
+1. `GUIA_SUBIR_v17.0.md` ← **empieza aquí: los 8 pasos para lanzar la 17.0** (compilar, probar, subir a Play, servidor).
+2. `UltimoRefugio_AndroidStudio_v17.0.zip` — proyecto de la app (versionCode 161, «17.0»).
+3. `privacy.html` — política de privacidad (la de la 16.3; la 17.0 no la cambia: súbela solo si no subiste la de la 16.3).
+4. `NOVEDADES_PLAY_v17.0.txt` — texto de «novedades» (es + en).
+5. `correo_testers_v170/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
-7. `CAMBIOS_v14.0_a_v16.3.md` — todo lo que cambió desde la versión que está en revisión.
+7. `CAMBIOS_v14.0_a_v17.0.md` — todo lo que cambió desde la versión que está en revisión.
 
 **IMPORTANTE (v15.5):** corrige el fallo por el que en las salas no se veía a los demás jugadores (solo un «Anfitrión»). Lee `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md` (en la raíz): explica la causa, por qué hay que actualizar la app y la opción mínima **14.0.1**.
 
@@ -24,3 +24,5 @@
 **v16.2:** elegir la clave al crear una sala (o al azar si se deja vacía), arranque rápido (5,9 s → 2,7 s desde la segunda vez) y pantalla de juego más limpia. Ver `actualizacion_v162/CAMBIOS_v16.2.md`. 
 
 **v16.3:** **chat de voz de proximidad** (botón VOZ; los zombis también oyen) y **sala PvP oficial** («Frontera PvP», con `AGREGAR_SALA_PVP.bat`). Cambia la parte Java (permiso de micrófono): compílala y pruébala en un teléfono. **Hay que volver a subir la política y actualizar Seguridad de los datos y la clasificación.** Ver `actualizacion_v163/CAMBIOS_v16.3.md`. **Si todavía no subiste ninguna de las 15.8–16.2, sube directamente la 16.3: incluye todo.**
+
+**v17.0 «Zona Roja»:** lo construido tiene **vida** y se **repara** con el martillo; **armario de herramientas** (nadie construye junto a tu base mientras tenga mantenimiento); **saco de dormir y camas** para **elegir dónde reaparecer**, con espera que crece con las muertes y **anuncio para volver ya** (monetización); **Zonas Rojas** (hospital, comisaría y depósito en cuarentena: gas, saqueadores armados, cajas militares); en la **sala PvP** las bases ya **no se protegen** al desconectarse. No cambia Java ni la política. Ver `actualizacion_v170/CAMBIOS_v17.0.md`. **Si todavía no subiste la 16.3, sube directamente la 17.0: incluye todo.**

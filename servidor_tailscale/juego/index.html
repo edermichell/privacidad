@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v16.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v17.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -1225,7 +1225,7 @@ const G_GRASS = 0, G_ROAD = 1, G_SIDE = 2, G_WOOD = 3, G_TILE = 4, G_DIRT = 5, G
 // Objetos
 const O_NONE = 0, O_WALL = 1, O_DOOR = 2, O_WIN = 3, O_TREE = 4, O_FENCE = 5, O_FRIDGE = 6, O_CUPB = 7,
   O_WARD = 8, O_DRAW = 9, O_SHELF = 10, O_BCAB = 11, O_CRATE = 12, O_BED = 13, O_TABLE = 14, O_SOFA = 15,
-  O_CAR = 16, O_COUNT = 17, O_LOCKER = 18, O_ROCK = 19, O_LAMP = 20, O_PUMP = 21, O_BIN = 22, O_BENCH = 23, O_HYD = 24, O_MAIL = 25, O_BUSH = 26, O_REED = 27, O_GRAVE = 28, O_LOG = 29, O_CROP = 30, O_HAY = 31, O_WORKB = 32, O_STOVE = 33, O_MEDT = 34, O_GUNB = 35, O_SBAG = 36, O_MCRATE = 37, O_STUP = 38, O_STDN = 39;
+  O_CAR = 16, O_COUNT = 17, O_LOCKER = 18, O_ROCK = 19, O_LAMP = 20, O_PUMP = 21, O_BIN = 22, O_BENCH = 23, O_HYD = 24, O_MAIL = 25, O_BUSH = 26, O_REED = 27, O_GRAVE = 28, O_LOG = 29, O_CROP = 30, O_HAY = 31, O_WORKB = 32, O_STOVE = 33, O_MEDT = 34, O_GUNB = 35, O_SBAG = 36, O_MCRATE = 37, O_STUP = 38, O_STDN = 39, O_BAG = 40;
 const CONTAINER = new Set([O_FRIDGE, O_CUPB, O_WARD, O_DRAW, O_SHELF, O_BCAB, O_CRATE, O_CAR, O_COUNT, O_LOCKER, O_BIN]);
 const CNAME = {
   [O_FRIDGE]: 'Nevera', [O_CUPB]: 'Alacena', [O_WARD]: 'Armario', [O_DRAW]: 'Cajonera', [O_SHELF]: 'Estantería',
@@ -2222,7 +2222,7 @@ function solidTile(tx, ty) {
   if (!inb(tx, ty)) return 1;
   const o = to[idx(tx, ty)];
   if (tg[idx(tx, ty)] === G_WATER) return 1;
-  if (o === O_NONE || o === O_REED || o === O_CROP) return 0;
+  if (o === O_NONE || o === O_REED || o === O_CROP || o === O_BAG) return 0;
   if (o === O_DOOR) return (td[idx(tx, ty)] & 1) ? 0 : 2;
   if (o === O_WIN) return 1;
   return 1;
@@ -2231,7 +2231,7 @@ function zwalk(tx, ty) {
   if (!inb(tx, ty)) return false;
   const o = to[idx(tx, ty)];
   if (tg[idx(tx, ty)] === G_WATER) return false;
-  return o === O_NONE || o === O_DOOR || (o === O_WIN && !(td[idx(tx, ty)] & 4)) || o === O_REED || o === O_CROP || (o === O_FENCE && tbh[idx(tx, ty)] > 0);
+  return o === O_NONE || o === O_DOOR || (o === O_WIN && !(td[idx(tx, ty)] & 4)) || o === O_REED || o === O_CROP || o === O_BAG || (o === O_FENCE && tbh[idx(tx, ty)] > 0);
 }
 function losClear(x0, y0, x1, y1) {
   let dx = x1 - x0, dy = y1 - y0; const n = Math.ceil(Math.hypot(dx, dy) * 2);
@@ -2328,8 +2328,14 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 160, UR_VERSION = '16.3', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 161, UR_VERSION = '17.0', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '17.0', t: 'Zona Roja', it: [
+    'Lo que construyes tiene <b>vida</b>: al golpearlo se ve una barra. Con el <b>martillo en la mano</b>, USAR lo repara (1 tablón + 2 clavos), pero no en pleno asalto.',
+    '<b>Armario de herramientas</b> (V ▸ Almacenaje): marca tu zona. Nadie más puede construir ni desmontar cerca mientras tenga <b>mantenimiento</b>: tablones y clavos dentro. Quien lo abre (o sabe su candado) queda autorizado.',
+    '<b>Saco de dormir</b> (V ▸ Muebles) y camas: si mueres en una sala, <b>eliges dónde reaparecer</b>. Cuantas más veces mueres en una hora, más esperas. Con un anuncio vuelves al instante.',
+    '<b>Zonas Rojas</b>: el hospital, la comisaría y el depósito que el ejército puso en cuarentena. Hay gas (lleva <b>máscara antigás</b>), saqueadores armados y cajas militares con el mejor botín. Salen en el mapa.',
+    'Sala PvP: las bases ya <b>no se protegen</b> cuando sus dueños se desconectan. Paredes, candados y armario de herramientas son tu defensa.' ] },
   { v: '16.3', t: 'Chat de voz de proximidad', it: [
     'En las salas del servidor hay <b>chat de voz</b>: solo te oyen los que están cerca, y más fuerte cuanto más cerca.',
     'Botón <b>VOZ</b> (o tecla T): <b>mantén pulsado</b> para hablar, o <b>tócalo</b> para dejar el micrófono abierto y vuelve a tocarlo para cerrarlo.',
@@ -2668,6 +2674,7 @@ function initGfx() {
   SPR.obj[O_CRATE] = [0].map(() => objSprite((g, cx, by) => isoBox(g, cx, by, 11, 11, [176, 130, 80], [156, 110, 64], [118, 82, 48], (f, u, v) => { if (f !== 'T' && (Math.abs(v - 5.5) < .7 || u < 1 || u > 10)) return [92, 62, 36]; return null; })));
   SPR.obj[O_BED] = [0].map(() => objSprite((g, cx, by) => isoBox(g, cx, by, 15, 8, [200, 80, 84], [176, 66, 70], [130, 48, 52], (f, u, v) => {
     if (f === 'T' && u < 10) return [235, 235, 240]; return null; })));
+  SPR.obj[O_BAG] = [0].map(() => objSprite((g, cx, by) => isoBox(g, cx, by, 13, 3, [106, 114, 66], [88, 96, 54], [66, 72, 40], (f, u, v) => { if (f === 'T' && u < 4) return [200, 194, 172]; return null; })));   /* v17.0: saco de dormir */
   SPR.obj[O_TABLE] = [0].map(() => objSprite((g, cx, by) => { isoBox(g, cx, by, 12, 8, [166, 120, 74], [120, 84, 50], [88, 60, 36]); }));
   SPR.obj[O_SOFA] = [0].map(() => objSprite((g, cx, by) => { isoBox(g, cx, by, 14, 9, [150, 70, 80], [128, 56, 66], [96, 40, 50]); isoBox(g, cx, by - 9, 10, 6, [172, 86, 96], [150, 72, 82], [112, 52, 62]); }));
   SPR.obj[O_COUNT] = [0].map(() => objSprite((g, cx, by) => isoBox(g, cx, by, 14, 13, [190, 192, 198], [150, 154, 164], [112, 116, 126], (f, u, v) => { if (f !== 'T' && Math.abs(v - 6) < .5) return [90, 94, 104]; return null; })));
@@ -4354,6 +4361,17 @@ function initFurnHi() {
     fslab(g, px, py, .7, bq + .1, 7.4, [96, 64, 40], (f, x, w, z, X, Y) => f === 'T' ? [110, 76, 48] : grain([100, 68, 42], x, z, X, Y, 18));
   }, 52);
 
+  /* ---- v17.0: saco de dormir enrollado a medias, con almohada y cremallera ---- */
+  hold(O_BAG, (g, cx, by) => {
+    const ap = 7.4, bq = 3.6;
+    fslab(g, cx, by, ap, bq, 2.4, [98, 108, 60], (f, x, w, z, X, Y, p, q) => {
+      if (f === 'T') { const u = p + ap; if (u < 3.4) return [204, 198, 176]; if (Math.abs(q) < .32) return [58, 64, 34]; return (Math.floor(u / 2.4) & 1) ? [104, 114, 64] : [92, 102, 56]; }
+      return grain([88, 98, 52], x, z, X, Y, 23);
+    });
+    const [px, py] = fpq(cx, by, ap - 1.2, 0);
+    fslab(g, px, py - 2.4, 1.2, bq - .2, 2.2, [84, 94, 50], (f, x, w, z, X, Y) => f === 'T' ? [96, 106, 58] : grain([80, 90, 48], x, z, X, Y, 24));
+  }, 30);
+
   /* ---- mesa con patas, tablones, plato y vela ---- */
   hold(O_TABLE, (g, cx, by) => {
     for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const [px, py] = fpq(cx, by, a * 5.6, b * 4.5); fslab(g, px, py, .7, .7, 7.2, [118, 82, 50], (f, x, w, z) => z < .8 ? [52, 36, 26] : null); }
@@ -4729,7 +4747,7 @@ function findInteract() {
     else if (o === O_STUP || o === O_STDN) type = 'stairs';
     else if (STO[o]) type = 'stn';
     else if ((o === O_DOOR || o === O_WIN) && tbar[i] > 0) type = 'unbar';
-    else if (CONTAINER.has(o)) type = 'cont'; else if (o === O_DOOR) type = 'door'; else if (o === O_BED) type = 'bed'; else if (o === O_TREE) type = axe ? 'tree' : ((twigs.get(i) || 0) < 2 ? 'twig' : null); else if (o === O_BUSH) type = 'bush'; else if (o === O_WIN) type = (td[i] & 4) ? 'jump' : 'climb'; else if (o === O_FENCE) type = (tbh[i] > 0 && tbh[i] < 120 && BLD.pc.has(i) && hasTool('hammer') && hasItem('plank') && hasItem('nails')) ? 'fixf' : (tv[i] === 1 ? null : 'hop');
+    else if (CONTAINER.has(o)) type = 'cont'; else if (o === O_DOOR) type = 'door'; else if (o === O_BED || o === O_BAG) type = 'bed'; else if (o === O_TREE) type = axe ? 'tree' : ((twigs.get(i) || 0) < 2 ? 'twig' : null); else if (o === O_BUSH) type = 'bush'; else if (o === O_WIN) type = (td[i] & 4) ? 'jump' : 'climb'; else if (o === O_FENCE) type = (tbh[i] > 0 && tbh[i] < 120 && BLD.pc.has(i) && hasTool('hammer') && hasItem('plank') && hasItem('nails')) ? 'fixf' : (tv[i] === 1 ? null : 'hop');
     if (!type) continue;
     const cx = tx + .5, cy = ty + .5, d = Math.hypot(cx - px, cy - py); if (d > 1.9) continue;
     const s = d + Math.abs(angDiff(Math.atan2(cy - py, cx - px), P.dir)) * .14 - (type === 'stairs' ? .6 : 0);
@@ -6072,7 +6090,8 @@ const BCAT = [
   { id: 'wall', g: 'Vallas y muros', n: 'Pared', d: 'Muro sólido para armar tu propio refugio', o: O_WALL, cost: [['plank', 3], ['nails', 4]], lv: 1, t: 3.6 },
   { id: 'door', g: 'Vallas y muros', n: 'Puerta', d: 'Sobre una pared nueva o vieja; se puede barricadar', o: O_DOOR, cost: [['plank', 2], ['nails', 3]], lv: 1, t: 3, onWall: 1 },
   { id: 'win', g: 'Vallas y muros', n: 'Ventana', d: 'Sobre una pared; se puede tapiar con tablones', o: O_WIN, cost: [['plank', 1], ['nails', 2]], lv: 1, t: 2.6, onWall: 1 },
-  { id: 'bed', g: 'Muebles', n: 'Cama', d: 'Para dormir y recuperar energía', o: O_BED, cost: [['plank', 3], ['nails', 4], ['sheet', 2]], lv: 1, t: 4 },
+  { id: 'bag', g: 'Muebles', n: 'Saco de dormir', d: 'Barato. En las salas, si mueres puedes reaparecer aquí', o: O_BAG, cost: [['rag', 3], ['sheet', 1]], lv: 0, t: 2.2 },
+  { id: 'bed', g: 'Muebles', n: 'Cama', d: 'Para dormir y recuperar energía. En las salas, punto para reaparecer', o: O_BED, cost: [['plank', 3], ['nails', 4], ['sheet', 2]], lv: 1, t: 4 },
   { id: 'table', g: 'Muebles', n: 'Mesa', d: 'Para decorar tu base', o: O_TABLE, cost: [['plank', 3], ['nails', 3]], lv: 0, t: 3 },
   { id: 'sofa', g: 'Muebles', n: 'Sofá', d: 'Un lugar cómodo', o: O_SOFA, cost: [['plank', 2], ['nails', 2], ['sheet', 3]], lv: 1, t: 3.4 },
   { id: 'bench', g: 'Muebles', n: 'Banca', d: 'Sencilla y barata', o: O_BENCH, cost: [['plank', 2], ['nails', 2]], lv: 0, t: 2.4 },
@@ -6080,6 +6099,7 @@ const BCAT = [
   { id: 'shelf', g: 'Almacenaje', n: 'Estantería', d: 'Almacén para tu base', o: O_SHELF, cost: [['plank', 4], ['nails', 4]], lv: 1, t: 3.4 },
   { id: 'draw', g: 'Almacenaje', n: 'Cajonera', d: 'Cajones para objetos pequeños', o: O_DRAW, cost: [['plank', 3], ['nails', 4]], lv: 1, t: 3.2 },
   { id: 'ward', g: 'Almacenaje', n: 'Armario', d: 'Guarda ropa y equipo', o: O_WARD, cost: [['plank', 5], ['nails', 6]], lv: 2, t: 4.4 },
+  { id: 'tc', g: 'Almacenaje', n: 'Armario de herramientas', d: 'En las salas: nadie más construye cerca mientras tenga tablones y clavos dentro (mantenimiento)', o: O_LOCKER, cost: [['plank', 6], ['nails', 8], ['scrap', 4]], lv: 1, t: 5 },
   { id: 'h1', g: 'Casas', n: 'Choza (5×5)', d: 'Un cuarto con puerta y ventanas', house: 1, w: 5, h: 5, cost: [['plank', 8], ['nails', 12]], lv: 0, t: 10, xp: 20 },
   { id: 'h2', g: 'Casas', n: 'Casa (7×6)', d: 'Más espacio para muebles y camas', house: 1, w: 7, h: 6, cost: [['plank', 16], ['nails', 24]], lv: 2, t: 17, xp: 36 },
   { id: 'h4', g: 'Casas', n: 'Casa de 2 pisos (7×6)', d: 'Planta baja y planta alta unidas por una escalera', house: 1, two: 1, w: 7, h: 6, cost: [['plank', 30], ['nails', 44]], lv: 3, t: 32, xp: 70 },
@@ -6089,11 +6109,11 @@ const BCID = Object.fromEntries(BCAT.map(c => [c.id, c]));
 // lo que se recupera al desmontar objetos del mundo
 const SALV = {
   [O_FENCE]: [['plank', 0, 1], ['nails', 0, 2]], [O_TABLE]: [['plank', 1, 2], ['nails', 1, 3]], [O_SOFA]: [['plank', 1, 1], ['sheet', 1, 2], ['nails', 1, 2]],
-  [O_BENCH]: [['plank', 1, 2], ['nails', 0, 2]], [O_CRATE]: [['plank', 1, 2], ['nails', 1, 3]], [O_BED]: [['plank', 1, 2], ['sheet', 1, 2], ['nails', 1, 3]],
+  [O_BENCH]: [['plank', 1, 2], ['nails', 0, 2]], [O_CRATE]: [['plank', 1, 2], ['nails', 1, 3]], [O_BED]: [['plank', 1, 2], ['sheet', 1, 2], ['nails', 1, 3]], [O_BAG]: [['rag', 1, 2], ['sheet', 0, 1]],
   [O_SHELF]: [['plank', 1, 3], ['nails', 1, 3]], [O_DRAW]: [['plank', 1, 2], ['nails', 1, 3]], [O_WARD]: [['plank', 2, 3], ['nails', 2, 4]],
   [O_DOOR]: [['plank', 1, 2], ['nails', 1, 2]], [O_WIN]: [['plank', 0, 1], ['nails', 0, 2]], [O_WALL]: [['plank', 1, 3], ['nails', 1, 3]]
 };
-const SALVNAME = { [O_FENCE]: 'valla', [O_TABLE]: 'mesa', [O_SOFA]: 'sofá', [O_BENCH]: 'banca', [O_CRATE]: 'caja', [O_BED]: 'cama', [O_SHELF]: 'estantería', [O_DRAW]: 'cajonera', [O_WARD]: 'armario', [O_DOOR]: 'puerta', [O_WIN]: 'ventana', [O_WALL]: 'pared' };
+const SALVNAME = { [O_FENCE]: 'valla', [O_TABLE]: 'mesa', [O_SOFA]: 'sofá', [O_BENCH]: 'banca', [O_CRATE]: 'caja', [O_BED]: 'cama', [O_BAG]: 'saco de dormir', [O_SHELF]: 'estantería', [O_DRAW]: 'cajonera', [O_WARD]: 'armario', [O_DOOR]: 'puerta', [O_WIN]: 'ventana', [O_WALL]: 'pared' };
 const BCMAP = {}; for (const c of BCAT) if (c.o) BCMAP[c.o] = c;
 
 const HSIDES = ['N', 'E', 'S', 'W'];
@@ -12678,7 +12698,7 @@ function netMkPc() {
 }
 function netBind(ch) {
   NET.ch = ch; ch.binaryType = 'arraybuffer';
-  ch.onopen = () => { NET.lastRx = performance.now(); NET.st = 'linked'; netUI(); if (NET.role === 'guest') netSend({ t: 'hi', n: NET.name || 'Jugador 2', b: UR_BUILD }); };
+  ch.onopen = () => { NET.lastRx = performance.now(); NET.st = 'linked'; netUI(); if (NET.role === 'guest') { const sq = NET.spReq; NET.spReq = null; netSend(Object.assign({ t: 'hi', n: NET.name || 'Jugador 2', b: UR_BUILD }, sq ? { sp: sq.sp, ad: sq.ad } : {})); } };   /* v17.0: dónde reaparecer */
   ch.onclose = () => { netLost(); };
   ch.onmessage = e => { NET.lastRx = performance.now(); if (typeof e.data === 'string') { NET.rxBytes += e.data.length; try { netMsg(JSON.parse(e.data)); } catch (er) { if (typeof console !== 'undefined') console.error('net', er); } } else netBin(e.data); };
 }
@@ -21750,7 +21770,7 @@ async function s139GameOpen() {
 const LK = { codes: new Map(), flags: new Set(), ok: new Map(), rh: new Map(), strip: false, q: 0, pend: new Map(), fo: new Map(), rl: new Map(), tries: new Map() };
 Object.assign(ITEMS, { padlock: { n: 'Candado de código', w: .3, t: 'tool', ic: 'lockpick', col: '#d8b84a' } });
 RECIPES.push({ id: 'padlock', n: 'Candado de código', d: 'Cerradura de 4 dígitos para tus puertas y cajas. Comparte el código con tus amigos', in: [['nails', 6], ['tape', 1]], out: [['padlock', 1]], t: 3, tool: 'hammer' });
-const lkHpOf = t => t === O_WALL ? 420 : t === O_DOOR ? 240 : t === O_WIN ? 120 : t === O_LOCKER ? 380 : (CONTAINER.has(t) && t !== O_CAR) ? 160 : 0;
+const lkHpOf = t => t === O_BAG ? 60 : t === O_BED ? 150 : t === O_WALL ? 420 : t === O_DOOR ? 240 : t === O_WIN ? 120 : t === O_LOCKER ? 380 : (CONTAINER.has(t) && t !== O_CAR) ? 160 : 0;
 const lkHouseTile = i => { const x = i % W, y = (i / W) | 0; for (const r of BLD.list) if (r.k === 'h' && x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) return true; return false; };
 const lkPlayerTile = i => BLD.pc.has(i) || lkHouseTile(i);
 const lkRaidable = i => { const t = to[i]; if (!lkHpOf(t) || t === O_FENCE) return false; return BLD.pc.has(i) || ((t === O_WALL || t === O_DOOR || t === O_WIN) && lkHouseTile(i)); };
@@ -23064,6 +23084,173 @@ const VOZ = {
   setInterval(() => { try { VOZ.tick(); } catch (e) { } }, 120);
   VOZ.init();
 })();
+
+/* ===================== v17.0 · ZONA ROJA =====================
+   En las salas del servidor (lo decide el servidor; el teléfono lo muestra y lo pide):
+   1) Lo que construyes tiene vida: al golpearlo se ve una barra y, con el MARTILLO en la mano, USAR lo repara (1 tablón + 2 clavos).
+   2) Armario de herramientas: tu zona de construcción. Nadie más construye ni desmonta cerca mientras tenga mantenimiento (tablones y clavos dentro).
+   3) Sacos de dormir y camas propias: al morir eliges dónde volver. Cuantas más muertes seguidas, más esperas; un anuncio te deja volver ya.
+   4) Zonas Rojas: hospital, comisaría y depósito en cuarentena: gas (máscara antigás), saqueadores armados y cajas militares. */
+const ZR17 = { tcz: [], tcm: new Map(), tcR: 12, tcMax: 3, zr: [], seen: new Set(), inZ: null, gasT: 0, msgT: 0, spl: null, spI: 0, wq: 0, wp: new Map(), lkT: new Map(), going: 0 };
+const zr17On = () => !!(NET.srv && NET.role === 'guest');
+LOOT.zr = { def: { n: [2, 4], t: [['rifle', .8], ['smg', .7], ['shotgun', .9], ['pistol', 1.3], ['revolver', .8], ['ammo9', 3], ['shells', 2.2], ['ammo762', 1.6], ['ammo38', 1.4], ['vest', 1], ['helmet', 1.1], ['riothelm', .6], ['medkit', 1.4], ['gasmask', 1.5], ['adrenaline', .6], ['pills', 1.2], ['bandage', 2], ['sbandage', 1]].filter(q => ITEMS[q[0]]) } };
+LMCOL.zr = '#ff3b30';
+const ZR17LORE = {
+  hospital: 'ZONA ROJA · Al empezar el brote el ejército selló este hospital con los enfermos dentro y lo llenó de gas. Sin máscara antigás te quema los pulmones. Los saqueadores vigilan las cajas militares.',
+  police: 'ZONA ROJA · Aquí la policía resistió hasta el final. Queda gas en el aire y una banda armada se quedó con el arsenal.',
+  ware: 'ZONA ROJA · El depósito de la evacuación que nunca llegó. Gas, saqueadores armados y cajas del ejército con lo mejor que queda en la ciudad.'
+};
+/* ---- 1) vida de lo construido: barras y reparación ---- */
+const zr17Ham = () => !!(P && P.eq && (TOOLALIAS.hammer || ['hammer']).includes(P.eq.id));
+function zr17RepT() {
+  for (const rr of [1.0, 1.5]) {
+    const tx = Math.floor(P.x + Math.cos(P.dir) * rr), ty = Math.floor(P.y + Math.sin(P.dir) * rr); if (!inb(tx, ty)) continue; const i = idx(tx, ty); if (!lkRaidable(i)) continue;
+    const m = lkHpOf(to[i]), h = LK.rh.has(i) ? LK.rh.get(i) : m; return h < m ? { type: 'wrep', i, x: tx + .5, y: ty + .5, o: to[i], h, m } : null;
+  }
+  return null;
+}
+function zr17Call(o) { return new Promise(res => { const q = ++ZR17.wq; ZR17.wp.set(q, res); netSend(Object.assign({ q }, o)); setTimeout(() => { if (ZR17.wp.has(q)) { ZR17.wp.delete(q); res({ ok: false, m: 'Sin respuesta del servidor.' }); } }, 9000); }); }
+function zr17Repair(t) {
+  if (countItem('plank') < 1 || countItem('nails') < 2) { say('Para reparar necesitas 1 tablón y 2 clavos', 'bad'); return; }
+  startAct('Reparando…', 2.4 * (1 - .05 * sl('carp')), async () => {
+    const r = await zr17Call({ t: 'WRP', i: t.i });
+    if (r.ok) { useCount('plank', 1); useCount('nails', 2); if (r.h >= r.mx) LK.rh.delete(t.i); else LK.rh.set(t.i, r.h); ZR17.lkT.set(t.i, performance.now()); addXP('carp', 3); sfx('door', 0); spawnText(t.x, t.y, 'Reparado ' + Math.round(r.h / r.mx * 100) + '%', '#8dbb6e'); }
+    else say(r.m || 'No se pudo reparar.', 'bad');
+  }, { noise: 9 });
+}
+/* ---- 2) armario de herramientas ---- */
+function zr17TcBlock(x, y) { if (!zr17On()) return null; for (const z of ZR17.tcz) { if (z.own || !z.on) continue; if (Math.hypot(z.x - x, z.y - y) <= ZR17.tcR) return z; } return null; }
+function zr17TcHint(z) { if (!z) return 'Armario de herramientas'; if (!z.own) return 'Armario de herramientas de otro superviviente'; return 'Armario de herramientas · ' + (z.on ? 'mantenimiento ' + (z.hrs >= 48 ? Math.round(z.hrs / 24) + ' días' : z.hrs + ' h') : 'SIN MANTENIMIENTO') + ' (tablones y clavos dentro)'; }
+function zr17Brj(o) {
+  say(o.m || 'El servidor no lo permitió.', 'bad');
+  try {
+    if (o.k === 'p') { const c = BCID[o.c]; if (BLD.pc.has(o.i)) { NET.nodrop = true; try { removePieceAt(o.i); } finally { NET.nodrop = false; } if (c) for (const [id, n] of c.cost) addItem(mkItem(id, n)); } }
+    else if (o.k === 'h') { const b = buildings.find(q => q.player && !q.dead && q.x === o.x && q.y === o.y); if (b) { const c = b.fl2 ? BCID.h4 : b.w >= 9 ? BCID.h3 : b.w >= 7 ? BCID.h2 : BCID.h1; removeHouse(b, true); if (c) for (const [id, n] of c.cost) addItem(mkItem(id, n)); } }
+  } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+}
+/* ---- 3) elegir dónde reaparecer ---- */
+const zr17Left = () => { const s = ZR17.spl; return s ? Math.max(0, s.t0 + s.w * 1000 - Date.now()) : 0; };
+function zr17SpShow() {
+  const s = ZR17.spl, dv = $('death'); if (!s || STATE !== 'dead' || !dv || dv.hidden) return;
+  let box = $('spPanel'); if (!box) { box = document.createElement('div'); box.id = 'spPanel'; const mb = dv.querySelector('.mbtns'); mb.parentNode.insertBefore(box, mb); box.addEventListener('click', e => { const b = e.target.closest('button[data-sp]'); if (!b || b.disabled) return; audioInit(); zr17Go(+b.dataset.sp, b.dataset.ad === '1'); }); }
+  box.hidden = false; for (const id of ['bRevive', 'bLoadD', 'bAgain']) { const e = $(id); if (e) e.hidden = true; }
+  const nm = { saco: 'Saco de dormir', cama: 'Cama' }, ic = { saco: '&#9978;', cama: '&#9790;' };
+  let h = '<div class="spt">ELIGE DÓNDE REAPARECER</div><div class="sps">' + (s.n > 1 ? s.n + ' muertes en la última hora · ' : '') + (s.w > 0 ? 'espera <b id="spW">' + Math.ceil(zr17Left() / 1000) + ' s</b>' : 'sin espera') + '</div><div class="spl">';
+  for (const [i, k, x, y] of s.l) { const d = Math.round(Math.hypot(x + .5 - P.x, y + .5 - P.y)); h += '<button class="mbs spb" data-sp="' + i + '"><i class="ic">' + (ic[k] || '&#9790;') + '</i><span>' + (nm[k] || 'Cama') + '<small>' + (d < 4 ? 'donde caíste' : 'a ' + d + ' pasos ' + evDirName(x + .5 - P.x, y + .5 - P.y)) + '</small></span><em class="spc"></em></button>'; }
+  h += '<button class="mbs spb" data-sp="-1"><i class="ic">&#9733;</i><span>Lugar al azar<small>empiezas de cero en algún punto de la ciudad</small></span><em class="spc"></em></button></div>';
+  if (!s.l.length) h += '<div class="spn">No tienes sacos de dormir ni camas propias. Construye un <b>saco de dormir</b> (V ▸ Muebles) para elegir dónde volver la próxima vez.</div>';
+  if (s.ad && s.w > 0) h += '<div class="spa">' + '<button class="mbp rev spb" data-sp="' + (s.l.length ? s.l[0][0] : -1) + '" data-ad="1" id="spAd"><i class="ic">&#9654;</i><span>' + (MS.vip ? 'REAPARECER YA (FUNDADOR)' : 'VER ANUNCIO · REAPARECER YA') + '<small>' + (s.l.length ? 'en tu ' + (nm[s.l[0][1]] || 'cama').toLowerCase() : 'en un lugar al azar') + '</small></span></button></div>';
+  box.innerHTML = h; zr17SpTick();
+  clearInterval(ZR17.spI); ZR17.spI = setInterval(zr17SpTick, 250);
+}
+function zr17SpTick() {
+  const box = $('spPanel'); if (!box || box.hidden || STATE !== 'dead' || !ZR17.spl) { clearInterval(ZR17.spI); return; }
+  const left = zr17Left(), sec = Math.ceil(left / 1000), w = $('spW'); if (w) w.textContent = left > 0 ? sec + ' s' : 'lista';
+  for (const b of box.querySelectorAll('button[data-sp]')) { if (b.dataset.ad === '1') { if (left <= 0) b.parentNode.hidden = true; continue; } b.disabled = left > 0 || !!ZR17.going; const c = b.querySelector('.spc'); if (c) c.textContent = left > 0 ? sec + ' s' : 'IR'; }
+}
+async function zr17Go(sp, ad) {
+  if (!ZR17.spl || ZR17.going || zr17Go.busy) return; const left = zr17Left(); if (left > 0 && !ad) return;
+  if (ad && left > 0) {
+    let ok = MS.vip; if (!ok) { zr17Go.busy = 1; if (NATIVE) $('rvMsg').textContent = 'Cargando anuncio…'; try { ok = await monRewarded(); } finally { zr17Go.busy = 0; } }
+    if (!ok) { $('rvMsg').textContent = adFailMsg('Debes ver el anuncio completo para reaparecer ya.'); return; }
+  } else ad = false;
+  const code = NET.code; if (!code) { toMenu(); return; }
+  ZR17.going = 1; ZR17.spl = null; $('rvMsg').textContent = 'Volviendo a la sala…'; NET.spReq = { sp: sp | 0, ad: ad ? 1 : 0 };
+  try { netLeave(true); } catch (e) { } toMenu(); try { netOpenUI(); } catch (e) { }
+  setTimeout(() => { ZR17.going = 0; try { s138JoinId(code); } catch (e) { NET.spReq = null; } }, 150);
+}
+{ const _sd = UI.showDeath; UI.showDeath = function (c) { ZR17.spl = null; clearInterval(ZR17.spI); const r = _sd.apply(this, arguments); try { const b = $('spPanel'); if (b) b.hidden = true; const a = $('bAgain'); if (a) a.hidden = false; } catch (e) { } return r; }; }
+/* ---- 4) Zonas Rojas ---- */
+function zr17Tick(dt) {
+  if (!zr17On() || STATE !== 'play' || !P || P.dead) { ZR17.inZ = null; return; }
+  let inz = null; for (const z of ZR17.zr) if (Math.hypot(P.x - z.x, P.y - z.y) < z.r) { inz = z; break; }
+  if (inz && ZR17.inZ !== inz) { if (!ZR17.seen.has(inz.id)) { ZR17.seen.add(inz.id); LOCB.q.push(['ZONA ROJA · ' + inz.n, 'zr']); } const now = performance.now(); if (now - ZR17.msgT > 45000) { ZR17.msgT = now; say(ZR17LORE[inz.k] || ZR17LORE.ware, 'bad'); } sfx('alarm', 0); }
+  else if (!inz && ZR17.inZ) say('Sales de la Zona Roja. El aire se aclara.', 'tip');
+  ZR17.inZ = inz; if (!inz || P.sleep) return;
+  const mask = !!(P.cloth && P.cloth.head && P.cloth.head.id === 'gasmask');
+  if (mask) { ZR17.gasT += dt; if (ZR17.gasT > 40) { ZR17.gasT = 0; say('La máscara antigás filtra el gas de la Zona Roja', 'good'); } return; }
+  const k = 1 - .5 * Math.hypot(P.x - inz.x, P.y - inz.y) / inz.r; P.hp -= 1.15 * k * dt; P.pain = Math.min(100, (P.pain || 0) + 2 * dt); P.hurt = Math.max(P.hurt || 0, .15);
+  ZR17.gasT += dt; if (ZR17.gasT > 7) { ZR17.gasT = 0; say(['Toses: el gas te quema la garganta.', 'Te lloran los ojos por el gas.', 'Aquí dentro necesitas una máscara antigás.'][(Math.random() * 3) | 0], 'bad'); }
+  if (P.hp <= 0 && !P.dead) die('Asfixiado por el gas de la Zona Roja');
+}
+{ const _ug = updateGame; updateGame = function (dt) { const r = _ug.apply(this, arguments); try { if (STATE === 'play' && !PAUSED) zr17Tick(Math.min(.25, +dt || 0)); } catch (e) { typeof dbgc === 'function' && dbgc(e); } return r; }; }   /* el invitado no simula eventos: va en el bucle principal */
+/* ---- dibujo: barras de vida, gas y mapa ---- */
+{ const _rd = render; render = function (dt) {
+    _rd.apply(this, arguments);
+    if (!zr17On() || STATE !== 'play' || !P) return;
+    try {
+      const now = performance.now(), ham = zr17Ham(); let n = 0; ctx.save();
+      for (const [i, h] of LK.rh) {
+        const x = i % W, y = (i / W) | 0; if (Math.abs(x - P.x) > 13 || Math.abs(y - P.y) > 13) continue; if (!ham && now - (ZR17.lkT.get(i) || -1e9) > 9000) continue;
+        const m = lkHpOf(to[i]); if (!m || h >= m) continue; const [sx, sy] = w2sRender(x + .5, y + .5), X = RP(sx) - 12, Y = RP(sy) - (to[i] === O_WALL || to[i] === O_DOOR || to[i] === O_WIN ? 36 : 22), q = clamp(h / m, 0, 1);
+        ctx.fillStyle = '#000c'; ctx.fillRect(X - 1, Y - 1, 26, 5); ctx.fillStyle = q > .6 ? '#8dbb6e' : q > .3 ? '#eab244' : '#d6402f'; ctx.fillRect(X, Y, Math.max(1, Math.round(24 * q)), 3); if (++n > 48) break;
+      }
+      if (ZR17.inZ) {
+        const mask = !!(P.cloth && P.cloth.head && P.cloth.head.id === 'gasmask'), a = (mask ? .05 : .11) + Math.sin(TIME * 1.3) * .025;
+        ctx.fillStyle = 'rgba(128,150,40,' + a.toFixed(3) + ')'; ctx.fillRect(0, 0, CW, CH);
+        const g = ctx.createRadialGradient(CW / 2, CH / 2, Math.min(CW, CH) * .3, CW / 2, CH / 2, Math.max(CW, CH) * .7); g.addColorStop(0, 'rgba(60,70,10,0)'); g.addColorStop(1, 'rgba(60,70,10,' + (mask ? .18 : .34) + ')'); ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+        ctx.font = '12px VT323, "Courier New", monospace'; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; const t = '☣ ZONA ROJA' + (mask ? '' : ' · SIN MÁSCARA'); const Y = RP(CH * .78);   /* abajo, encima del rótulo de USAR: arriba lo tapan los paneles */
+        ctx.strokeText(t, RP(CW / 2), Y); ctx.fillStyle = (Math.sin(TIME * 4) > 0 || mask) ? '#ff6a5a' : '#ffd0c8'; ctx.fillText(t, RP(CW / 2), Y);
+      }
+      ctx.restore();
+    } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+  }; }
+{ const _dm = drawMarkers; drawMarkers = function (g, sc, ox, oy, labels) {
+    const r = _dm.apply(this, arguments);
+    try {
+      if (zr17On()) {
+        g.save();
+        for (const z of ZR17.tcz) { if (!z.own || !z.on) continue; const X = (z.x - ox) * sc, Y = (z.y - oy) * sc, R = Math.max(2, ZR17.tcR * sc); g.strokeStyle = 'rgba(141,187,110,.75)'; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.arc(X, Y, R, 0, TAU); g.stroke(); }
+        g.setLineDash([]);
+        for (const z of ZR17.zr) {
+          const X = (z.x - ox) * sc, Y = (z.y - oy) * sc, R = Math.max(3, z.r * sc); g.fillStyle = 'rgba(214,40,30,.2)'; g.strokeStyle = '#ff4a3a'; g.lineWidth = 1.5; g.beginPath(); g.arc(X, Y, R, 0, TAU); g.fill(); g.stroke();
+          if (labels) { g.font = '10px monospace'; g.textAlign = 'center'; g.fillStyle = '#000'; g.fillText('ZONA ROJA', X + 1, Y - R - 2); g.fillStyle = '#ff8a7a'; g.fillText('ZONA ROJA', X, Y - R - 3); }
+        }
+        g.restore();
+      }
+    } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+    return r;
+  }; }
+/* ---- interacción ---- */
+{ const _fi = findInteract; findInteract = function () { const t = _fi.apply(this, arguments); try { if (zr17On() && P && !BLD.on && !P.drive && zr17Ham()) { const r = zr17RepT(); if (r) return r; } } catch (e) { } return t; }; }
+{ const _hf = hintFor; hintFor = function (t) {
+    if (t && t.type === 'wrep') return 'Reparar ' + (SALVNAME[t.o] || 'pieza') + ' · ' + Math.round(t.h / t.m * 100) + '% (1 tablón + 2 clavos)';
+    if (t && t.type === 'bed' && t.o === O_BAG) return 'Dormir en el saco';
+    if (t && t.type === 'cont' && zr17On() && ZR17.tcm.has(t.i) && !(LK.flags.has(t.i) && !(LK.ok.get(t.i) > Date.now()))) return zr17TcHint(ZR17.tcm.get(t.i));
+    return _hf.apply(this, arguments);
+  }; }
+{ const _di = doInteract; doInteract = function () {
+    if (!P.dead && !P.sleep && !P.act && !BLD.on) { const t = findInteract(); if (t && t.type === 'wrep') { zr17Repair(t); return; } }
+    return _di.apply(this, arguments);
+  }; }
+{ const _oc = UI.openCont; UI.openCont = function (i) { const r = _oc.apply(this, arguments); try { if (zr17On() && ZR17.tcm.has(i)) netSend({ t: 'TCA', i }); } catch (e) { } return r; }; }
+{ const _bu = bldUpdate; bldUpdate = function () {
+    const r = _bu.apply(this, arguments);
+    try {
+      if (BLD.on && BLD.ok && zr17On()) {
+        const T = BLD.mode === 'dem' ? ((BLD.dem && BLD.dem.tiles) || []) : BLD.tiles;
+        for (const [x, y] of T) if (zr17TcBlock(x + .5, y + .5)) { BLD.ok = false; BLD.why = 'Zona de otro superviviente: su armario de herramientas no te deja ' + (BLD.mode === 'dem' ? 'desmontar' : 'construir') + ' aquí'; break; }
+        if (BLD.ok && BLD.mode !== 'dem' && BLD.sel && BLD.sel.id === 'tc') { let n = 0; for (const z of ZR17.tcz) if (z.own === 2 && z.on) n++; if (n >= ZR17.tcMax) { BLD.ok = false; BLD.why = 'Ya tienes ' + n + ' armarios de herramientas activos (máximo ' + ZR17.tcMax + ')'; } }
+      }
+    } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+    return r;
+  }; }
+/* ---- mensajes del servidor ---- */
+{ const _nm = netMsg; netMsg = function (o) {
+    if (o && typeof o.t === 'string' && NET.role === 'guest') {
+      switch (o.t) {
+        case 'LKH': { const i = o.i | 0; if (!o.m || o.h >= o.m) LK.rh.delete(i); else LK.rh.set(i, +o.h || 0); ZR17.lkT.set(i, performance.now()); return; }
+        case 'WRPa': { const r = ZR17.wp.get(o.q); if (r) { ZR17.wp.delete(o.q); r(o); } return; }
+        case 'BRJ': zr17Brj(o); return;
+        case 'BHR': { if (isFinite(o.x) && isFinite(o.y) && !BLD.list.some(q => q.k === 'h' && q.x === o.x && q.y === o.y)) BLD.list.push({ k: 'h', x: o.x, y: o.y, w: o.w | 0, h: o.h | 0, d: 'S', c: 0, big: 0, g: [], rx: 1 }); return; }
+        case 'TCZ': { ZR17.tcR = +o.r || 12; ZR17.tcMax = +o.mx || 3; ZR17.tcz = (Array.isArray(o.z) ? o.z : []).map(([i, own, hrs, on]) => ({ i, x: (i % W) + .5, y: ((i / W) | 0) + .5, own: own | 0, hrs: hrs | 0, on: on ? 1 : 0 })); ZR17.tcm = new Map(ZR17.tcz.map(z => [z.i, z])); return; }
+        case 'ZRL': { ZR17.zr = (Array.isArray(o.z) ? o.z : []).map(([id, x, y, r, n, k]) => ({ id, x: +x, y: +y, r: +r, n: String(n || 'Zona Roja'), k: String(k || '') })); return; }
+        case 'SPL': { ZR17.spl = { l: Array.isArray(o.l) ? o.l.filter(q => Array.isArray(q) && q.length >= 4).slice(0, 8) : [], w: Math.max(0, +o.w || 0), n: o.n | 0, ad: o.ad ? 1 : 0, t0: Date.now() }; if (STATE === 'dead') zr17SpShow(); return; }
+      }
+    }
+    return _nm.apply(this, arguments);
+  }; }
+{ const _nl = netLeave; netLeave = function () { try { if (NET.role === 'guest') { ZR17.tcz = []; ZR17.tcm = new Map(); ZR17.zr = []; ZR17.inZ = null; LK.rh.clear(); } } catch (e) { } return _nl.apply(this, arguments); }; }
 
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
@@ -24442,7 +24629,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24483,7 +24670,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24506,7 +24693,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24535,7 +24722,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24569,7 +24756,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24600,7 +24787,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24633,7 +24820,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24662,12 +24849,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.3') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.0') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24830,6 +25017,19 @@ body #tut button,body #quest button{border-radius:999px}
 @media (prefers-reduced-motion:reduce){#vozBtn.tx{animation:none}}
 /* teléfono en horizontal: el aviso de la sala a la derecha, bajo los botones (antes se montaba sobre el tutorial) */
 @media (max-height:520px){body #netchip{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;top:calc(34px + env(safe-area-inset-top,0px))}}
+</style>
+<style id="zr170">
+#spPanel{width:min(380px,100%);margin:2px auto 4px;padding:10px 12px;background:#0008;border:2px solid #000;box-shadow:0 0 0 1px #7a2a20;border-radius:4px;text-align:left}
+#spPanel[hidden]{display:none}
+#spPanel .spt{font-family:var(--disp);font-size:11px;letter-spacing:.14em;color:#ffb0a0;text-shadow:2px 2px 0 #000}
+#spPanel .sps{font-size:17px;color:var(--dim);margin:3px 0 8px}#spPanel .sps b{color:var(--amber);font-weight:normal}
+#spPanel .spl{display:flex;flex-direction:column;gap:6px;max-height:34vh;overflow:auto}
+#spPanel .spb{position:relative;padding:8px 12px}#spPanel .spb span{flex:1;min-width:0}
+#spPanel .spb .spc{font-style:normal;font-family:var(--disp);font-size:10px;color:var(--amber);min-width:34px;text-align:right}
+#spPanel .spb:disabled{filter:grayscale(.5) brightness(.8);cursor:default;transform:none}
+#spPanel .spn{font-size:16px;color:var(--dim);margin-top:8px;line-height:1.1}#spPanel .spn b{color:var(--bone);font-weight:normal}
+#spPanel .spa{margin-top:8px}#spPanel .spa[hidden]{display:none}#spPanel .spa .mbp small{display:block;font-family:var(--font);font-size:15px;letter-spacing:0;margin-top:2px;color:#2a1a04}
+@media (max-height:520px){#spPanel{padding:6px 8px}#spPanel .spl{max-height:30vh;gap:4px}#spPanel .spb{padding:5px 9px}#spPanel .sps{margin:1px 0 4px;font-size:15px}}
 </style>
 </body>
 </html>

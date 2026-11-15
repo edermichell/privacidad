@@ -1,10 +1,19 @@
-Asunto: Último Refugio v16.3 — mapa nuevo gigante: prueba de 20 minutos
+Asunto: Último Refugio v17.0 «Zona Roja» — prueba de 25 minutos
 
 Hola equipo:
 
-Ya está lista la v16.3 de Último Refugio. La novedad grande es el MAPA NUEVO de 960×960 casillas (más de 5 veces más grande que el de antes) en las 3 salas oficiales. Necesito que lo prueben en teléfonos reales.
+Ya está lista la v17.0 «Zona Roja» de Último Refugio. Las salas cambian de verdad: ahora hay que defender la base, elegir dónde volver al morir y hay lugares a los que da miedo entrar. Necesito que lo prueben en teléfonos reales.
 
-QUÉ HAY DE NUEVO
+LO NUEVO DE LA 17.0
+- ZONAS ROJAS: al principio del brote el ejército puso en cuarentena un hospital, una comisaría y un depósito, y los llenó de gas. Salen en el mapa con un círculo rojo. Dentro hay gas (sin máscara antigás pierden vida), saqueadores armados (y un jefe) y cajas militares con el mejor botín de la ciudad.
+- SACO DE DORMIR (V > Muebles, 3 trapos + 1 sábana) y camas: si mueren en una sala, eligen dónde reaparecer. Cuantas más veces mueran en una hora, más esperan (10 s, 25 s, 40 s...). Con un anuncio vuelven al instante.
+- ARMARIO DE HERRAMIENTAS (V > Almacenaje): marca su zona. Nadie más puede construir ni desmontar cerca mientras tenga tablones y clavos dentro (se gastan con el tiempo). Quien lo abre queda autorizado: pónganle candado.
+- SUS PAREDES TIENEN VIDA: al golpearlas sale una barra. Con el martillo en la mano, USAR las repara (1 tablón + 2 clavos), pero no mientras las están rompiendo.
+- SALA PVP: las bases ya no están protegidas cuando sus dueños se desconectan.
+
+(Adjuntar: zona_roja.jpg, reaparecer.jpg, mapa_zonas_rojas.jpg)
+
+LO QUE YA TRAÍAN LAS VERSIONES ANTERIORES
 - 3 salas oficiales con el mapa nuevo (etiqueta MAPA 960), hasta 10 jugadores por sala.
 - Distritos con personalidad: centro denso (más zombis y mejor botín), zona industrial con patios de cajas, PUERTO con mar y muelles de madera, parques con estanque y puentes, barrio residencial y campo con la base militar.
 - Callejones (pasajes de 1 o 2 casillas, cruces y callejones sin salida con botín… y emboscada) y mini-rotondas.
@@ -15,7 +24,7 @@ QUÉ HAY DE NUEVO
 - NUEVO EN LA 16.0: la INTERFAZ está renovada (menús y botones). Díganme si algo se ve cortado, montado o difícil de tocar en su teléfono (con captura).
 - NUEVO EN LA 15.9: pongan su NOMBRE en MULTIJUGADOR (campo «TU NOMBRE») y confirmen que los demás lo ven. Además, al volver a una sala deben aparecer donde lo dejaron, y si duermen en una cama, en esa cama (díganme si no). Si mueren, aparecen en un lugar al azar.
 - NUEVO EN LA 15.8: en la sala PVP el servidor vigila de dónde sale cada arma y cada bala (lo inventado no se guarda) y la velocidad. Si a alguno le aparece el aviso «El servidor no reconoce de dónde salieron…» o «El servidor te devolvió a tu posición» jugando limpio, mándenme captura y qué hacían: es justo lo que quiero cazar. También verán zombis con uniforme de policía o soldado (traen botín).
-- NUEVO EN LA 15.7: el botín de muebles vacíos vuelve con el tiempo, y su base queda protegida mientras están desconectados (pongan al menos un candado en ella). En la sala PVP: bandidos con recompensa y temporadas de 14 días.
+- NUEVO EN LA 15.7: el botín de muebles vacíos vuelve con el tiempo, y su base queda protegida mientras están desconectados (pongan al menos un candado en ella; desde la 17.0, en la sala PVP ya no). En la sala PVP: bandidos con recompensa y temporadas de 14 días.
 - NUEVO EN LA 15.6: ahora se ven y se oyen los golpes y los disparos de los demás (animación del golpe, estela de la bala, fogonazo y sonido). Pruébenlo: que uno golpee y dispare y los demás me digan si lo ven.
 - ARREGLADO EN LA 15.5: en las salas no se veía a los demás jugadores (solo un personaje fijo llamado «Anfitrión»). Ahora deben verse entre ustedes, moviéndose y con «Jugador N» encima. Por favor confírmenme que se ven.
 - NUEVO EN LA 15.4: MISIONES DE GRUPO en la sala PVP. Si su alianza tiene 2 o más aliados conectados y cerca, cada día de juego (de día) llega una misión: limpiar un nido o mantener una radio. Al cumplirla aparece UN solo botín en el suelo: el primero que llegue se lo lleva. Les mando aparte el guion.
@@ -29,12 +38,15 @@ QUÉ HAY DE NUEVO
 
 CÓMO PROBARLO (≈ 25 minutos)
 1. ANTES de jugar, abran en el teléfono [PEGAR AQUÍ LA DIRECCIÓN]/prueba (por ejemplo https://server.tail12bbaa.ts.net/prueba), pulsen EMPEZAR LA PRUEBA y mándenme el resultado (botón COPIAR RESULTADO). Gasta ~8 MB. Si pueden, háganlo con Wi-Fi y con datos móviles.
-2. Instalen la v16.3 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
+2. Instalen la v17.0 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
 3. Caminen por el centro, la zona industrial, el puerto (muelles al final del camino), un parque con estanque y entren a un callejón.
 4. Peleen contra zombis, construyan un muro, abran cajas y salgan y vuelvan a entrar: lo construido debe seguir ahí.
 5. Abran NOVEDADES: debe mostrar la lista de cambios y decir «Tienes la última versión». (Cuando salga una versión posterior, debe aparecer un aviso abajo en el menú con el botón ACTUALIZAR: avísenme si lo ven.)
 6. Salgan de la sala y vuelvan a entrar: deben conservar su mochila tal como la dejaron.
-7. A los 5 minutos: Ajustes → «Diagnóstico avanzado» → ABRIR → COPIAR y péguenlo en el mensaje.
+7. ZONA ROJA (17.0): abran el mapa, vayan a una Zona Roja (mejor en grupo) y entren: ¿se nota el gas?, ¿cuánto aguantan sin máscara?, ¿los saqueadores son demasiado duros o demasiado fáciles?, ¿el botín vale la pena?
+8. SACO Y REAPARECER (17.0): pongan un saco de dormir, aléjense y mueran (en la sala PVP pueden matarse entre ustedes). Debe salir ELIGE DÓNDE REAPARECER. Prueben el saco, «Lugar al azar» y el botón del anuncio. ¿La espera les parece justa?
+9. ARMARIO Y REPARAR (17.0): uno pone un armario de herramientas y otro intenta construir al lado (no debe dejarle; luego que lo abra y vuelva a probar). Golpeen una pared, esperen 15 s y repárenla con el martillo en la mano.
+10. A los 5 minutos: Ajustes → «Diagnóstico avanzado» → ABRIR → COPIAR y péguenlo en el mensaje.
 
 LO QUE MÁS ME PREOCUPA
 - Fluidez en teléfonos modestos con un mapa tan grande (los FPS del Diagnóstico me dicen todo).
@@ -46,7 +58,7 @@ CÓMO REPORTAR
 Modelo de teléfono y versión de Android, qué hacían y dónde (centro, puerto…), hora aproximada, Wi-Fi o datos, y captura o video corto. Para jugadores tramposos o tóxicos usen el botón de reportar y avísenme también.
 
 DESCARGA Y HORARIO
-Descarga de la v16.3: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
+Descarga de la v17.0: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
 El servidor estará encendido: [PONER FECHA Y HORARIO]
 (Si instalan encima conservan su partida individual. Las partidas de las salas oficiales anteriores no se conservan con el mapa nuevo.)
 
