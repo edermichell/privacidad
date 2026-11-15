@@ -80,3 +80,6 @@
 ## Tu nombre y tu cama (v15.9) — ver `actualizacion_v159/CAMBIOS_v15.9.md`
 - Nombre de jugador elegido en MULTIJUGADOR, único en el servidor y moderable desde el panel.
 - Al volver a una sala: junto a tu cama, o donde lo dejaste; tras morir, en un lugar al azar.
+
+## Interfaz renovada (v16.0) — ver `actualizacion_v160/CAMBIOS_v16.0.md`
+- Un solo sistema de botones y ventanas, color de sección en los iconos, MULTIJUGADOR destacado y sin cortes, menú del teléfono sin solapes.
