@@ -1,15 +1,15 @@
-# Guía para subir la v15.7 a Google Play (la 14.0 ya está aprobada al 100 % en la prueba cerrada «alpha»)
+# Guía para subir la v15.8 a Google Play (la 14.0 ya está aprobada al 100 % en la prueba cerrada «alpha»)
 
 > **Estado actual:** la 14.0 ya fue aprobada y está en alpha. Puedes saltarte la fila de «rechazada / en revisión» de la tabla de abajo y seguir directamente con la sección 1.
 
-Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, versionCode **154** / «15.7») · `UltimoRefugio_Servidor_Tailscale.zip` (kit del servidor) · `privacy.html` (política **actualizada**) · `NOVEDADES_PLAY_v15.7.txt` · `correo_testers_v157/` · `CAMBIOS_v14.0_a_v15.7.md`.
+Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.8.zip` (app, versionCode **155** / «15.8») · `UltimoRefugio_Servidor_Tailscale.zip` (kit del servidor) · `privacy.html` (política **actualizada**) · `NOVEDADES_PLAY_v15.8.txt` · `correo_testers_v157/` · `CAMBIOS_v14.0_a_v15.8.md`.
 
 ## 0. Qué hacer según el estado de la 14.0
 | Estado de la 14.0 | Qué hacer |
 |---|---|
-| **Aprobada** (100 %) | Sigue con los pasos de abajo y sube la 15.7 como una versión nueva en la misma pista (alpha). |
+| **Aprobada** (100 %) | Sigue con los pasos de abajo y sube la 15.8 como una versión nueva en la misma pista (alpha). |
 | **Rechazada / con problemas** | Lee el motivo en *Recibidos* y *Política y programas*. La 15.7 ya incluye la política de privacidad corregida; corrige lo que pida Google y sube la 15.1 (no hace falta arreglar la 14.0). Mándame el texto del rechazo si quieres que lo revisemos. |
-| **Sigue «En revisión» tras 3–4 días** | Opción: en la versión, *Quitar de la revisión* y enviar directamente la 15.7 (reinicia la espera). Decídelo tú; no lo hagas antes. |
+| **Sigue «En revisión» tras 3–4 días** | Opción: en la versión, *Quitar de la revisión* y enviar directamente la 15.8 (reinicia la espera). Decídelo tú; no lo hagas antes. |
 
 ## 1. Antes de subir (en este orden)
 1. **Sube `privacy.html` a tu URL pública** (la misma que tienes en Play Console y en la variable `PRIVACY_URL`). La política anterior (v83) decía que *no hay servidores propios ni cuentas*; el multijugador ya no encaja con eso. Compruébalo abriendo la URL desde el teléfono: debe decir «noviembre de 2026 (v15.7)».
@@ -20,16 +20,16 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
    - **Eliminación de datos:** indica que se pueden solicitar al correo de contacto (así lo dice la nueva política).
 3. **Clasificación de contenido** (cuestionario IARC): vuelve a contestarlo honestamente: ahora **los usuarios pueden interactuar entre sí** (multijugador por salas, **sin chat de texto ni voz**) y hay violencia de fantasía contra zombis. Puede cambiar la clasificación.
 4. **Contenido generado por usuarios (política de Play):** cumples lo que se pide: **reportar** (botón en la partida), **expulsar/banear** (dueño de la sala y panel del servidor) y moderación por el responsable. Si el formulario pregunta, dilo así.
-5. **Compruebas el proyecto:** `app/build.gradle` tiene `versionCode 154` y `versionName "15.7"` (mayor que el 137 de la 14.0). Los secretos de compilación siguen igual: `UNITY_TEST_MODE=false`, `PRIVACY_URL` con tu dirección real, `UNITY_GAME_ID`, firma (`KEYSTORE_FILE`…). El mensaje de la compilación *release* avisa si queda algo de prueba.
+5. **Compruebas el proyecto:** `app/build.gradle` tiene `versionCode 155` y `versionName "15.8"` (mayor que el 137 de la 14.0). Los secretos de compilación siguen igual: `UNITY_TEST_MODE=false`, `PRIVACY_URL` con tu dirección real, `UNITY_GAME_ID`, firma (`KEYSTORE_FILE`…). El mensaje de la compilación *release* avisa si queda algo de prueba.
 
 ## 2. Compilar y subir
 1. Descomprime el zip, abre la carpeta `UltimoRefugio_Android` en Android Studio y compila el **AAB firmado** (ver `LEEME_PASOS.md`, sección «APK/AAB firmado») con la **misma llave** de siempre.
 2. Play Console → Pruebas cerradas (alpha) → **Crear nueva versión** → sube el `.aab`.
-3. «Novedades»: pega el texto de `NOVEDADES_PLAY_v15.7.txt` (≤ 500 caracteres).
+3. «Novedades»: pega el texto de `NOVEDADES_PLAY_v15.8.txt` (≤ 500 caracteres).
 4. Revisa los avisos de Play Console (permisos, dispositivos, API) y **Enviar a revisión**.
 5. Mientras revisa, **no cambies más cosas** de la ficha; cada cambio puede reiniciar la espera.
 
-## 3. Cuando la 15.7 esté disponible para los testers
+## 3. Cuando la 15.8 esté disponible para los testers
 1. Manda el correo de `correo_testers_v157/` (rellena enlace, dirección de `/prueba` y horario). Pídeles las pruebas del guion.
 2. En tu PC copia el kit nuevo (`UltimoRefugio_Servidor_Tailscale.zip`) **sin pisar tu `config.json`** y sigue `MAPA_NUEVO_960.md`: cierra el servidor → `MIGRAR_A_MAPA_NUEVO.bat` → `INICIAR_SERVIDOR.bat` → prueba con tu teléfono.
 3. Corre `PRUEBA_DURA.bat` (3 salas, con todo cerrado) y, si quieres más seguridad, una de 30 min: `node herramientas\prueba_dura.js --seg 1800`.
@@ -47,7 +47,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 
 ---
 
-## Lista de verificación ANTES de enviar la v15.7 (30–45 min)
+## Lista de verificación ANTES de enviar la v15.8 (30–45 min)
 1. **Compila en Android Studio.** Esta versión toca `MainActivity.java` (recuperación del WebView y `onTrimMemory`); no pude compilarla con el SDK real. Si Gradle marca un error en esas líneas, avísame con el texto.
 2. **Provoca el cierre del WebView** en un teléfono con depuración USB: Ajustes del teléfono → Opciones de desarrollador → «Límite de procesos en segundo plano» o, con Android Studio abierto, `adb shell am send-trim-memory com.impulso.ultimorefugio RUNNING_CRITICAL`. El juego **no** debe cerrarse (puede reiniciarse y volver a su último guardado).
 3. **Prueba en el teléfono más modesto que tengas:** Ajustes → «Diagnóstico avanzado» → ABRIR → COPIAR tras 5 min en el centro de la ciudad. El primer arranque debe ir a «30 FPS».
@@ -64,7 +64,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 - **Tras actualizar**, el panel se abre una sola vez. En una instalación nueva no molesta.
 - **Aviso automático:** al abrir el menú, la app (Android) pregunta a Google Play si hay una versión más nueva (*actualización dentro de la app*, librería `com.google.android.play:app-update:2.1.0`, ya añadida a `build.gradle`). Si la hay, aparece un aviso abajo («Versión nueva disponible · ACTUALIZAR»), un punto rojo en NOVEDADES y el botón ACTUALIZAR AHORA en el panel. Al pulsar, Google Play hace la actualización (pantalla completa, «inmediata»); si Play no la permite, abre la ficha de la app. El jugador puede descartar el aviso (no vuelve hasta que salga otra versión).
 - **Anuncio desde tu servidor (opcional):** en `config.json` puedes poner `"appUltima": { "codigo": 147, "version": "14.10", "notas": ["Lo nuevo 1", "Lo nuevo 2"] }` (codigo = versionCode de Play). La app lo recibe con la lista de salas y avisa (con esas notas) a quien tenga una versión menor. Sin ese bloque no se anuncia nada; el aviso de Google Play funciona igual. **Cada vez que subas una versión nueva, añade también sus cambios a la lista `UR_NEWS` del juego** (primeras líneas del bloque «v15.7 · NOVEDADES»), o pídeme que lo haga.
-- **Cómo probar el aviso (hay que hacerlo con Google Play, no se puede en el emulador sin Play):** instala la 15.7 desde la pista (alpha/interna) en un teléfono; luego sube **otra compilación con un versionCode mayor** (p. ej. 155) a la misma pista; cuando Play la procese (puede tardar de minutos a horas), abre la app en el teléfono: debe salir el aviso. Con «Compartir app interna» también sirve. Qué mirar: (1) aviso y punto rojo; (2) ACTUALIZAR abre la pantalla de actualización de Play; (3) al terminar, la app arranca en la versión nueva y abre las novedades una vez.
+- **Cómo probar el aviso (hay que hacerlo con Google Play, no se puede en el emulador sin Play):** instala la 15.8 desde la pista (alpha/interna) en un teléfono; luego sube **otra compilación con un versionCode mayor** (p. ej. 155) a la misma pista; cuando Play la procese (puede tardar de minutos a horas), abre la app en el teléfono: debe salir el aviso. Con «Compartir app interna» también sirve. Qué mirar: (1) aviso y punto rojo; (2) ACTUALIZAR abre la pantalla de actualización de Play; (3) al terminar, la app arranca en la versión nueva y abre las novedades una vez.
 - **Aún sin probar en un teléfono real:** el código Java de esta función compila contra una copia de la API de Play hecha por mí, pero **no se ha ejecutado con Google Play real**. Es la primera cosa a revisar con la 15.1 (Android Studio debe descargar la librería `app-update` al sincronizar Gradle; necesita internet).
 
 
@@ -99,7 +99,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 - **Ya hay daño entre jugadores en las salas `"pvp": true`.** Reglas: protección de 20 s al aparecer, zonas seguras a 10 casillas de comerciantes, el servidor decide aciertos y daño (cuchillo ≈ 14, hacha ≈ 37, pistola ≈ 41, rifle ≈ 74), al morir el cuerpo deja todo en el suelo y el personaje se borra, cortar la conexión en pleno combate (20 s) = morir, aparición aleatoria en la costa. Detalle en `actualizacion_v157/CAMBIOS_v15.7_combate_pvp.md`.
 - **Recomendación:** abre la sala PvP **solo a tus testers** primero. Todo está probado con clientes de prueba, no con teléfonos reales: hay que ver cómo se siente con red real (precisión de los disparos, el castigo por cortar en combate).
 - **Guion de prueba PvP (20 min, 4 testers):** (1) entrar a la sala PvP (aceptar el aviso); (2) comprobar que aparecen en sitios distintos y que sale «Protección de aparición»; (3) esperar 20 s, buscarse y pelear con cuchillo/hacha y con armas de fuego; (4) al morir: ¿el cuerpo deja las cosas?, ¿el que mató puede recogerlas?; (5) acercarse a un comerciante y comprobar que ahí no se puede atacar; (6) probar a cerrar la app en medio de una pelea (debe contar como muerte); (7) pasarme sus impresiones sobre la puntería y el daño (muy poco / mucho).
-- **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Las salas PvP exigen la app **15.2** (`versionCode 154`).
+- **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Las salas PvP exigían la app **15.2** (`versionCode 149`).
 - **Google Play:** antes de publicar revisa la clasificación por edades (cuestionario IARC: ahora hay **violencia entre usuarios** en las salas PvP) y «Seguridad de los datos» (el servidor guarda tu personaje y registra heridas y bajas). Los controles de reportar, expulsar y banear ya existen.
 - **Política de privacidad:** subir la nueva.
 
@@ -121,7 +121,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 ## Misiones de grupo (nuevo en la 15.4)
 - **Solo en salas `"pvp": true`, para alianzas con 2+ miembros conectados y cerca.** Una misión por día de juego y de día: **Limpiar el nido** o **Mantener la radio** (150 s cerca del punto, con oleadas). Se marca en el mapa y en el panel ALIANZA (tecla Y).
 - **El botín:** al cumplirla aparece **un solo botín** en el suelo del punto. **Se lo lleva el primero que llegue** (aliado, traidor o desconocido): ahí se decide la confianza. Una arma con munición, vendas, un botiquín y objetos extra.
-- **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Opcional: `"misionesGrupo": false`. Las salas PvP exigen la app **15.4** (`versionCode 154`).
+- **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Opcional: `"misionesGrupo": false`. Las salas PvP exigían la app **15.4** (`versionCode 154`).
 - **Guion de prueba (25 min, 3–4 testers en la sala PvP):** (1) formar una alianza y esperar de día a que llegue la misión (acelerar con el reloj del mundo no es posible desde el teléfono: basta esperar al amanecer del juego; si es de noche, el servidor lo anota y llega al día siguiente); (2) ir juntos al punto marcado; (3) **nido:** eliminar a todos los infectados; **radio:** que uno aguante en el punto mientras los otros defienden las oleadas; (4) al cumplirla, ver quién llega primero al botín y qué pasa con la confianza; (5) probar que un desconocido también puede llevarse el botín; (6) reconectarse a mitad de misión.
 - **Límites:** solo dos tipos de misión; el botín no se reparte; la misión en curso se pierde si el servidor se reinicia.
 
@@ -133,7 +133,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 - **Hay que actualizar la app en Play** (no basta con el servidor). Dos caminos: la **14.0.1** (versionCode 138: la 14.0 aprobada más solo este arreglo, riesgo mínimo) o esta **15.5** (versionCode 154, con todo lo nuevo).
 - **Servidor:** el kit nuevo trae un paliativo para quien siga con la app antigua (ve al jugador más cercano, rotulado «Anfitrión»); se apaga con `"parcheAppAntigua": false`. Copia `servidor.js`, `srv_layer.js` y `juego\index.html` sin pisar `config.json`.
 - **Prueba obligatoria con 3 teléfonos actualizados:** cada uno debe ver a los otros dos moviéndose, con «Jugador N», sin ningún «Anfitrión».
-- Las salas PvP exigen ahora la app 15.5 (`versionCode 154`).
+- Las salas PvP exigían entonces la app 15.5 (`versionCode 152`).
 
 
 ---
@@ -141,7 +141,7 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 ## Golpes y disparos visibles, y salas sin «anfitrión» (nuevo en la 15.6)
 - **Animaciones:** cada golpe y cada disparo de otro jugador se ve completo (animación, arco, estela de la bala, fogonazo, casquillo) y se oye con la distancia. **Hace falta la app nueva y el kit nuevo del servidor** (el servidor reenvía los eventos).
 - **Sin anfitrión:** en las salas oficiales el primer jugador es «Jugador 1» y los textos ya no hablan de «anfitrión» ni de «tu compañero».
-- Detalle, pruebas y la opción mínima **14.0.2** (versionCode 139): `actualizacion_v157/CAMBIOS_v15.7_y_v14.0.2.md`.
+- Detalle, pruebas y la opción mínima **14.0.2** (versionCode 139): `actualizacion_v156/CAMBIOS_v15.6_y_v14.0.2.md`.
 - **Prueba con 2–3 teléfonos:** uno golpea y dispara; los demás deben verlo y oírlo.
 
 
@@ -153,3 +153,10 @@ Contenido de esta carpeta: `UltimoRefugio_AndroidStudio_v15.7.zip` (app, version
 - **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Opciones nuevas: `botinReapareceHoras` (3), `proteccionBases` (true), `proteccionBasesMin` (10), `temporadaDias` (14, salas PvP).
 - **Consejo para tus testers:** pongan al menos un candado en su base para que quede protegida al desconectarse.
 - Detalle y pruebas: `actualizacion_v157/CAMBIOS_v15.7_fase5.md`.
+
+## Fase 6: salas PvP más limpias (nuevo en la 15.8)
+- **Libro de inventario:** el servidor apunta de dónde saca cada jugador las armas de fuego, la munición (también la cargada), los botiquines, los chalecos/cascos y las armas fuertes: suelo, muebles, cadáveres de zombis con uniforme, comerciantes y fabricar. Lo que aparece sin origen **no se guarda**, no sirve para dañar a otros jugadores y el teléfono del tramposo también lo pierde. Hay una pequeña tolerancia para las recompensas de misiones (nunca dan armas).
+- **Movimiento:** más de 9 casillas/s a pie o 16 en coche (con margen) = el servidor devuelve al jugador a su última posición válida; los golpes usan esa posición.
+- **Los invitados ven ahora el uniforme de los zombis** (policía, soldado…) y pueden sacar su botín.
+- **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Opcionales: `"auditarInventario": false`, `"validarMovimiento": false`. **Las salas PvP exigen la app 15.8** (`versionCode 155`); en el registro verás `INVENTARIO SOSPECHOSO de jugador N …` si alguien lo intenta.
+- Detalle, límites y pruebas: `actualizacion_v158/CAMBIOS_v15.8_fase6.md`.

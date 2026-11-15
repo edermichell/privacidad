@@ -71,3 +71,8 @@
 ## Fase 5: salas vivas (v15.7) — ver `actualizacion_v157/CAMBIOS_v15.7_fase5.md`
 - Servidor (cualquier app): botín que reaparece en muebles vacíos; bases protegidas con los dueños desconectados más de 10 min; temporadas PvP de 14 días con avisos, ranking y mundo nuevo.
 - PvP: bandidos (3 asesinatos en 24 h) con recompensa; los comerciantes no atienden a bandidos ni traidores; nombre naranja «· BANDIDO» y panel con ranking (app 15.7).
+
+## Fase 6: salas PvP más limpias (v15.8) — ver `actualizacion_v158/CAMBIOS_v15.8_fase6.md`
+- PvP: el servidor apunta de dónde sale cada objeto valioso; lo inventado no se guarda ni sirve para atacar. Quien se mueve más rápido de lo posible vuelve a su sitio.
+- Los invitados ven el uniforme de los zombis (policía, soldado…) y pueden sacar su botín especial.
+- La sala PvP exige la app 15.8 (versionCode 155).

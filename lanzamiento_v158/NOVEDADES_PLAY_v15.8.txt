@@ -1,0 +1,17 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v15.8:
+• Salas PVP más justas: el servidor sabe de dónde sale cada arma y cada bala; lo inventado no se guarda.
+• Quien se mueve más rápido de lo posible vuelve a su sitio.
+• Ahora ves el uniforme de los zombis policía y soldado en las salas, con su botín.
+• Botín que reaparece, bases protegidas sin conexión, bandidos y temporadas PVP.
+• Ves y oyes los golpes y disparos de los demás.
+
+--- English (optional) ---
+What's new in v15.8:
+• Fairer PVP rooms: the server knows where every gun and bullet comes from; made-up items are not saved.
+• Anyone moving faster than possible is sent back.
+• You now see police and soldier zombie uniforms in rooms, with their loot.
+• Respawning loot, offline base protection, bandits and PVP seasons.
+• You see and hear other players' hits and shots.

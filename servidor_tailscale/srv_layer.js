@@ -59,9 +59,10 @@ SRV.boot = function (opt) {
     if (!isFinite(o.P.hp) || o.P.hp < 0 || o.P.hp > 200) return null; return o;
   };
   SRV.charFlush = peer => { if (!peer.chPend || !peer.uid) return; const c = peer.chPend; peer.chPend = null; peer.chT = performance.now(); charCall('put', peer.uid, c); };
-  SRV.charPut = (peer, c) => {
+  SRV.charPut = (peer, c, fin) => {
     if (!SRV.auth || !peer.chAu || peer.chDead) return;
-    const cv = SRV.charValid(c); if (!cv) { peer.chBadN = (peer.chBadN | 0) + 1; if (peer.chBadN <= 3) slog('personaje rechazado de ' + who(peer) + ' (formato o valores no válidos)'); return; }
+    let cv = SRV.charValid(c); if (!cv) { peer.chBadN = (peer.chBadN | 0) + 1; if (peer.chBadN <= 3) slog('personaje rechazado de ' + who(peer) + ' (formato o valores no válidos)'); return; }
+    if (audOn(peer)) { try { peer.audSeq = (peer.audSeq | 0) + 1; const ar = SRV.audit(peer, cv, !!fin); if (ar.wait) { const sq = peer.audSeq, c0 = c; clearTimeout(peer.audTm); peer.audTm = setTimeout(() => { try { if (peer.audSeq === sq && !peer.chDead) SRV.charPut(peer, c0, true); } catch (e) { } }, 2500); return; } if (ar.cut) { cv = ar.cv; c = JSON.stringify(cv); } } catch (e) { slog('auditoría: ' + e.message); } }   /* v15.8 */
     peer.chBlob = cv; peer.chInv = new Set(cv.P.inv.map(i => i.id));   /* v15.2: lo que el servidor sabe que lleva (armas, botín del cuerpo) */
     peer.chPend = c; if (!peer.chT || performance.now() - peer.chT > 8000) SRV.charFlush(peer);
   };
@@ -266,6 +267,131 @@ SRV.boot = function (opt) {
       try { const peer = NET.cur; if (SRV.pvp && peer && peer.uid && (SRV.traitLeft(peer.uid) > 0 || SRV.isBandit(peer.uid) > 0)) { const n = NPCS.find(q => q.id === o.id), T = n && NT[n.type]; if (T && T.shop) { netSend({ t: 'NS', id: o.id, no: 1 }); SRV.aliSay(peer, (n.name || T.n) + ': «No hago tratos con ' + (SRV.isBandit(peer.uid) > 0 ? 'bandidos' : 'traidores') + '.»', 'bad'); return; } } } catch (e) { }
       return _no.apply(this, arguments);
     }; }
+  /* ===== v15.8 · FASE 6: LIBRO DE INVENTARIO Y MOVIMIENTO (salas PvP, app 15.8+) =====
+     INVENTARIO: el servidor apunta de dónde saca cada jugador los objetos VALIOSOS (armas de fuego, munición —también la cargada—, botiquines, chalecos/cascos, armas cuerpo a cuerpo fuertes):
+       suelo que recoge cerca · muebles y maleteros que vacía cerca (comprobando que lo que «sale» de un mueble nuevo cabe en su tabla de botín) · cadáveres de zombis (lo que dice su uniforme) ·
+       comerciantes (su existencia baja) · fabricar (deben gastarse los ingredientes) · descargar un arma (la munición cuenta junta).
+       Cuando el jugador sube su personaje, cada objeto valioso de más debe tener origen. Hay una pequeña tolerancia (12 «puntos» por hora) para lo que no se vea; lo que la supere NO SE GUARDA,
+       no cuenta como «arma que lleva» para atacar a otros y suma avisos. El jugador se entera con un aviso.
+     MOVIMIENTO: con más de 9 casillas/s a pie o 32 en coche (con margen), el servidor se queda con la última posición válida (es la que usa para los golpes) y, si se repite, devuelve al jugador a ella. */
+  SRV.AUD = { on: !!SRV.pvp && opt.audit !== false, minB: 155, slack0: 12, slackH: 12, slackMax: 24, credMs: 15 * 60e3 };
+  SRV.MOV = { on: !!SRV.pvp && opt.mov !== false, foot: 9, car: 16, slack: 2.5, bank: 3 };
+  const audOn = peer => SRV.AUD.on && peer && (peer.build | 0) >= SRV.AUD.minB;
+  SRV.valOf = id => { const d = ITEMS[id]; if (!d) return 0; if (d.gun) return 30; if (d.t === 'ammo') return .15; if (id === 'medkit') return 3; if (d.t === 'cloth' && d.prot >= .4) return 5; if (d.t === 'wpn' && d.dmg >= 50) return 3; return 0; };
+  SRV.invCount = inv => { const all = {}; for (const it of (inv || [])) { if (!it || !ITEMS[it.id]) continue; const d = ITEMS[it.id], n = d.stack ? Math.max(0, it.n | 0) : 1; all[it.id] = (all[it.id] || 0) + n; if (d.gun && d.ammo && (it.a | 0) > 0) all[d.ammo] = (all[d.ammo] || 0) + (it.a | 0); } return all; };
+  SRV.audInit = peer => peer.aud || (peer.aud = { prev: SRV.invCount(peer.chBlob ? peer.chBlob.P.inv : [mkItem('knife'), mkItem('bandage', 2)]), slack: SRV.AUD.slack0, t: Date.now() });
+  SRV.cred = (peer, id, n) => { if (!audOn(peer) || !(n > 0) || !(SRV.valOf(id) > 0)) return; const D = peer.dropd || (peer.dropd = {}), u = Math.min(n, D[id] || 0); if (u) { D[id] -= u; n -= u; } if (!(n > 0)) return; (peer.cr || (peer.cr = [])).push({ id, n, t: Date.now() }); if (peer.cr.length > 400) peer.cr.splice(0, peer.cr.length - 400); };
+  /* soltar algo valioso (al suelo o a un mueble): ¿lo tenía de verdad? devuelve cuánto está respaldado */
+  SRV.take = (peer, id, n) => {
+    if (!audOn(peer) || !(SRV.valOf(id) > 0)) return n; const A = SRV.audInit(peer), D = peer.dropd || (peer.dropd = {}), now = Date.now(); let r = n, ok = 0;
+    for (const q of (peer.rel || [])) { if (r <= 0) break; if (q.id !== id || q.n <= 0 || now - q.t > 20000) continue; const u = Math.min(r, q.n); q.n -= u; r -= u; ok += u; }   /* lo que acaba de salir de su inventario (el guardado llegó antes que el aviso) */
+    const base = Math.max(0, (A.prev[id] || 0) - (D[id] || 0)), u1 = Math.min(r, base); D[id] = (D[id] || 0) + u1; r -= u1; ok += u1;
+    for (const c of (peer.cr || [])) { if (r <= 0) break; if (c.id !== id || c.n <= 0 || now - c.t > SRV.AUD.credMs) continue; const u = Math.min(r, c.n); c.n -= u; r -= u; ok += u; }
+    return ok;
+  };
+  SRV.FAKE = new WeakSet();   /* objetos del suelo sin respaldo: recogerlos no cuenta */
+  const itParts = it => { const d = ITEMS[it.id], o = [[it.id, d.stack ? Math.max(1, it.n | 0) : 1]]; if (d.gun && d.ammo && (it.a | 0) > 0) o.push([d.ammo, it.a | 0]); return o; };
+  SRV.credIt = (peer, it) => { if (!it || !ITEMS[it.id]) return; const d = ITEMS[it.id]; SRV.cred(peer, it.id, d.stack ? Math.max(1, it.n | 0) : 1); if (d.gun && d.ammo && (it.a | 0) > 0) SRV.cred(peer, d.ammo, it.a | 0); };
+  SRV.vpos = p => p.mv ? [p.mv.x, p.mv.y] : [p.rp.nx !== undefined ? p.rp.nx : p.rp.x, p.rp.ny !== undefined ? p.rp.ny : p.rp.y];
+  const contPos = i => { if (i >= TRUNK_BASE) { const c = cars.find(q => TRUNK_BASE + q.id === i); return c ? [c.x, c.y] : null; } return [(i % W) + .5, ((i / W) | 0) + .5]; };
+  const bag = items => { const m = new Map(); for (const it of (items || [])) { if (!it || !ITEMS[it.id]) continue; const k = it.id; m.set(k, (m.get(k) || []).concat([it])); } return m; };
+  /* ¿lo que aparece en un mueble registrado por primera vez cabe en su tabla de botín? */
+  SRV.lootOk = (c, items) => {
+    try {
+      if (!c || !Array.isArray(items)) return true; const grp = c.k === O_CAR ? LOOT.car : (LOOT[c.bk] || LOOT.house), tb_ = grp[c.k] || grp.def || LOOT.house.def, ok = new Set(tb_.t.map(q => q[0]));
+      const maxN = (tb_.n[1] + 1) * (c.bonus ? 2 : 1) + 2; if (items.length > maxN) return false;
+      for (const it of items) { if (!it || !ITEMS[it.id]) return false; if (SRV.valOf(it.id) > 0 && !ok.has(it.id) && it.id !== c.force) return false; if ((it.n | 0) > 40) return false; if (ITEMS[it.id].gun && (it.a | 0) > ITEMS[it.id].mag) return false; }
+      return true;
+    } catch (e) { return true; }
+  };
+  { const _al = netApplyList; netApplyList = function (o) {
+      try {
+        const peer = NET.role === 'host' ? NET.cur : null;
+        if (audOn(peer) && o && o.n === 'f' && peer.rp) {
+          const m = NET.fsh, q = SRV.vpos(peer);
+          for (const k of (Array.isArray(o.del) ? o.del : [])) { const f = m && m.get(k); if (f && f.it && !SRV.FAKE.has(f) && Math.hypot(f.x - q[0], f.y - q[1]) < 6) SRV.credIt(peer, f.it); }
+          for (const e of (Array.isArray(o.add) ? o.add : [])) { const f = e && e[1]; if (!f || !f.it || !ITEMS[f.it.id] || (m && m.has(e[0]))) continue; let ok = Math.hypot((+f.x) - q[0], (+f.y) - q[1]) < 6; for (const [id, n] of itParts(f.it)) if (SRV.valOf(id) > 0 && SRV.take(peer, id, n) < n) ok = false; if (!ok && itParts(f.it).some(x => SRV.valOf(x[0]) > 0)) SRV.FAKE.add(f); }
+        }
+      } catch (e) { }
+      return _al.apply(this, arguments);
+    }; }
+  { const _ac = netApplyCont; netApplyCont = function (o) {
+      try {
+        const peer = NET.role === 'host' ? NET.cur : null;
+        if (audOn(peer) && o && typeof o.i === 'number' && peer.rp) {
+          const c = containers.get(o.i), old = c ? c.items : null, pos = contPos(o.i), q = SRV.vpos(peer), near = pos && Math.hypot(pos[0] - q[0], pos[1] - q[1]) < 5;
+          if (!Array.isArray(old) && Array.isArray(o.items)) { if (!near || !SRV.lootOk(o.i >= TRUNK_BASE ? { k: O_CAR, bk: 'car' } : (c && c.k !== undefined ? c : { k: to[o.i], bk: 0 }), o.items)) { SRV.strike(peer, 1, 'contenido imposible en un mueble'); return; } }
+          else if (Array.isArray(old) && Array.isArray(o.items) && c) {
+            const a0 = SRV.invCount(old), a1 = SRV.invCount(o.items), fk = c.fk || (c.fk = {});
+            for (const id of new Set(Object.keys(a0).concat(Object.keys(a1)))) {
+              if (!(SRV.valOf(id) > 0)) continue; const d = (a1[id] || 0) - (a0[id] || 0);
+              if (d > 0) { const ok = near ? SRV.take(peer, id, d) : 0; if (ok < d) fk[id] = (fk[id] || 0) + (d - ok); }
+              else if (d < 0) { const n = -d, f = Math.min(n, fk[id] || 0); if (f) fk[id] -= f; if (near && n - f > 0) SRV.cred(peer, id, n - f); }
+            }
+          }
+        }
+      } catch (e) { }
+      return _ac.apply(this, arguments);
+    }; }
+  { const _nu = netNpcUpdate; netNpcUpdate = function (o) {
+      try { const peer = NET.role === 'host' ? NET.cur : null; if (audOn(peer) && o && Array.isArray(o.stock) && peer.rp) { const n = NPCS.find(x => x.id === o.id), q = SRV.vpos(peer); if (n && Array.isArray(n.stock) && Math.hypot(n.x - q[0], n.y - q[1]) < 5) { const nw = new Map(o.stock.map(a => [a[0], +a[1] || 0])); for (const [id, c0] of n.stock) { const c1 = nw.has(id) ? nw.get(id) : 0; if (c0 > c1) SRV.cred(peer, id, c0 - c1); } } } } catch (e) { }
+      return _nu.apply(this, arguments);
+    }; }
+  SRV.corpseLoot = (peer, o) => {
+    if (!audOn(peer) || !peer.rp) return; const z = zById(o.id), q = SRV.vpos(peer); if (!z || z.st !== 'dead' || z.lootedBy || Math.hypot(z.x - q[0], z.y - q[1]) > 3.5) return; z.lootedBy = peer.uid;
+    const J = z.job && typeof S88_JOB !== 'undefined' ? S88_JOB[z.job] : null, tab = new Map(J ? J.t.map(e => [e[0], e[3]]) : []);
+    const pr = new Map(J ? J.t.map(e => [e[0], e[1]]) : []); if (J) peer.corpN = (peer.corpN | 0) + 1; const RA = peer.rare || (peer.rare = {});
+    for (const e of (Array.isArray(o.it) ? o.it.slice(0, 12) : [])) { const id = e && e[0], n = Math.max(1, e[1] | 0); if (!ITEMS[id] || !(SRV.valOf(id) > 0)) continue; if (!tab.has(id) || n > Math.max(1, tab.get(id))) { SRV.strike(peer, .5, 'cadáver con ' + id + ' imposible'); continue; }
+      const p_ = pr.get(id) || 1; if (p_ < .15) { if ((RA[id] | 0) >= 1 + peer.corpN * p_ * 2) { slog('demasiada suerte con ' + id + ' en cadáveres: ' + who(peer)); continue; } RA[id] = (RA[id] | 0) + 1; }   /* un arma «del 5 %» en cada cadáver no cuela */
+      SRV.cred(peer, id, n); if (ITEMS[id].gun && ITEMS[id].ammo) SRV.cred(peer, ITEMS[id].ammo, Math.min(3, e[2] | 0)); }
+  };
+  /* ¿de dónde salió cada objeto valioso de más? final=false: si falta algo, se espera (el aviso de «recogí/compré» puede llegar después del guardado) */
+  SRV.audit = (peer, cv, final) => {
+    const now = Date.now(), cur = SRV.invCount(cv.P.inv), A = SRV.audInit(peer);
+    A.slack = Math.min(SRV.AUD.slackMax, A.slack + (now - A.t) / 3600e3 * SRV.AUD.slackH); A.t = now;
+    const cr = (peer.cr || []).filter(c => now - c.t < SRV.AUD.credMs).map(c => Object.assign({}, c));
+    const miss = []; let pts = 0;
+    for (const id in cur) {
+      const v = SRV.valOf(id); if (!(v > 0)) continue; let r = cur[id] - (A.prev[id] || 0); if (r <= 0) continue;
+      for (const c of cr) { if (r <= 0) break; if (c.id !== id || c.n <= 0) continue; const u = Math.min(r, c.n); c.n -= u; r -= u; }
+      if (r > 0) { miss.push([id, r]); pts += r * v; }
+    }
+    const commit = keepCnt => { const D = peer.dropd || {}, rel = (peer.rel || []).filter(q => q.n > 0 && now - q.t < 20000); for (const id in A.prev) { if (!(SRV.valOf(id) > 0)) continue; const d = A.prev[id] - (keepCnt[id] || 0) - (D[id] || 0); if (d > 0) rel.push({ id, n: d, t: now }); } peer.rel = rel.slice(-200); peer.cr = cr.filter(c => c.n > 0); A.prev = keepCnt; peer.dropd = {}; A.waitT = 0; };
+    if (!miss.length || pts <= A.slack) { if (pts) A.slack -= pts; commit(cur); return { cv, cut: false }; }
+    if (!final) { if (!A.waitT) A.waitT = now; if (now - A.waitT < 6000) return { wait: true }; }
+    /* sin origen: no se guarda */
+    const inv = cv.P.inv.map(it => Object.assign({}, it)), gone = [];
+    for (const [id, r0] of miss) { let r = r0; const d = ITEMS[id];
+      if (d.t === 'ammo') { for (const it of inv) { if (r <= 0) break; if (it.id === id && (it.n | 0) > 0) { const u = Math.min(r, it.n | 0); it.n -= u; r -= u; } } for (const it of inv) { if (r <= 0) break; const g = ITEMS[it.id]; if (g && g.gun && g.ammo === id && (it.a | 0) > 0) { const u = Math.min(r, it.a | 0); it.a -= u; r -= u; } } }
+      else if (d.stack) { for (const it of inv) { if (r <= 0) break; if (it.id === id) { const u = Math.min(r, it.n | 0); it.n -= u; r -= u; } } }
+      else { for (let k = inv.length - 1; k >= 0 && r > 0; k--) if (inv[k].id === id && !inv[k]._x) { inv[k]._x = 1; r--; } }
+      gone.push((d.n || id) + ' ×' + r0);
+    }
+    const keep = inv.filter(it => !it._x && (!ITEMS[it.id].stack || (it.n | 0) > 0)), ncv = JSON.parse(JSON.stringify(cv)); ncv.P.inv = keep.map(it => { const o = Object.assign({}, it); delete o._x; return o; });
+    const remap = k => { if (!(k >= 0) || !inv[k]) return -1; return keep.indexOf(inv[k]); };
+    ncv.P.eq = remap(cv.P.eq); ncv.P.cloth = {}; for (const sl in (cv.P.cloth || {})) { const j = remap(cv.P.cloth[sl]); if (j >= 0) ncv.P.cloth[sl] = j; }
+    commit(SRV.invCount(keep)); const D = A.deny || (A.deny = {}); let fresh = false; for (const [id, r] of miss) { if (r > (D[id] || 0)) { fresh = true; D[id] = r; } }
+    try { netSendRaw(peer, { t: 'IV', rm: miss }); } catch (e) { }   /* el teléfono también lo quita */
+    if (fresh) { SRV.strike(peer, 1, 'inventario sin origen: ' + gone.join(', ')); slog('INVENTARIO SOSPECHOSO de ' + who(peer) + ': ' + gone.join(', ') + ' (no se guarda)'); SRV.aliSay(peer, 'El servidor no reconoce de dónde salieron: ' + gone.join(', ') + '. Se quitan de tu personaje.', 'bad'); }
+    return { cv: ncv, cut: true };
+  };
+  /* fabricar: el teléfono avisa al terminar; se acredita lo fabricado con un ritmo máximo (lo que tarda de verdad) */
+  SRV.craftMsg = (peer, o) => {
+    if (!audOn(peer) || !o) return; const r = RECIPES.find(q => q.id === o.id); if (!r || !Array.isArray(r.out) || r.place) return; const now = performance.now();
+    if (now - (peer.crfT || -1e9) < (r.t || 1) * 600) { SRV.strike(peer, .3, 'fabricar demasiado rápido'); return; } peer.crfT = now;
+    const H = peer.crfH = (peer.crfH || []).filter(t => now - t < 3600e3); if (H.length >= 40) return; H.push(now);
+    for (const [id, n] of r.out) SRV.cred(peer, id, n);
+  };
+  /* movimiento */
+  SRV.moveCheck = (peer, o) => {
+    if (!SRV.MOV.on || !peer || !o) return; if (o.k || peer.chDead) { peer.mv = null; return; } if (!isFinite(o.x) || !isFinite(o.y)) return; const now = performance.now();
+    if (!peer.mv) { peer.mv = { x: +o.x, y: +o.y, t: now, bad: 0 }; return; }
+    /* «tiempo de viaje» acumulado (hasta 3 s): los mensajes que llegan juntos tras un corte de red no cuentan como trampa */
+    const M = peer.mv, v = o.v ? SRV.MOV.car : SRV.MOV.foot; M.t = Math.max(M.t, now - SRV.MOV.bank * 1000); const dt = Math.max(0, (now - M.t) / 1000), d = Math.hypot(o.x - M.x, o.y - M.y), lim = v * dt + SRV.MOV.slack;
+    if (d <= lim) { M.x = +o.x; M.y = +o.y; M.t = Math.min(now, M.t + Math.max(0, d - SRV.MOV.slack * .5) / v * 1000); M.bad = 0; return; }
+    M.bad++; peer.mvRej = (peer.mvRej | 0) + 1;
+    if (M.bad >= 3) { M.bad = 0; M.t = now; SRV.strike(peer, 1, 'movimiento imposible (' + d.toFixed(1) + ' casillas en ' + dt.toFixed(2) + ' s)'); try { netSendRaw(peer, { t: 'PZ', x: Math.round(M.x * 100) / 100, y: Math.round(M.y * 100) / 100 }); } catch (e) { } }
+  };
   { const _m = netMsg; netMsg = function (o) {
       const peer = NET.role === 'host' ? NET.cur : null;
       if (peer && o && typeof o.t === 'string') {
@@ -283,6 +409,8 @@ SRV.boot = function (opt) {
           }
         } else if (o.t === 'CHS') { SRV.charPut(peer, o.c); return; }
         else if (o.t === 'AP' || o.t === 'AA' || o.t === 'AD' || o.t === 'AL' || o.t === 'SG') { if (SRV.pvp) SRV.aliMsg(peer, o); return; }
+        else if (o.t === 'CL') { try { SRV.corpseLoot(peer, o); } catch (e) { } return; }
+        else if (o.t === 'CR') { try { SRV.craftMsg(peer, o); } catch (e) { } return; }
         else if (o.t === 'PH') { if (SRV.pvp) SRV.pvpAttack(peer, o); return; }
         else if ((o.t === 'HZ' || o.t === 'HN') && SRV.val && !SRV.hitOk(peer, o)) return;
       }
@@ -346,7 +474,7 @@ SRV.boot = function (opt) {
   SRV.pvpAttack = (peer, o) => {
     const now = performance.now(), vic = NET.peers.find(p => p.slot === (o.i | 0) && p.ready);
     if (!vic || vic === peer || !peer.rp || !vic.rp || peer.chDead || vic.chDead || peer.A === undefined || vic.A === undefined || peer.rp.dead || vic.rp.dead) return;
-    const ax = peer.rp.nx !== undefined ? peer.rp.nx : peer.rp.x, ay = peer.rp.ny !== undefined ? peer.rp.ny : peer.rp.y, vx = vic.rp.nx !== undefined ? vic.rp.nx : vic.rp.x, vy = vic.rp.ny !== undefined ? vic.rp.ny : vic.rp.y, d = Math.hypot(vx - ax, vy - ay);
+    const [ax, ay] = SRV.vpos(peer), [vx, vy] = SRV.vpos(vic), d = Math.hypot(vx - ax, vy - ay);   /* v15.8: posiciones validadas */
     const gun = o.s === 'g', Wp = o.w && ITEMS[o.w] && ITEMS[o.w].t === 'wpn' ? ITEMS[o.w] : null; let why = null;
     if (o.s !== 'g' && o.s !== 'm') why = 'tipo de ataque desconocido';
     else if (gun ? (!Wp || !Wp.gun) : (Wp && Wp.gun)) why = 'arma no válida para este ataque (' + o.w + ')';
@@ -370,6 +498,7 @@ SRV.boot = function (opt) {
   { const _op = netOnPlayer; netOnPlayer = function (o) {
       const r = _op.apply(this, arguments);
       try { const pe = NET.cur; if (SRV.pvp && pe && o && !pe.chDead && !o.k) SRV.hpSync(pe, +o.h); } catch (e) { }
+      try { if (SRV.pvp && NET.cur && (NET.cur.build | 0) >= 155) SRV.moveCheck(NET.cur, o); } catch (e) { }
       try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { if (SRV.pvp) SRV.dropLoot(peer); peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { charCall('del', peer.uid, ''); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
       return r;
     }; }
