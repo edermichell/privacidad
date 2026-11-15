@@ -1,32 +1,32 @@
-# Lanzar la v16.1 en Google Play · paso a paso
+# Lanzar la v16.2 en Google Play · paso a paso
 
-**Qué subes:** la app **16.1** (versionCode **158**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
+**Qué subes:** la app **16.2** (versionCode **159**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
 **Tiempo:** ~1 h de trabajo tuyo + la revisión de Google (de horas a varios días).
 
 ## Archivos de esta carpeta
 | Archivo | Para qué |
 |---|---|
-| `UltimoRefugio_AndroidStudio_v16.1.zip` | Proyecto de Android Studio (versionCode 158, versionName «16.1») |
+| `UltimoRefugio_AndroidStudio_v16.2.zip` | Proyecto de Android Studio (versionCode 159, versionName «16.2») |
 | `privacy.html` | Política de privacidad actualizada («noviembre de 2026 (v15.9)») |
-| `NOVEDADES_PLAY_v16.1.txt` | Texto de «Novedades» para Play (español 394 caracteres, inglés 370; máximo 500) |
+| `NOVEDADES_PLAY_v16.2.txt` | Texto de «Novedades» para Play (español 309 caracteres, inglés 281; máximo 500) |
 | `UltimoRefugio_Servidor_Tailscale.zip` | Kit del servidor nuevo (se instala **después**, paso 7) |
-| `correo_testers_v161/` | Correo para testers (HTML con imágenes y texto) |
-| `CAMBIOS_v14.0_a_v16.1.md` | Todo lo que cambió desde la 14.0 aprobada |
+| `correo_testers_v162/` | Correo para testers (HTML con imágenes y texto) |
+| `CAMBIOS_v14.0_a_v16.2.md` | Todo lo que cambió desde la 14.0 aprobada |
 
 ---
 
 ## Paso 1 · Política de privacidad (5 min)
 1. Sube `privacy.html` a **tu URL pública de siempre** (la que está en Play Console → Contenido de la app → Política de privacidad, y en la variable `PRIVACY_URL`), sustituyendo la anterior.
-2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v15.9)»** (la 16.0 y la 16.1 no cambian la política).
+2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v15.9)»** (las 16.x no cambian la política).
 
 ## Paso 2 · Formularios de Play Console (solo si no los actualizaste con la 15.x)
-Desde la 15.9 hay un dato nuevo: **el nombre de jugador que cada uno elige** (visible para los demás, guardado en tu servidor). Si aún no lo declaraste, añádelo en Seguridad de los datos (ver abajo). La 16.0 y la 16.1 no añaden nada más.
+Desde la 15.9 hay un dato nuevo: **el nombre de jugador que cada uno elige** (visible para los demás, guardado en tu servidor). Si aún no lo declaraste, añádelo en Seguridad de los datos (ver abajo). Las versiones 16.x no añaden ningún dato nuevo.
 - **Seguridad de los datos:** *ID de usuario* (identificador anónimo del multijugador **y el nombre de jugador que elige**; si el formulario lo pide aparte, decláralo como *Otros contenidos generados por el usuario*) e *Interacciones/actividad en la app*: recopilados, finalidad «Funcionalidad de la app» (y «Prevención de fraudes y seguridad» si el formulario la ofrece), **no compartidos**, cifrados en tránsito, y se puede pedir el borrado por correo. Lo de Unity Ads y las compras sigue igual. Comprueba cada casilla con el formulario actual.
 - **Clasificación de contenido (IARC):** los usuarios interactúan entre sí (multijugador por salas, **sin chat de texto ni voz**), hay violencia de fantasía contra zombis y combate entre jugadores en la sala PvP.
 
 ## Paso 3 · Compilar el AAB firmado (15–30 min)
-1. Descomprime `UltimoRefugio_AndroidStudio_v16.1.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
-2. Revisa `app/build.gradle`: debe tener `versionCode 158` y `versionName "16.1"`.
+1. Descomprime `UltimoRefugio_AndroidStudio_v16.2.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
+2. Revisa `app/build.gradle`: debe tener `versionCode 159` y `versionName "16.2"`.
 3. Revisa tus valores de compilación (los mismos de la 14.0): `UNITY_TEST_MODE=false`, `PRIVACY_URL` con tu dirección real, `UNITY_GAME_ID` y la firma (`KEYSTORE_FILE`…).
 4. **Build ▸ Generate Signed Bundle / APK… ▸ Android App Bundle**, con **la misma llave `.jks` de la 14.0** (si usas otra, Play la rechaza) ▸ **release** ▸ Finish. El archivo queda en `app/release/app-release.aab`.
 5. Si Gradle da un error, mándame el texto exacto. El código Java (actualización dentro de la app y recuperación del WebView) es distinto del de la 14.0 y no pude compilarlo con el SDK real.
@@ -36,32 +36,33 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 1. Que el juego abre, se puede jugar una partida individual y se conserva el guardado anterior.
 2. **MULTIJUGADOR:** aparecen las salas y puedes entrar a una (con el servidor encendido).
 3. Una compra de prueba, un anuncio recompensado y la pantalla de consentimiento.
-4. **NOVEDADES:** la primera entrada de la lista es la 16.1, «Partidas largas más fluidas».
+4. **NOVEDADES:** la primera entrada de la lista es la 16.2, «Tu clave de sala y arranque rápido».
+6. **Arranque rápido:** cierra la app del todo y ábrela otra vez: la segunda vez debe llegar al menú bastante antes.
 5. **MULTIJUGADOR → TU NOMBRE:** escribe un nombre, entra a una sala y comprueba que otro jugador lo ve sobre tu personaje.
 
 ## Paso 5 · Subir a Play Console (10 min)
 1. Play Console → tu app → **Pruebas → Prueba cerrada (alpha)** → **Crear nueva versión**.
-2. Sube `app-release.aab`. Nombre de la versión: **16.1 (158)**.
-3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v16.1.txt` (es-419 / es-ES y en-US).
+2. Sube `app-release.aab`. Nombre de la versión: **16.2 (159)**.
+3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v16.2.txt` (es-419 / es-ES y en-US).
 4. **Siguiente → Revisar versión**: lee los avisos (permisos, API objetivo, dispositivos). Los avisos amarillos no impiden publicar; los rojos sí (mándamelos).
 5. **Guardar → Enviar cambios a revisión** (en *Resumen de la publicación*).
 6. Mientras dure la revisión **no cambies la ficha ni los formularios**, porque cada cambio puede alargar la espera.
 
 ## Paso 6 · Cuando Google la apruebe
-1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 16.1. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
-2. Manda el correo de `correo_testers_v161/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
+1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 16.2. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
+2. Manda el correo de `correo_testers_v162/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
 
-## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 16.1
-**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 16.1**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 16.1 esté en Play.
+## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 16.2
+**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 16.2**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 16.2 esté en Play.
 1. Cierra el servidor (ventana de `INICIAR_SERVIDOR.bat` → Ctrl+C).
 2. Haz una copia de la carpeta del servidor (por seguridad).
 3. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo estos archivos: `servidor.js`, `srv_layer.js`, `admin.html`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** ni la carpeta `datos`.
 4. Abre `INICIAR_SERVIDOR.bat` y entra con tu teléfono a una sala normal y a la sala PvP.
 5. Opcional: `PRUEBA_DURA.bat` con todo cerrado. Debe decir **APROBADO**.
-6. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 158, "version": "16.1", "notas": ["Pon tu nombre en las salas", "Apareces en tu cama o donde lo dejaste"] }`.
+6. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 159, "version": "16.2", "notas": ["Pon tu nombre en las salas", "Apareces en tu cama o donde lo dejaste"] }`.
 
 ## Paso 8 · Vigilar 2–3 días
-- **Play Console → Android vitals:** cierres y ANR de la 16.1.
+- **Play Console → Android vitals:** cierres y ANR de la 16.2.
 - **Panel `/admin` del servidor:** memoria y pasos/s.
 - **Registro del servidor:** si ves `INVENTARIO SOSPECHOSO de jugador N` o `movimiento imposible` de alguien que juega limpio, mándame esas líneas y qué estaba haciendo. Mientras tanto puedes apagar el control con `"auditarInventario": false` o `"validarMovimiento": false` en `config.json`.
 - Cuando la alpha vaya bien 1–2 semanas, puedes **promover la versión a producción** desde la misma pantalla (Play exige haber cumplido los requisitos de prueba cerrada de tu cuenta).
@@ -71,8 +72,8 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 |---|---|
 | Play rechaza la versión | Copia el motivo (*Recibidos* / *Política y programas*) y mándamelo |
 | «Clave de firma incorrecta» | Usaste otra llave: compila con la `.jks` de la 14.0 |
-| «Version code 158 ya usado» | Ya subiste un 158 antes: dime y lo paso a 158 |
-| La sala PvP no deja entrar | Ese teléfono no tiene aún la 16.1 (es lo esperado) |
+| «Version code 159 ya usado» | Ya subiste un 159 antes: dime y lo paso a 159 |
+| La sala PvP no deja entrar | Ese teléfono no tiene aún la 16.2 (es lo esperado) |
 | Fallo del servidor nuevo | Restaura la copia del paso 7.2 y mándame el registro |
 
 ---
@@ -193,3 +194,9 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 ## Partidas largas más fluidas (nuevo en la 16.1)
 - Optimización: con miles de zombis en el mapa (día 5 en adelante) la simulación cuesta un 18 % menos. No cambia la partida. Informe con todas las medidas: `actualizacion_v161/INFORME_RENDIMIENTO_v16.1.md`.
 - **Servidor:** copia `juego\index.html` del kit nuevo (las salas usan este mismo código).
+
+## Clave de sala, arranque rápido y pantalla de juego (nuevo en la 16.2)
+- **Clave de sala** (app 16.2 + servidor nuevo): al crear una sala se puede elegir la clave (4 a 6 letras o números) o dejarla vacía para una al azar. **Servidor:** copia también `servidor.js`.
+- **Arranque rápido:** de 5,9 s a 2,7 s desde la segunda vez (procesador frenado ×4).
+- **Pantalla de juego:** el tutorial ya no tapa los botones; barras y mensajes más legibles.
+- Detalle y pruebas: `actualizacion_v162/CAMBIOS_v16.2.md`.

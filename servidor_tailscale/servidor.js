@@ -299,14 +299,16 @@ const userRooms = uid => [...rooms.values()].filter(r => r.dynamic && r.owner ==
 const appInfo = () => { const a = CFG.appUltima; if (!a || !(+a.codigo > 0)) return null; return { codigo: Math.floor(+a.codigo), version: String(a.version || '').slice(0, 12), notas: (Array.isArray(a.notas) ? a.notas : []).slice(0, 8).map(x => String(x).slice(0, 180)) }; };
 const max247 = () => Math.min(CFG.salas247Max, Math.max(0, CFG.salasActivasMax - 1));
 function planOf(uid) { const l = licOf(uid), own = userRooms(uid); return { anfitrion: !!l, vence: l ? new Date(l.vence).toISOString() : null, salasMax: l ? l.salas : CFG.gratisSalasMax, salasUsadas: own.length, salas247: own.filter(r => r.plan247).length, gratisMax: CFG.gratisSalasMax, max247: max247(), activas247: [...rooms.values()].filter(r => r.plan247).length }; }
-function createRoom(uid, nombre, publica, want247) {
+function createRoom(uid, nombre, publica, want247, clave) {
   if (!CFG.salasUsuario) return { ok: false, error: 'Este servidor no permite crear salas.' };
   nombre = String(nombre || '').replace(/[<>&"\u0000-\u001f]/g, '').trim().slice(0, 24); if (nombre.length < 3) return { ok: false, error: 'Ponle un nombre de 3 a 24 letras.' };
   const pl = planOf(uid); if (want247 && !pl.anfitrion) return { ok: false, error: 'Las salas 24/7 requieren una licencia activa.' };
   if (pl.salasUsadas >= pl.salasMax) return { ok: false, error: pl.anfitrion ? 'Ya tienes ' + pl.salasMax + ' salas (tu límite). Borra una para crear otra.' : 'Ya tienes tu sala gratis. Borra la tuya para crear otra.' };
   if ([...rooms.values()].filter(r => r.dynamic).length >= CFG.salasUsuarioMax) return { ok: false, error: 'El servidor llegó a su máximo de salas de jugadores.' };
   if (want247) { if (!pl.anfitrion) return { ok: false, error: 'Las salas 24/7 requieren una licencia activa.' }; if (pl.salas247 >= pl.salasMax) return { ok: false, error: 'Ya usas todas tus salas 24/7.' }; if (pl.activas247 >= pl.max247) return { ok: false, error: 'El servidor no tiene cupo para más salas 24/7 ahora mismo.' }; }
-  let id; do { id = newCode(6); } while (rooms.has(id));
+  let id; const cl = String(clave || '').toUpperCase().replace(/[^A-Z0-9]/g, '');   /* v16.2: clave elegida por el jugador (4 a 6 letras o números) */
+  if (cl) { if (cl.length < 4 || cl.length > 6) return { ok: false, error: 'La clave debe tener de 4 a 6 letras o números.' }; if (/^SALA/.test(cl) || CFG.salas.some(c => String(c.id).toUpperCase() === cl)) return { ok: false, error: 'Esa clave está reservada. Elige otra.' }; if (rooms.has(cl)) return { ok: false, error: 'Esa clave ya la usa otra sala. Elige otra o déjala vacía.' }; id = cl; }
+  else do { id = newCode(6); } while (rooms.has(id));
   const r = new Room({ id, nombre, owner: uid, publica: !!publica, plan247: !!want247, dynamic: true }); rooms.set(id, r); saveUserRooms(); if (want247) { r.wanted = true; } log('[salas] nueva sala ' + id + ' «' + nombre + '» (' + (publica ? 'pública' : 'privada') + (want247 ? ', 24/7' : '') + ')');
   return { ok: true, id, sala: r.info() };
 }
@@ -412,7 +414,7 @@ function handler(req, res) {
     if (p === '/sala/crear') {
       if (limited('crear:' + ip, 12, 3600000)) return json(res, 429, { ok: false, error: 'Demasiadas salas creadas desde este dispositivo. Intenta más tarde.' });
       const a = auth(Q('uid'), Q('tok'), true); if (!a.ok) return json(res, 403, { ok: false, error: a.error });
-      const o = createRoom(a.uid, Q('nombre'), Q('tipo') !== 'privada', Q('plan') === '247'); return json(res, o.ok ? 200 : 400, o); }
+      const o = createRoom(a.uid, Q('nombre'), Q('tipo') !== 'privada', Q('plan') === '247', Q('clave')); return json(res, o.ok ? 200 : 400, o); }
     if (p === '/licencia/canjear') {
       if (limited('lic:' + ip, 10, 600000)) return json(res, 429, { ok: false, error: 'Demasiados intentos. Espera unos minutos.' });
       const a = auth(Q('uid'), Q('tok'), true); if (!a.ok) return json(res, 403, { ok: false, error: a.error });

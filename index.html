@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v16.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v16.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -1056,6 +1056,8 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
         <div class="mprow"><input id="mpPrivIn" maxlength="6" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="mpPrivGo" class="mbp"><span>ENTRAR</span></button></div>
         <details id="mpNew"><summary>+ CREAR SALA (pública o privada)</summary>
           <div class="mprow"><input id="mpNewName" maxlength="24" placeholder="Nombre de tu sala" autocomplete="off" spellcheck="false" style="text-transform:none;letter-spacing:0;font-size:14px;text-align:left"></div>
+          <div class="mprow"><input id="mpNewCode" maxlength="6" placeholder="CLAVE (opcional)" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
+          <p class="hint" id="mpNewCodeHint">Clave de la sala: 4 a 6 letras o números. Si la dejas vacía, se crea una al azar.</p>
           <div class="mpseg"><button id="mpNewPub" class="on">PÚBLICA</button><button id="mpNewPriv">PRIVADA</button></div>
           <div class="mpseg"><button id="mpNew247" hidden>24/7 · SALA SIEMPRE ABIERTA</button></div>
           <p class="hint">Pública: aparece en la lista. Privada: solo entra quien tenga el código. Las salas gratis se duermen si están vacías y se borran tras 14 días sin jugadores.</p>
@@ -2325,8 +2327,12 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 158, UR_VERSION = '16.1', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 159, UR_VERSION = '16.2', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '16.2', t: 'Tu clave de sala y arranque rápido', it: [
+    'Al <b>crear una sala</b> puedes elegir su clave (4 a 6 letras o números). Si la dejas vacía, se crea una al azar como antes.',
+    'El juego <b>arranca bastante más rápido</b> a partir de la segunda vez: guarda en el teléfono los dibujos que antes generaba en cada arranque.',
+    'Pantalla de juego más limpia: barras redondeadas con su etiqueta encima, mensajes más compactos y el tutorial ya no tapa los botones.' ] },
   { v: '16.1', t: 'Partidas largas más fluidas', it: [
     'Con miles de zombis en el mapa (a partir del día 4–5) el juego <b>calcula mucho menos</b>: solo se ocupa en detalle de los que están cerca de algún jugador.',
     'Las hordas amontonadas y las hogueras ya no frenan el juego.' ] },
@@ -14162,7 +14168,7 @@ const DISC = new Set(); const LOCB = { t: 0, n: '', k: '', chk: 0, q: [] };
       const a = clamp(Math.min(LOCB.t, 3.2 - LOCB.t) * 2.5, 0, 1); if (a <= 0) return;
       const txt = strip(LOCB.n), rise = (1 - a) * -6;
       ctx.save(); ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.font = '13px VT323, "Courier New", monospace'; const w1 = ctx.measureText(txt).width; ctx.font = '8px monospace'; const w2 = ctx.measureText('LUGAR DESCUBIERTO').width;
-      const w = Math.max(w1, w2) + 26, X = RP(CW / 2), Y = RP(44 + rise);
+      const w = Math.max(w1, w2) + 26, X = RP(CW / 2), Y = RP(Math.max(44, CH * (innerHeight < 520 ? .66 : .29)) + rise);   /* v16.2: fuera de la zona de paneles (en el teléfono, bajo el personaje) */
       ctx.fillStyle = '#000b'; ctx.fillRect(X - w / 2, Y - 11, w, 24); ctx.fillStyle = LMCOL[LOCB.k] || '#ffe27a'; ctx.fillRect(X - w / 2, Y - 11, 3, 24);
       ctx.fillStyle = '#9fb59a'; ctx.font = '8px monospace'; ctx.fillText('LUGAR DESCUBIERTO', X + 1, Y - 2);
       ctx.font = '13px VT323, "Courier New", monospace'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.strokeText(txt, X + 1, Y + 10); ctx.fillStyle = '#fff6dc'; ctx.fillText(txt, X + 1, Y + 10);
@@ -21638,9 +21644,10 @@ async function s138Create() {
   const nm = ($('mpNewName').value || '').trim(); if (nm.length < 3) { s137Msg('Ponle un nombre a tu sala (3 a 24 letras).', true); return; }
   s137Msg('Creando la sala…'); $('mpNewGo').disabled = true;
   try {
-    const d = await s138Get(S137.url, '/sala/crear', { nombre: nm, tipo: S137.tipo, plan: S137.plan247 ? '247' : 'gratis' });
+    const cl = ($('mpNewCode') ? $('mpNewCode').value : '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (cl && (cl.length < 4 || cl.length > 6)) { s137Msg('La clave debe tener de 4 a 6 letras o números (o déjala vacía).', true); $('mpNewGo').disabled = false; return; }
+    const d = await s138Get(S137.url, '/sala/crear', Object.assign({ nombre: nm, tipo: S137.tipo, plan: S137.plan247 ? '247' : 'gratis' }, cl ? { clave: cl } : {}));
     if (!d.ok) { s137Msg(d.error || 'No se pudo crear la sala.', true); $('mpNewGo').disabled = false; return; }
-    $('mpNewName').value = ''; $('mpNew').open = false; await s138Refresh(true);
+    $('mpNewName').value = ''; if ($('mpNewCode')) $('mpNewCode').value = ''; $('mpNew').open = false; await s138Refresh(true);
     s137Msg(S137.tipo === 'privada' ? 'Sala privada creada. Código para tus amigos: ' + d.id + ' (también en «CÓDIGO»). Entrando…' : 'Sala pública creada. Entrando…'); $('mpNewGo').disabled = false; s138JoinId(d.id);
   } catch (e) { s137Msg('No se pudo crear la sala: sin conexión con el servidor.', true); $('mpNewGo').disabled = false; }
 }
@@ -21668,6 +21675,7 @@ async function s138Redeem(code, say2) {
   });
   $('mpPrivGo').addEventListener('click', () => s138JoinId($('mpPrivIn').value, true));
   $('mpPrivIn').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  if ($('mpNewCode')) { $('mpNewCode').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); }); $('mpNewCode').addEventListener('keydown', e => e.stopPropagation()); }
   for (const id of ['mpPrivIn', 'mpNewName', 'mpSrvUrl']) { const el = $(id); el.addEventListener('keydown', e => { e.stopPropagation(); if (e.code === 'Enter') { if (id === 'mpPrivIn') s138JoinId(el.value, true); else if (id === 'mpNewName') s138Create(); else $('mpSrvGo').click(); } if (e.code === 'Escape') $('mpm').hidden = true; }); el.addEventListener('keyup', e => e.stopPropagation()); }
   seg('mpNewPub', () => { S137.tipo = 'publica'; $('mpNewPub').classList.add('on'); $('mpNewPriv').classList.remove('on'); });
   seg('mpNewPriv', () => { S137.tipo = 'privada'; $('mpNewPriv').classList.add('on'); $('mpNewPub').classList.remove('on'); });
@@ -22936,8 +22944,73 @@ function toMenu() {
 function urTrim() { try { chunks.clear(); return true; } catch (e) { typeof dbgc === 'function' && dbgc(e); return false; } }
 window.__urTrim = urTrim;
 try { urNewsInit(); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+/* ===== v16.2 · ARRANQUE RÁPIDO: los dibujos generados (muebles, muros, árboles, coches…) se guardan en el teléfono la primera vez
+   y se reutilizan en los arranques siguientes en lugar de volver a dibujarlos píxel a píxel (~2,5 s en un teléfono modesto).
+   Se guarda: SPR, HI, EVS y DCS (objetos, listas y lienzos; nada más). Clave: versión + resolución interna. Cualquier fallo → se dibuja como siempre. */
+const SPRC = {
+  on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
+  key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
+  db() { return new Promise((res, rej) => { const r = indexedDB.open('ur_sprc', 1); r.onupgradeneeded = () => { try { r.result.createObjectStore('k'); } catch (e) { } }; r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error || new Error('idb')); r.onblocked = () => rej(new Error('idb bloqueada')); }); },
+  tx(mode, fn) { return this.db().then(db => new Promise((res, rej) => { let out; const t = db.transaction('k', mode); t.oncomplete = () => { db.close(); res(out); }; t.onerror = t.onabort = () => { db.close(); rej(t.error || new Error('tx')); }; out = fn(t.objectStore('k')); })); },
+  enc() {
+    const canv = [], cid = new Map(), oid = new Map(); let n = 0;
+    const E = v => {
+      if (v === null) return null; const t = typeof v;
+      if (t === 'number') return isFinite(v) ? v : { $n: String(v) };
+      if (t === 'string' || t === 'boolean') return v;
+      if (t === 'undefined') return { $u: 1 };
+      if (t !== 'object') throw new Error('tipo ' + t);
+      if (v instanceof HTMLCanvasElement) { let i = cid.get(v); if (i === undefined) { i = canv.length; cid.set(v, i); const p = {}; for (const k of Object.keys(v)) { const x = v[k]; if (x === null || typeof x === 'number' || typeof x === 'string' || typeof x === 'boolean') p[k] = x; else throw new Error('propiedad de lienzo ' + k); } canv.push({ c: v, w: v.width, h: v.height, p }); } return { $c: i }; }
+      if (oid.has(v)) return { $r: oid.get(v) };
+      const pr = Object.getPrototypeOf(v);
+      if (Array.isArray(v)) { const id = n++; oid.set(v, id); const a = new Array(v.length); for (let i = 0; i < v.length; i++) a[i] = (i in v) ? E(v[i]) : { $h: 1 }; return { $a: id, v: a }; }
+      if (pr === Object.prototype || pr === null) { const id = n++; oid.set(v, id); const o = {}; for (const k of Object.keys(v)) o[k] = E(v[k]); return { $o: id, v: o }; }
+      throw new Error('objeto no guardable');
+    };
+    const roots = { SPR: E(SPR), HI: E(HI), EVS: E(EVS), DCS: E(DCS) };
+    let tot = 0; for (const c of canv) tot += c.w * c.h * 4; const px = new Uint8Array(tot); let off = 0;
+    for (const c of canv) { const g = c.c.getContext('2d'); const d = g.getImageData(0, 0, c.w, c.h).data; px.set(d, off); c.o = off; off += d.length; delete c.c; }
+    return { meta: JSON.stringify({ roots, canv }), px: px.buffer };
+  },
+  dec(rec) {
+    const M = JSON.parse(rec.meta), px = new Uint8ClampedArray(rec.px), cs = M.canv.map(c => {
+      const k = document.createElement('canvas'); k.width = c.w; k.height = c.h;
+      const g = k.getContext('2d', (c.p.hi || c.w * c.h <= 40000) ? { willReadFrequently: true } : undefined);
+      if (c.w && c.h) g.putImageData(new ImageData(new Uint8ClampedArray(px.buffer, c.o, c.w * c.h * 4), c.w, c.h), 0, 0);
+      for (const q in c.p) k[q] = c.p[q]; return k; });
+    const ids = new Map();
+    const D = v => {
+      if (v === null || typeof v !== 'object') return v;
+      if ('$c' in v) return cs[v.$c]; if ('$n' in v) return Number(v.$n); if ('$u' in v) return undefined; if ('$r' in v) return ids.get(v.$r);
+      if ('$a' in v) { const a = new Array(v.v.length); ids.set(v.$a, a); for (let i = 0; i < v.v.length; i++) { const x = v.v[i]; if (x && typeof x === 'object' && x.$h) continue; a[i] = D(x); } return a; }
+      if ('$o' in v) { const o = {}; ids.set(v.$o, o); for (const k in v.v) o[k] = D(v.v[k]); return o; }
+      throw new Error('formato');
+    };
+    const R = {}; for (const k in M.roots) R[k] = D(M.roots[k]); return R;
+  },
+  mark(v) { try { if (v) localStorage.setItem('ur_sprc', v); else localStorage.removeItem('ur_sprc'); } catch (e) { } },
+  load() {
+    if (!this.on) return Promise.resolve(false);
+    let saved = null; try { saved = localStorage.getItem('ur_sprc'); } catch (e) { }
+    if (saved !== this.key()) return Promise.resolve(false);   /* solo si un arranque anterior la guardó bien para esta versión */
+    const t0 = performance.now();
+    const get = this.tx('readonly', st => { const q = st.get(this.key()); return q; }).then(q => q && q.result);
+    const tm = new Promise(res => setTimeout(() => res('tarde'), 1500));
+    return Promise.race([get, tm]).then(rec => {
+      if (rec === 'tarde' || !rec || !rec.meta || !rec.px) { this.mark(null); return false; }
+      const R = this.dec(rec);
+      for (const [nm, obj] of [['SPR', SPR], ['HI', HI], ['EVS', EVS]]) { for (const k of Object.keys(obj)) delete obj[k]; Object.assign(obj, R[nm]); }
+      DCS = R.DCS; this.ms = Math.round(performance.now() - t0); this.used = 1; return true;
+    }).catch(e => { this.mark(null); typeof dbgc === 'function' && dbgc(e); return false; });
+  },
+  later() {
+    if (!this.on) return; const go = () => { try { const rec = this.enc(); this.tx('readwrite', st => { st.clear(); st.put(rec, this.key()); }).then(() => { this.saved = 1; this.mark(this.key()); }).catch(e => { typeof dbgc === 'function' && dbgc(e); }); } catch (e) { typeof dbgc === 'function' && dbgc(e); } };
+    setTimeout(() => { if (window.requestIdleCallback) requestIdleCallback(go, { timeout: 8000 }); else go(); }, 4000);
+  }
+};
 function boot() {
-  initGfx(); initHi(); initEventSprites(); resize(); initMenuWorld(); resize();
+  if (!boot.st) { boot.st = 1; const full = () => { initGfx(); initHi(); initEventSprites(); SPRC.later(); }; SPRC.load().then(ok => { if (!ok) full(); boot(); }, () => { full(); boot(); }); return; }
+  resize(); initMenuWorld(); resize();
   /* Solicita al contenedor Android una frecuencia coherente con el límite elegido.
      En navegador independiente la llamada no existe y rAF queda bajo control del sistema. */
   try { if (window.AndroidMonet && typeof window.AndroidMonet.setPreferredFps === 'function') window.AndroidMonet.setPreferredFps(OPT.fps || 0); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
@@ -22945,6 +23018,7 @@ function boot() {
   window.addEventListener('pagehide', saveGame);
   requestAnimationFrame(frame);
   requestAnimationFrame(() => requestAnimationFrame(() => { const s = document.getElementById('s99splash'); if (s) s.remove(); }));   /* v99: quita la pantalla de carga cuando ya hay imagen */
+  window.__UR_BOOT_OK = true;
 }
 window.GAME = {
   cars, mkCar, enterCar, leaveCar, pumps, shove, carHit, updDrive, TRUNK_BASE, carTrunk,
@@ -24250,7 +24324,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24291,7 +24365,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24314,7 +24388,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24343,7 +24417,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24377,7 +24451,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24408,7 +24482,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24441,7 +24515,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24470,12 +24544,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.1') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.2') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24493,7 +24567,6 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
 })();
 
 boot();
-window.__UR_BOOT_OK = true;
 
 </script>
 <style id="ui16">
@@ -24590,6 +24663,33 @@ body #bMulti{justify-content:flex-start}
 body #pause .pz-g #bMP{grid-column:1/-1;order:-1}
 body #pause .pz-g #bSaveP{grid-column:1/-1}
 @media (max-height:520px){body .m2{grid-template-columns:1fr}}
+</style>
+<style id="ui162">
+/* ===== v16.2 · PANTALLA DE JUEGO: barras, mensajes y tutorial sin solapes ===== */
+/* barras de vida y aliento: redondeadas, con brillo suave */
+body .bar{height:15px;border:1px solid #000;border-radius:7px;background:#000000c4;box-shadow:0 0 0 1px #ffffff1a,0 2px 6px #00000080;overflow:hidden}
+body .bar i{border-radius:6px}
+body .bar i::after{content:"";position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(#ffffff40,#fff0);border-radius:6px 6px 0 0;pointer-events:none}
+/* necesidades: barra fina con la etiqueta encima (antes el texto tapaba el relleno) */
+body #needs{gap:6px;margin-top:17px}
+body .nd{height:7px;border:1px solid #000;border-radius:5px;background:#000000c4;box-shadow:0 0 0 1px #ffffff14}
+body .nd i{border-radius:4px}
+body .nd u{top:-15px;left:1px;font-size:12px;letter-spacing:.06em;color:#dfe8d8;opacity:1;text-shadow:1px 1px 0 #000,0 0 3px #000}
+/* mensajes: tarjetas compactas */
+body .toast{background:#0a0f0cd9;border:1px solid #000;border-left-width:4px;border-radius:0 7px 7px 0;padding:3px 10px 4px;font-size:16px;line-height:1.15;box-shadow:0 0 0 1px #ffffff12,0 4px 12px #00000066}
+body .toast.bad{border-left-color:var(--blood)} body .toast.good{border-left-color:var(--moss)} body .toast.tip{border-left-color:var(--amber)} body .toast.rad{border-left-color:var(--sky)}
+/* tutorial y misión: mismas formas que el resto de ventanas */
+body #tut,body #quest{border-radius:10px;border:1px solid #000;box-shadow:0 0 0 1px #6a4d12,0 10px 26px #00000080}
+body #tut button,body #quest button{border-radius:999px}
+/* pantallas medianas: el tutorial bajo la fila de botones (antes tapaba «Mochila») */
+@media (min-width:900px) and (max-width:1279px){body #tut{top:calc(52px + env(safe-area-inset-top,0px))}}
+/* teléfono en horizontal: panel más compacto y mensajes un poco más abajo para no tapar el arma */
+@media (max-height:520px){
+  body #needs{margin-top:13px;gap:5px}
+  body .nd u{top:-12px;font-size:10px}
+  body #toasts{top:calc(104px + env(safe-area-inset-top,0px))}
+  body .toast{font-size:14px;padding:2px 8px 3px}
+}
 </style>
 </body>
 </html>

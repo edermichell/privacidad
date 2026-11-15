@@ -86,3 +86,6 @@
 
 ## Partidas largas más fluidas (v16.1) — ver `actualizacion_v161/INFORME_RENDIMIENTO_v16.1.md`
 - Menos cálculo con miles de zombis (cuadrícula de supervivientes bajo demanda, hogueras y hordas amontonadas): −18 % en la simulación del día 7.
+
+## Clave de sala, arranque rápido y pantalla de juego (v16.2) — ver `actualizacion_v162/CAMBIOS_v16.2.md`
+- Clave elegida al crear sala (4 a 6 letras o números) o al azar; arranque −54 % desde la segunda vez; tutorial sin tapar botones, barras y mensajes más legibles.

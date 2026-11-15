@@ -1,0 +1,17 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v16.2:
+• Al crear una sala puedes elegir su clave (o dejarla al azar).
+• El juego arranca mucho más rápido desde la segunda vez.
+• Pantalla de juego más limpia y menús renovados.
+• Pon tu nombre en las salas y vuelve a aparecer en tu cama.
+• Salas PVP más justas y partidas largas más fluidas.
+
+--- English (optional) ---
+What's new in v16.2:
+• Choose your room's code when you create it (or leave it random).
+• The game starts much faster from the second launch.
+• Cleaner in-game screen and refreshed menus.
+• Set your name in rooms and respawn in your bed.
+• Fairer PVP rooms and smoother long games.
