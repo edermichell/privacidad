@@ -1,7 +1,7 @@
 # Lanzamiento v15.8 — qué hay en esta carpeta
-1. `GUIA_SUBIR_v15.8.md` ← empieza aquí (orden de pasos y qué hacer según la revisión de la 14.0).
+1. `GUIA_SUBIR_v15.8.md` ← **empieza aquí: los 8 pasos para lanzar la 15.8** (política, compilar, subir a Play, servidor).
 2. `UltimoRefugio_AndroidStudio_v15.8.zip` — proyecto de la app (versionCode 155, «15.8»), con la política nueva y el resumen de cambios.
-3. `privacy.html` — política de privacidad **actualizada** (súbela a tu URL pública antes de enviar la app).
+3. `privacy.html` — política de privacidad **actualizada (v15.8)** (súbela a tu URL pública antes de enviar la app).
 4. `NOVEDADES_PLAY_v15.8.txt` — texto de «novedades» (es + en).
 5. `correo_testers_v158/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
