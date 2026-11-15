@@ -1,0 +1,73 @@
+Último Refugio 17.0 · resultado de las pruebas (2026-11-15)
+
+  ######## 17.0 cliente
+  == notas
+  fallos: 0
+  == escenas/guardado
+  fallos: 0
+  == 13.5 -> 13.6
+  OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+  == 2 jugadores
+  host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+  == 4 jugadores
+  FAIL invitado 2 entra a la partida 
+  FAIL el anfitrión tiene 3 invitados jugando {"peers":3,"estados":["playing/true/1/2/Jugador 2","linked/false/null/3/null","playing/true/1/4/Jugador 4"],"chip":"COOP ● 
+  FAIL g1 ve al anfitrión y a los otros 2 invitados {"st":"playing","oth":1,"host":true,"chip":"COOP ● 3 jugadores"}
+  FAIL g2 ve al anfitrión y a los otros 2 invitados {"st":"linked","oth":0,"host":false,"chip":"COOP … conectando"}
+  FAIL g3 ve al anfitrión y a los otros 2 invitados {"st":"playing","oth":1,"host":true,"chip":"COOP ● 3 jugadores"}
+  == soak
+  d4 13s {"Z":1554,"NPCS":171,"parts":34,"texts":3,"cars":322,"chunks":26,"HC2":1434,"SPR":35,"EVS":6,"JL":17,"buildings":286,"TRAPS":0,"day":5,"ls":211979,"mem":null,"aliv
+  ERRS_FOUND []
+  FIN
+  == mono
+  == small: teclas 131, toques 89 (36 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+  == colossal: teclas 124, toques 96 (37 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+  == ritmo
+  fallos: 0
+  == gama baja
+  fallos: 0
+  == novedades
+  FAIL anota la versión como vista 
+  FAIL queda anotado 
+  FAIL Android: consulta a Play al abrir y detecta la versión 160 ["none",0,"check"]
+  FAIL aviso visible en el menú 
+  FAIL punto rojo en NOVEDADES 
+  == suelo
+  fallos: 0
+  FIN2
+  == funciones optimizadas
+  fallos: 0
+  == arranque rápido
+  fallos: 0
+  == clave de sala
+  fallos: 0
+  == chat de voz
+  fallos: 0
+  ######## 17.0 zona roja
+  TODO OK
+  ######## fase 5
+  fallos: 0
+  fallos: 0
+  ######## fase 6
+  fallos: 0
+  ######## nombres y aparición
+  fallos: 0
+  ######## visibilidad y acciones
+  fallos: 0
+  fallos: 0
+  ######## alianzas y misiones
+  fallos: 0
+  fallos: 0
+  == prueba dura
+  SALA1: 29.9 pasos/s (objetivo 30) · zombis vivos 223 · bajas 292 · errores del juego 0
+  SALA2: 29.8 pasos/s (objetivo 30) · zombis vivos 205 · bajas 227 · errores del juego 0
+  SALA3: 29.8 pasos/s (objetivo 30) · zombis vivos 160 · bajas 247 · errores del juego 0
+  Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3931
+  VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+  TODO_FIN
+
+Repetidas aparte tras corregir la prueba (no el juego):
+  == novedades (upd170.js, versión 17.0 / 161): fallos: 0
+  == 4 jugadores (coop4.js, usa ntfy.sh externo; ya fallaba así en la 16.3): fallos: 0
+
+Nota: en la suite, «novedades» usaba la prueba de la 16.3 (versión fija 16.3/160) y «4 jugadores» depende de un servicio externo; ambas pasan al repetirlas.

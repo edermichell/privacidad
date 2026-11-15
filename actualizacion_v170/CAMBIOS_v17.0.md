@@ -44,8 +44,8 @@ Al empezar el brote, el ejército intentó contenerlo: **selló el hospital con 
 - **Juego individual y COOP en la misma red:** sin cambios (salvo que el saco de dormir también se puede construir para dormir).
 - **Apps anteriores en el servidor nuevo:** entran como siempre, pero no ven barras, armario, zonas ni la pantalla de reaparición; el servidor les aplica igual las reglas del armario (sin devolverles el material) y no tienen espera al reaparecer.
 
-## Pruebas (todas en `herramientas_pruebas/` o el scratchpad)
-- `prueba_zona_roja_v170.js` (servidor real, sala PvP, 2 jugadores): **49 comprobaciones**, todas OK: vida y reparación (con asalto y materiales), armario (bloqueo en el teléfono y en el servidor, devolución, autorización, caducidad y cobro), saco y reaparición (lista, cuenta atrás, anuncio, espera creciente, rechazo de quien vuelve antes, al azar), Zonas Rojas (elección, cajas, botín, guardias, gas con y sin máscara, avisos) y pared rota para todos.
+## Pruebas
+- `prueba_zona_roja_v170.js` (servidor real, sala PvP, 2 jugadores): **57 comprobaciones**, todas OK: vida y reparación (con asalto y materiales), armario (bloqueo en el teléfono y en el servidor, devolución, autorización, caducidad y cobro), saco y reaparición (lista, cuenta atrás, anuncio, espera creciente, rechazo de quien vuelve antes, al azar), Zonas Rojas (elección, cajas, botín, guardias, gas con y sin máscara, avisos) y pared rota para todos.
 - Regresión completa de la 16.3 (cliente, servidor, PvP, alianzas, misiones, voz, claves, nombres y aparición, prueba dura) con la 17.0: ver `RESULTADO_PRUEBAS_v17.0.txt`.
 
 ## Opciones del servidor (config.json, todas opcionales)
