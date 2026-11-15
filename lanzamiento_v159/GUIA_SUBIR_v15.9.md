@@ -1,32 +1,32 @@
-# Lanzar la v15.8 en Google Play · paso a paso
+# Lanzar la v15.9 en Google Play · paso a paso
 
-**Qué subes:** la app **15.8** (versionCode **155**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
+**Qué subes:** la app **15.9** (versionCode **156**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
 **Tiempo:** ~1 h de trabajo tuyo + la revisión de Google (de horas a varios días).
 
 ## Archivos de esta carpeta
 | Archivo | Para qué |
 |---|---|
-| `UltimoRefugio_AndroidStudio_v15.8.zip` | Proyecto de Android Studio (versionCode 155, versionName «15.8») |
-| `privacy.html` | Política de privacidad actualizada («noviembre de 2026 (v15.8)») |
-| `NOVEDADES_PLAY_v15.8.txt` | Texto de «Novedades» para Play (español 402 caracteres, inglés 371; máximo 500) |
+| `UltimoRefugio_AndroidStudio_v15.9.zip` | Proyecto de Android Studio (versionCode 156, versionName «15.9») |
+| `privacy.html` | Política de privacidad actualizada («noviembre de 2026 (v15.9)») |
+| `NOVEDADES_PLAY_v15.9.txt` | Texto de «Novedades» para Play (español 402 caracteres, inglés 371; máximo 500) |
 | `UltimoRefugio_Servidor_Tailscale.zip` | Kit del servidor nuevo (se instala **después**, paso 7) |
-| `correo_testers_v158/` | Correo para testers (HTML con imágenes y texto) |
-| `CAMBIOS_v14.0_a_v15.8.md` | Todo lo que cambió desde la 14.0 aprobada |
+| `correo_testers_v159/` | Correo para testers (HTML con imágenes y texto) |
+| `CAMBIOS_v14.0_a_v15.9.md` | Todo lo que cambió desde la 14.0 aprobada |
 
 ---
 
 ## Paso 1 · Política de privacidad (5 min)
 1. Sube `privacy.html` a **tu URL pública de siempre** (la que está en Play Console → Contenido de la app → Política de privacidad, y en la variable `PRIVACY_URL`), sustituyendo la anterior.
-2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v15.8)»**.
+2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v15.9)»**.
 
 ## Paso 2 · Formularios de Play Console (solo si no los actualizaste con la 15.x)
-Si ya los pusiste al día con alguna 15.x, **no hace falta tocarlos**: la 15.8 no recoge ningún tipo de dato nuevo.
-- **Seguridad de los datos:** *ID de usuario* (identificador anónimo del multijugador) e *Interacciones/actividad en la app*: recopilados, finalidad «Funcionalidad de la app» (y «Prevención de fraudes y seguridad» si el formulario la ofrece), **no compartidos**, cifrados en tránsito, y se puede pedir el borrado por correo. Lo de Unity Ads y las compras sigue igual. Comprueba cada casilla con el formulario actual.
+**La 15.9 añade un dato nuevo: el nombre de jugador que cada uno elige** (visible para los demás, guardado en tu servidor). Añádelo en Seguridad de los datos (ver abajo).
+- **Seguridad de los datos:** *ID de usuario* (identificador anónimo del multijugador **y el nombre de jugador que elige**; si el formulario lo pide aparte, decláralo como *Otros contenidos generados por el usuario*) e *Interacciones/actividad en la app*: recopilados, finalidad «Funcionalidad de la app» (y «Prevención de fraudes y seguridad» si el formulario la ofrece), **no compartidos**, cifrados en tránsito, y se puede pedir el borrado por correo. Lo de Unity Ads y las compras sigue igual. Comprueba cada casilla con el formulario actual.
 - **Clasificación de contenido (IARC):** los usuarios interactúan entre sí (multijugador por salas, **sin chat de texto ni voz**), hay violencia de fantasía contra zombis y combate entre jugadores en la sala PvP.
 
 ## Paso 3 · Compilar el AAB firmado (15–30 min)
-1. Descomprime `UltimoRefugio_AndroidStudio_v15.8.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
-2. Revisa `app/build.gradle`: debe tener `versionCode 155` y `versionName "15.8"`.
+1. Descomprime `UltimoRefugio_AndroidStudio_v15.9.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
+2. Revisa `app/build.gradle`: debe tener `versionCode 156` y `versionName "15.9"`.
 3. Revisa tus valores de compilación (los mismos de la 14.0): `UNITY_TEST_MODE=false`, `PRIVACY_URL` con tu dirección real, `UNITY_GAME_ID` y la firma (`KEYSTORE_FILE`…).
 4. **Build ▸ Generate Signed Bundle / APK… ▸ Android App Bundle**, con **la misma llave `.jks` de la 14.0** (si usas otra, Play la rechaza) ▸ **release** ▸ Finish. El archivo queda en `app/release/app-release.aab`.
 5. Si Gradle da un error, mándame el texto exacto. El código Java (actualización dentro de la app y recuperación del WebView) es distinto del de la 14.0 y no pude compilarlo con el SDK real.
@@ -36,31 +36,32 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 1. Que el juego abre, se puede jugar una partida individual y se conserva el guardado anterior.
 2. **MULTIJUGADOR:** aparecen las salas y puedes entrar a una (con el servidor encendido).
 3. Una compra de prueba, un anuncio recompensado y la pantalla de consentimiento.
-4. **NOVEDADES:** la primera entrada de la lista es la 15.8, «Salas PVP más limpias».
+4. **NOVEDADES:** la primera entrada de la lista es la 15.9, «Tu nombre y tu cama».
+5. **MULTIJUGADOR → TU NOMBRE:** escribe un nombre, entra a una sala y comprueba que otro jugador lo ve sobre tu personaje.
 
 ## Paso 5 · Subir a Play Console (10 min)
 1. Play Console → tu app → **Pruebas → Prueba cerrada (alpha)** → **Crear nueva versión**.
-2. Sube `app-release.aab`. Nombre de la versión: **15.8 (155)**.
-3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v15.8.txt` (es-419 / es-ES y en-US).
+2. Sube `app-release.aab`. Nombre de la versión: **15.9 (156)**.
+3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v15.9.txt` (es-419 / es-ES y en-US).
 4. **Siguiente → Revisar versión**: lee los avisos (permisos, API objetivo, dispositivos). Los avisos amarillos no impiden publicar; los rojos sí (mándamelos).
 5. **Guardar → Enviar cambios a revisión** (en *Resumen de la publicación*).
 6. Mientras dure la revisión **no cambies la ficha ni los formularios**, porque cada cambio puede alargar la espera.
 
 ## Paso 6 · Cuando Google la apruebe
-1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 15.8. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
-2. Manda el correo de `correo_testers_v158/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
+1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 15.9. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
+2. Manda el correo de `correo_testers_v159/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
 
-## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 15.8
-**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 15.8**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 15.8 esté en Play.
+## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 15.9
+**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 15.9**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 15.9 esté en Play.
 1. Cierra el servidor (ventana de `INICIAR_SERVIDOR.bat` → Ctrl+C).
 2. Haz una copia de la carpeta del servidor (por seguridad).
-3. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo estos archivos: `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** ni la carpeta `datos`.
+3. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo estos archivos: `servidor.js`, `srv_layer.js`, `admin.html`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** ni la carpeta `datos`.
 4. Abre `INICIAR_SERVIDOR.bat` y entra con tu teléfono a una sala normal y a la sala PvP.
 5. Opcional: `PRUEBA_DURA.bat` con todo cerrado. Debe decir **APROBADO**.
-6. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 155, "version": "15.8", "notas": ["Salas PVP más justas", "Uniformes de zombis en las salas"] }`.
+6. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 156, "version": "15.9", "notas": ["Pon tu nombre en las salas", "Apareces en tu cama o donde lo dejaste"] }`.
 
 ## Paso 8 · Vigilar 2–3 días
-- **Play Console → Android vitals:** cierres y ANR de la 15.8.
+- **Play Console → Android vitals:** cierres y ANR de la 15.9.
 - **Panel `/admin` del servidor:** memoria y pasos/s.
 - **Registro del servidor:** si ves `INVENTARIO SOSPECHOSO de jugador N` o `movimiento imposible` de alguien que juega limpio, mándame esas líneas y qué estaba haciendo. Mientras tanto puedes apagar el control con `"auditarInventario": false` o `"validarMovimiento": false` en `config.json`.
 - Cuando la alpha vaya bien 1–2 semanas, puedes **promover la versión a producción** desde la misma pantalla (Play exige haber cumplido los requisitos de prueba cerrada de tu cuenta).
@@ -70,8 +71,8 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 |---|---|
 | Play rechaza la versión | Copia el motivo (*Recibidos* / *Política y programas*) y mándamelo |
 | «Clave de firma incorrecta» | Usaste otra llave: compila con la `.jks` de la 14.0 |
-| «Version code 155 ya usado» | Ya subiste un 155 antes: dime y lo paso a 156 |
-| La sala PvP no deja entrar | Ese teléfono no tiene aún la 15.8 (es lo esperado) |
+| «Version code 156 ya usado» | Ya subiste un 156 antes: dime y lo paso a 156 |
+| La sala PvP no deja entrar | Ese teléfono no tiene aún la 15.9 (es lo esperado) |
 | Fallo del servidor nuevo | Restaura la copia del paso 7.2 y mándame el registro |
 
 ---
@@ -83,7 +84,7 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 - **Tras actualizar**, el panel se abre una sola vez. En una instalación nueva no molesta.
 - **Aviso automático:** al abrir el menú, la app (Android) pregunta a Google Play si hay una versión más nueva (*actualización dentro de la app*, librería `com.google.android.play:app-update:2.1.0`, ya añadida a `build.gradle`). Si la hay, aparece un aviso abajo («Versión nueva disponible · ACTUALIZAR»), un punto rojo en NOVEDADES y el botón ACTUALIZAR AHORA en el panel. Al pulsar, Google Play hace la actualización (pantalla completa, «inmediata»); si Play no la permite, abre la ficha de la app. El jugador puede descartar el aviso (no vuelve hasta que salga otra versión).
 - **Anuncio desde tu servidor (opcional):** en `config.json` puedes poner `"appUltima": { "codigo": 147, "version": "14.10", "notas": ["Lo nuevo 1", "Lo nuevo 2"] }` (codigo = versionCode de Play). La app lo recibe con la lista de salas y avisa (con esas notas) a quien tenga una versión menor. Sin ese bloque no se anuncia nada; el aviso de Google Play funciona igual. **Cada vez que subas una versión nueva, añade también sus cambios a la lista `UR_NEWS` del juego** (primeras líneas del bloque «v15.7 · NOVEDADES»), o pídeme que lo haga.
-- **Cómo probar el aviso (hay que hacerlo con Google Play, no se puede en el emulador sin Play):** instala la 15.8 desde la pista (alpha/interna) en un teléfono; luego sube **otra compilación con un versionCode mayor** (p. ej. 156) a la misma pista; cuando Play la procese (puede tardar de minutos a horas), abre la app en el teléfono: debe salir el aviso. Con «Compartir app interna» también sirve. Qué mirar: (1) aviso y punto rojo; (2) ACTUALIZAR abre la pantalla de actualización de Play; (3) al terminar, la app arranca en la versión nueva y abre las novedades una vez.
+- **Cómo probar el aviso (hay que hacerlo con Google Play, no se puede en el emulador sin Play):** instala la 15.9 desde la pista (alpha/interna) en un teléfono; luego sube **otra compilación con un versionCode mayor** (p. ej. 157) a la misma pista; cuando Play la procese (puede tardar de minutos a horas), abre la app en el teléfono: debe salir el aviso. Con «Compartir app interna» también sirve. Qué mirar: (1) aviso y punto rojo; (2) ACTUALIZAR abre la pantalla de actualización de Play; (3) al terminar, la app arranca en la versión nueva y abre las novedades una vez.
 - **Aún sin probar en un teléfono real:** el código Java de esta función compila contra una copia de la API de Play hecha por mí, pero **no se ha ejecutado con Google Play real**. Es la primera cosa a revisar con la 15.8 (Android Studio debe descargar la librería `app-update` al sincronizar Gradle; necesita internet).
 
 
@@ -179,3 +180,8 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 - **Los invitados ven ahora el uniforme de los zombis** (policía, soldado…) y pueden sacar su botín.
 - **Servidor:** copia `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html` (sin pisar `config.json`). Opcionales: `"auditarInventario": false`, `"validarMovimiento": false`. **Las salas PvP exigen la app 15.8** (`versionCode 155`); en el registro verás `INVENTARIO SOSPECHOSO de jugador N …` si alguien lo intenta.
 - Detalle, límites y pruebas: `actualizacion_v158/CAMBIOS_v15.8_fase6.md`.
+
+## Tu nombre y tu cama (nuevo en la 15.9)
+- **Aparición (solo servidor, apps 15.0+):** al volver a una sala, junto a la cama donde durmió; si no, donde lo dejó; tras morir, en un lugar al azar.
+- **Nombre (app 15.9):** campo «TU NOMBRE» en MULTIJUGADOR, único en el servidor y sin insultos (`datos/nombres.json`); botón **Quitar nombre** en el panel.
+- **Servidor:** copia también `admin.html` (botón nuevo). Detalle, opción de Google Play Juegos y pruebas: `actualizacion_v159/CAMBIOS_v15.9.md`.

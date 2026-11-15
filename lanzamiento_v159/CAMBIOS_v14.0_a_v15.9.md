@@ -76,3 +76,7 @@
 - PvP: el servidor apunta de dónde sale cada objeto valioso; lo inventado no se guarda ni sirve para atacar. Quien se mueve más rápido de lo posible vuelve a su sitio.
 - Los invitados ven el uniforme de los zombis (policía, soldado…) y pueden sacar su botín especial.
 - La sala PvP exige la app 15.8 (versionCode 155).
+
+## Tu nombre y tu cama (v15.9) — ver `actualizacion_v159/CAMBIOS_v15.9.md`
+- Nombre de jugador elegido en MULTIJUGADOR, único en el servidor y moderable desde el panel.
+- Al volver a una sala: junto a tu cama, o donde lo dejaste; tras morir, en un lugar al azar.

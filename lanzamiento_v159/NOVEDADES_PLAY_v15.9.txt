@@ -1,0 +1,17 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v15.9:
+• Pon tu nombre en las salas: los demás lo ven y nadie más puede usarlo.
+• Duerme en una cama y volverás a aparecer en ella. Si no, apareces donde lo dejaste.
+• Salas PVP más justas: el servidor sabe de dónde sale cada arma y cada bala.
+• Ves el uniforme de los zombis policía y soldado, con su botín.
+• Botín que reaparece, bases protegidas sin conexión, bandidos y temporadas PVP.
+
+--- English (optional) ---
+What's new in v15.9:
+• Set your name in rooms: others see it and nobody else can use it.
+• Sleep in a bed and you will respawn there. Otherwise you come back where you left.
+• Fairer PVP rooms: the server knows where every gun and bullet comes from.
+• See police and soldier zombie uniforms, with their loot.
+• Respawning loot, offline base protection, bandits and PVP seasons.

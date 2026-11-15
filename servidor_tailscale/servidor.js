@@ -55,6 +55,30 @@ function auth(uid, tok, register) {
 /* ---- baneos, reportes y verificación de identidad al unirse ---- */
 const bansAll = () => readJson('bans.json', { global: {}, salas: {} });
 const saveBans = b => writeJson('bans.json', b);
+/* v15.9 · nombres de jugador: uno por identificador (el que tiene la clave secreta del teléfono), únicos en todo el servidor */
+const NAME_RE = /^[A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ _.\-]{3,14}$/;
+const NAME_BAD = ['puta', 'puto', 'mierda', 'verga', 'pendej', 'cabron', 'marica', 'culero', 'pinche', 'joto', 'zorra', 'nazi', 'hitler', 'fuck', 'shit', 'bitch', 'nigg', 'admin', 'moderador', 'anfitrion', 'servidor', 'soporte', 'oficial'];
+const nameKey = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/5/g, 's').replace(/[^a-z0-9]/g, '');
+const namesAll = () => readJson('nombres.json', {});
+function nameOp(op, uid, name) {
+  try {
+    uid = String(uid || '').toLowerCase(); if (!/^[a-z0-9]{8,40}$/.test(uid)) return { ok: false };
+    const N = namesAll(), cur = N[uid] ? N[uid].n : null;
+    if (op === 'get') return { ok: true, n: cur };
+    if (op === 'clear') { if (N[uid]) { delete N[uid]; writeJson('nombres.json', N); } return { ok: true }; }
+    if (op === 'claim') {
+      const v = String(name || '').replace(/\s+/g, ' ').trim();
+      if (!v || /^jugador\s*\d*$/i.test(v)) return { ok: true, n: cur };
+      if (!NAME_RE.test(v)) return { ok: false, n: cur, why: 'Ese nombre tiene caracteres no permitidos.' };
+      const k = nameKey(v); if (k.length < 3) return { ok: false, n: cur, why: 'Ese nombre es demasiado corto.' };
+      if (NAME_BAD.some(w => k.includes(w))) return { ok: false, n: cur, why: 'Ese nombre no está permitido.' };
+      for (const [u, r] of Object.entries(N)) if (u !== uid && nameKey(r.n) === k) return { ok: false, n: cur, why: 'Ese nombre ya lo usa otro jugador.' };
+      if (cur !== v) { N[uid] = { n: v, t: Date.now() }; writeJson('nombres.json', N); log('nombre «' + v + '» para ' + uid.slice(0, 6)); }
+      return { ok: true, n: v };
+    }
+  } catch (e) { }
+  return { ok: false };
+}
 const reportsAll = () => readJson('reportes.json', []);
 const saveReports = r => writeJson('reportes.json', r.slice(-500));
 function banInfo(uid, roomId) { const b = bansAll(); return (b.global && b.global[uid]) ? Object.assign({ ambito: 'servidor' }, b.global[uid]) : (b.salas && b.salas[roomId] && b.salas[roomId][uid]) ? Object.assign({ ambito: 'sala' }, b.salas[roomId][uid]) : null; }
@@ -206,6 +230,7 @@ class Room {
       await ctx.exposeFunction('__srvChar', (op, uid, data) => this.charOp(op, uid, data));
       await ctx.exposeFunction('__srvLog', m => log('[' + this.id + '] ' + String(m).slice(0, 300)));
       await ctx.exposeFunction('__srvAli', (op, data) => this.aliOp(op, data));
+      await ctx.exposeFunction('__srvName', (op, uid, n) => nameOp(op, uid, n));   /* v15.9 */
       this.purgeChars();
       const page = await ctx.newPage(); this.page = page;
       if (+process.env.URSRV_CPU > 1) { try { const cdp = await ctx.newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: +process.env.URSRV_CPU }); log('[' + this.id + '] PRUEBA: CPU del anfitrión frenada ×' + process.env.URSRV_CPU); } catch (e) { } }   /* solo para pruebas: imita un PC más lento */
@@ -357,6 +382,7 @@ async function manage(r, act, Q, admin) {
     const R = reportsAll(); for (const x of R) if (x.sala === r.id && x.contra === uid && x.estado === 'nuevo') x.estado = 'baneado'; saveReports(R); log('[' + r.id + '] baneado ' + String(uid).slice(0, 6)); return { ok: true };
   }
   if (act === 'desbanear') { delBan(r.id, Q('uid')); return { ok: true }; }
+  if (act === 'quitarnombre') { const slot = +Q('slot'), pl = pls.find(p => p.slot === slot); if (!pl || !pl.uid) return { ok: false, error: 'Ese jugador ya no está.' }; nameOp('clear', pl.uid); await r.kick(slot, 'Tu nombre no está permitido. Elige otro en MULTIJUGADOR.'); log('[' + r.id + '] nombre quitado a ' + String(pl.uid).slice(0, 6)); return { ok: true }; }
   if (act === 'ignorar') { const R = reportsAll(); const x = R.find(y => y.id === Q('rid') && y.sala === r.id); if (x) x.estado = 'ignorado'; saveReports(R); return { ok: true }; }
   if (act === 'reiniciar') { await r.restart(); return { ok: true }; }
   if (act === 'nuevomundo') { await r.newWorld(); return { ok: true }; }

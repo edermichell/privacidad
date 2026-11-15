@@ -136,3 +136,8 @@ Copia el nuevo `index.html` sobre `juego\index.html` y reinicia el servidor. **T
 
 ## Mapa nuevo 960×960 (v14.5)
 Ver `MAPA_NUEVO_960.md` (migración con copia de seguridad: `MIGRAR_A_MAPA_NUEVO.bat`; volver atrás: `VOLVER_AL_MAPA_ANTERIOR.bat`). Opciones por sala en `config.json`: dentro de cada elemento de `salas` puedes poner `"tamano"` (`small`, `big`, `huge`, `vast`, `colossal`), `"mundo"` y `"semilla"`. `"salasUsuarioActivasMax"` limita las salas de jugadores activas a la vez, aparte de `"salasActivasMax"` (oficiales).
+
+## Nombres de jugador y punto de aparición (v15.9)
+- **Aparición:** al volver a una sala, el jugador aparece junto a la cama donde durmió (si sigue ahí); si no, donde lo dejó; tras morir, en un lugar al azar; la primera vez, en el punto de inicio. Funciona con las apps 15.0 o posteriores (las 14.0.x no guardan el personaje en el servidor).
+- **Nombres:** con la app 15.9 cada jugador elige su nombre en MULTIJUGADOR. El servidor lo reserva para su identificador (único en todo el servidor, sin insultos ni «admin», «moderador»…) en `datos/nombres.json`.
+- **Moderación:** en el panel, **Quitar nombre** libera el nombre de un jugador y lo saca de la sala para que elija otro. Para prohibir un nombre para siempre, añade la palabra a la lista `NAME_BAD` de `servidor.js`.

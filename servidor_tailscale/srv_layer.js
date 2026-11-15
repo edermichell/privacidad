@@ -27,7 +27,7 @@ SRV.boot = function (opt) {
     openCtl(); setInterval(() => { try { if (SRV.ctl && SRV.ctl.readyState === 1) SRV.ctl.send('{"k":"ka"}'); } catch (e) { } }, 20000); }
   /* el mundo que recibe un invitado nuevo lleva la posición del anfitrión: siempre debe ser el punto de entrada (no el rincón donde se aparca con la sala vacía) */
   /* v15.6: en una sala del servidor nadie es «el anfitrión»: los jugadores se numeran desde 1 (antes el primero era «Jugador 2» porque el 1 era el anfitrión invisible) */
-  { const _nsw = netSendWorld; netSendWorld = function () { try { if (NET.cur && (!NET.rpName || /^Jugador \d+$/.test(NET.rpName))) NET.rpName = 'Jugador ' + Math.max(1, NET.cur.slot - 1); } catch (e) { } try { if (SRV.spawn && P) { const sp = SRV.pvp && SRV.pickSpawn ? SRV.pickSpawn() : SRV.spawn; P.x = sp[0]; P.y = sp[1]; SRV.lastBusy = true; } } catch (e) { } return _nsw.apply(this, arguments); }; }
+  { const _nsw = netSendWorld; netSendWorld = function () { try { if (NET.cur && (!NET.rpName || /^Jugador \d+$/.test(NET.rpName))) NET.rpName = 'Jugador ' + Math.max(1, NET.cur.slot - 1); } catch (e) { } try { if (SRV.spawn && P) { const sf = SRV.spawnFor ? SRV.spawnFor(NET.cur) : { p: SRV.spawn }, sp = sf.p; P.x = sp[0]; P.y = sp[1]; SRV.lastBusy = true; if (NET.cur) NET.cur.spWhy = sf.why; } } catch (e) { } return _nsw.apply(this, arguments); }; }
   /* jugadores conectados y expulsión (los usa el servidor) */
   SRV.players = () => (NET.peers || []).filter(p => p.ready).map(p => ({ slot: p.slot, uid: p.uid || '', nombre: ((p.rp && p.rp.name) || ('Jugador ' + p.slot)) }));
   SRV.kick = (slot, msg) => { const p = (NET.peers || []).find(q => q.slot === slot); if (!p) return false; try { netSendRaw(p, { t: 'end', m: msg || 'Fuiste expulsado de la sala.' }); } catch (e) { } setTimeout(() => { try { netPeerLost(p, true); } catch (e) { } }, 450); return true; };
@@ -63,6 +63,7 @@ SRV.boot = function (opt) {
     if (!SRV.auth || !peer.chAu || peer.chDead) return;
     let cv = SRV.charValid(c); if (!cv) { peer.chBadN = (peer.chBadN | 0) + 1; if (peer.chBadN <= 3) slog('personaje rechazado de ' + who(peer) + ' (formato o valores no válidos)'); return; }
     if (audOn(peer)) { try { peer.audSeq = (peer.audSeq | 0) + 1; const ar = SRV.audit(peer, cv, !!fin); if (ar.wait) { const sq = peer.audSeq, c0 = c; clearTimeout(peer.audTm); peer.audTm = setTimeout(() => { try { if (peer.audSeq === sq && !peer.chDead) SRV.charPut(peer, c0, true); } catch (e) { } }, 2500); return; } if (ar.cut) { cv = ar.cv; c = JSON.stringify(cv); } } catch (e) { slog('auditoría: ' + e.message); } }   /* v15.8 */
+    if (Array.isArray(peer.bed)) { cv.srvBed = peer.bed; c = JSON.stringify(cv); }   /* v15.9: su cama */
     peer.chBlob = cv; peer.chInv = new Set(cv.P.inv.map(i => i.id));   /* v15.2: lo que el servidor sabe que lleva (armas, botín del cuerpo) */
     peer.chPend = c; if (!peer.chT || performance.now() - peer.chT > 8000) SRV.charFlush(peer);
   };
@@ -392,17 +393,60 @@ SRV.boot = function (opt) {
     M.bad++; peer.mvRej = (peer.mvRej | 0) + 1;
     if (M.bad >= 3) { M.bad = 0; M.t = now; SRV.strike(peer, 1, 'movimiento imposible (' + d.toFixed(1) + ' casillas en ' + dt.toFixed(2) + ' s)'); try { netSendRaw(peer, { t: 'PZ', x: Math.round(M.x * 100) / 100, y: Math.round(M.y * 100) / 100 }); } catch (e) { } }
   };
+  /* ===== v15.9 · NOMBRES Y PUNTO DE APARICIÓN =====
+     Nombre: el teléfono manda el que eligió el jugador; el servidor lo reserva para su identificador (únicos en todo el servidor, sin insultos). Las apps antiguas usan el que ya tuvieran reservado.
+     Aparición: al volver a la sala, en su cama si durmió en una (y sigue ahí); si no, donde lo dejó; tras morir, en un lugar al azar; la primera vez, en el punto de inicio. */
+  const nameCall = (op, uid, n) => { try { if (typeof window.__srvName === 'function') return Promise.race([Promise.resolve(window.__srvName(op, uid, n || '')), new Promise(res => setTimeout(() => res(null), 3000))]).catch(() => null); } catch (e) { } return Promise.resolve(null); };
+  SRV.nameResolve = (peer, o) => {
+    if (!peer || !peer.uid) return Promise.resolve(null); const asked = o && typeof o.n === 'string' && o.n !== 'Jugador 2' ? o.n : '';
+    return nameCall(asked ? 'claim' : 'get', peer.uid, asked).then(r => {
+      const nm = r && r.n ? String(r.n).slice(0, 14) : ''; if (o) o.n = nm || 'Jugador 2'; peer.nick = nm || null;
+      if (r && r.why) setTimeout(() => { try { SRV.aliSay(peer, r.why + (nm ? ' Sigues como «' + nm + '».' : ' Entras como «' + ((peer.rp && peer.rp.name) || 'Jugador') + '».'), 'bad'); } catch (e) { } }, 5000);
+      return r;
+    });
+  };
+  SRV.charDead = peer => { try { charCall('put', peer.uid, JSON.stringify({ muerto: Date.now() })); } catch (e) { } peer.bed = null; };
+  const freeAt = (x, y) => { const X = Math.floor(x), Y = Math.floor(y); return isFinite(x) && isFinite(y) && inb(X, Y) && !solidTile(X, Y) && tg[idx(X, Y)] !== G_WATER; };
+  SRV.bedFree = (bx, by) => { for (const [dx, dy] of [[0, 1], [1, 0], [-1, 0], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1], [0, 2], [2, 0], [-2, 0], [0, -2]]) { const x = bx + dx + .5, y = by + dy + .5; if (freeAt(x, y)) return [x, y]; } return null; };
+  SRV.spawnFor = peer => {
+    try {
+      const b = peer && peer.chBlob;
+      if (b) {
+        const bed = Array.isArray(peer.bed) ? peer.bed : b.srvBed;
+        if (Array.isArray(bed) && inb(bed[0], bed[1]) && to[idx(bed[0], bed[1])] === O_BED) { const q = SRV.bedFree(bed[0], bed[1]); if (q) return { p: q, why: 'cama' }; }
+        if (b.P && freeAt(+b.P.x, +b.P.y)) return { p: [+b.P.x, +b.P.y], why: 'ultima' };
+      }
+      if (peer && peer.diedAt) return { p: SRV.pickSpawn(), why: 'muerte' };
+    } catch (e) { }
+    return { p: SRV.pvp && SRV.pickSpawn ? SRV.pickSpawn() : SRV.spawn, why: 'inicio' };
+  };
+  /* dormir junto a una cama la marca como su punto de aparición */
+  SRV.bedCheck = (peer, o) => {
+    if (!peer || !o || !o.z || !isFinite(o.x) || !isFinite(o.y)) return; const X = Math.floor(o.x), Y = Math.floor(o.y);
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = X + dx, y = Y + dy; if (!inb(x, y) || to[idx(x, y)] !== O_BED || Math.hypot(x + .5 - o.x, y + .5 - o.y) > 1.9) continue;
+      if (peer.bed && peer.bed[0] === x && peer.bed[1] === y) return; peer.bed = [x, y]; if (peer.chBlob) { peer.chBlob.srvBed = peer.bed; peer.chPend = JSON.stringify(peer.chBlob); }
+      SRV.aliSay(peer, 'Esta cama es ahora tu punto de aparición: al volver a la sala aparecerás aquí.', 'good'); slog(who(peer) + ' eligió cama en ' + x + ',' + y); return; }
+  };
+  /* al salir, se guarda la última posición que conoce el servidor (el teléfono solo guarda cuando cambia la mochila) */
+  SRV.posFlush = peer => {
+    try { if (!SRV.auth || !peer || !peer.chAu || peer.chDead || !peer.chBlob || !peer.rp || (peer.rp && peer.rp.dead)) return; const [x, y] = SRV.vpos ? SRV.vpos(peer) : [peer.rp.x, peer.rp.y]; if (!freeAt(x, y)) return;
+      const b = peer.chBlob; b.P.x = Math.round(x * 100) / 100; b.P.y = Math.round(y * 100) / 100; if (Array.isArray(peer.bed)) b.srvBed = peer.bed; peer.chPend = JSON.stringify(b); } catch (e) { }
+  };
+  { const _np2 = netPeerLost; netPeerLost = function (peer) { try { SRV.posFlush(peer); } catch (e) { } return _np2.apply(this, arguments); }; }
+  { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
   { const _m = netMsg; netMsg = function (o) {
       const peer = NET.role === 'host' ? NET.cur : null;
       if (peer && o && typeof o.t === 'string') {
         if (o.t === 'hi') {
           peer.build = o.b | 0;
           if (SRV.minB && peer.build < SRV.minB) { try { netSendRaw(peer, { t: 'end', m: 'Esta sala pide una versión más reciente de la app. Actualiza Último Refugio desde Google Play.' }); } catch (e) { } setTimeout(() => { try { netPeerLost(peer, true); } catch (e) { } }, 400); slog('versión antigua rechazada: ' + who(peer) + ' build ' + peer.build); return; }
-          if (SRV.auth && peer.build >= 147 && !peer.chDone) {
-            peer.chDone = 1; const self = this, args = arguments;
-            charCall('get', peer.uid, '').then(r => {
+          if (!peer.chDone) {
+            peer.chDone = 1; const self = this, args = arguments, wantCh = SRV.auth && peer.build >= 147;
+            Promise.all([wantCh ? charCall('get', peer.uid, '') : Promise.resolve(null), SRV.nameResolve(peer, o)]).then(([r]) => {
               if (!NET.peers.includes(peer)) return;
-              if (r && r.ok) { let rec = r.c || null; const cv0 = rec ? SRV.charValid(rec) : null; if (!cv0) rec = null; else { peer.chBlob = cv0; peer.chInv = new Set(cv0.P.inv.map(i => i.id)); } peer.chAu = 1; peer.chRec = rec; } else { peer.chAu = 0; slog('almacén de personajes no disponible para ' + who(peer)); }
+              if (wantCh) {
+                if (r && r.ok) { let rec = r.c || null; try { const t0 = rec && JSON.parse(rec); if (t0 && t0.muerto) peer.diedAt = t0.muerto; } catch (e) { } const cv0 = rec ? SRV.charValid(rec) : null; if (!cv0) rec = null; else { peer.chBlob = cv0; peer.chInv = new Set(cv0.P.inv.map(i => i.id)); if (Array.isArray(cv0.srvBed)) peer.bed = cv0.srvBed; } peer.chAu = 1; peer.chRec = rec; } else { peer.chAu = 0; slog('almacén de personajes no disponible para ' + who(peer)); }
+              }
               netCtx(peer, () => _m.apply(self, args));
             });
             return;
@@ -452,7 +496,7 @@ SRV.boot = function (opt) {
   };
   SRV.pvpKill = (peer, by, quiet, att) => {
     if (peer.chDead) return; peer.chDead = 1; peer.chPend = null; peer.A = 0; const nl = SRV.dropLoot(peer);
-    if (!quiet) netSendRaw(peer, { t: 'HP', h: 0, k: 1, by: by ? String(by).slice(0, 14) : undefined }); if (SRV.auth && peer.chAu) charCall('del', peer.uid, '');
+    if (!quiet) netSendRaw(peer, { t: 'HP', h: 0, k: 1, by: by ? String(by).slice(0, 14) : undefined }); if (SRV.auth && peer.chAu) SRV.charDead(peer);
     if (att) { att.pk = (att.pk | 0) + 1; netSendRaw(att, { t: 'PX', n: (peer.rp && peer.rp.name) || '?', k: 1 }); try { SRV.onKill(att, peer); } catch (e) { } }
     slog(who(peer) + ' murió' + (by ? ' (' + by + ')' : '') + (quiet ? ' al desconectarse en combate' : '') + ': personaje borrado, ' + nl + ' objetos en el suelo');
     if (quiet) return;
@@ -499,7 +543,8 @@ SRV.boot = function (opt) {
       const r = _op.apply(this, arguments);
       try { const pe = NET.cur; if (SRV.pvp && pe && o && !pe.chDead && !o.k) SRV.hpSync(pe, +o.h); } catch (e) { }
       try { if (SRV.pvp && NET.cur && (NET.cur.build | 0) >= 155) SRV.moveCheck(NET.cur, o); } catch (e) { }
-      try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { if (SRV.pvp) SRV.dropLoot(peer); peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { charCall('del', peer.uid, ''); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
+      try { if (NET.cur && o && o.z) SRV.bedCheck(NET.cur, o); } catch (e) { }
+      try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { if (SRV.pvp) SRV.dropLoot(peer); peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { SRV.charDead(peer); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
       return r;
     }; }
   { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (peer && peer.uid) SRV.seen.set(peer.uid, Date.now()); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
