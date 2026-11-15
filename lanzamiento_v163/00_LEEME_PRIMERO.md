@@ -1,11 +1,11 @@
-# Lanzamiento v16.2 — qué hay en esta carpeta
-1. `GUIA_SUBIR_v16.2.md` ← **empieza aquí: los 8 pasos para lanzar la 16.2** (política, compilar, subir a Play, servidor).
-2. `UltimoRefugio_AndroidStudio_v16.2.zip` — proyecto de la app (versionCode 159, «16.2»), con la política nueva y el resumen de cambios.
-3. `privacy.html` — política de privacidad **actualizada (v15.9)** (súbela a tu URL pública antes de enviar la app).
-4. `NOVEDADES_PLAY_v16.2.txt` — texto de «novedades» (es + en).
-5. `correo_testers_v162/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
+# Lanzamiento v16.3 — qué hay en esta carpeta
+1. `GUIA_SUBIR_v16.3.md` ← **empieza aquí: los 8 pasos para lanzar la 16.3** (política, compilar, subir a Play, servidor).
+2. `UltimoRefugio_AndroidStudio_v16.3.zip` — proyecto de la app (versionCode 160, «16.3»), con la política nueva y el resumen de cambios.
+3. `privacy.html` — política de privacidad **actualizada (v16.3)** (súbela a tu URL pública antes de enviar la app).
+4. `NOVEDADES_PLAY_v16.3.txt` — texto de «novedades» (es + en).
+5. `correo_testers_v163/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
-7. `CAMBIOS_v14.0_a_v16.2.md` — todo lo que cambió desde la versión que está en revisión.
+7. `CAMBIOS_v14.0_a_v16.3.md` — todo lo que cambió desde la versión que está en revisión.
 
 **IMPORTANTE (v15.5):** corrige el fallo por el que en las salas no se veía a los demás jugadores (solo un «Anfitrión»). Lee `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md` (en la raíz): explica la causa, por qué hay que actualizar la app y la opción mínima **14.0.1**.
 
@@ -21,4 +21,6 @@
 
 **v16.1:** partidas largas más fluidas (−18 % de cálculo con miles de zombis). Ver `actualizacion_v161/INFORME_RENDIMIENTO_v16.1.md`. 
 
-**v16.2:** elegir la clave al crear una sala (o al azar si se deja vacía), arranque rápido (5,9 s → 2,7 s desde la segunda vez) y pantalla de juego más limpia. Ver `actualizacion_v162/CAMBIOS_v16.2.md`. **Si todavía no subiste ninguna de las 15.8–16.1, sube directamente la 16.2: incluye todo.**
+**v16.2:** elegir la clave al crear una sala (o al azar si se deja vacía), arranque rápido (5,9 s → 2,7 s desde la segunda vez) y pantalla de juego más limpia. Ver `actualizacion_v162/CAMBIOS_v16.2.md`. 
+
+**v16.3:** **chat de voz de proximidad** (botón VOZ; los zombis también oyen) y **sala PvP oficial** («Frontera PvP», con `AGREGAR_SALA_PVP.bat`). Cambia la parte Java (permiso de micrófono): compílala y pruébala en un teléfono. **Hay que volver a subir la política y actualizar Seguridad de los datos y la clasificación.** Ver `actualizacion_v163/CAMBIOS_v16.3.md`. **Si todavía no subiste ninguna de las 15.8–16.2, sube directamente la 16.3: incluye todo.**

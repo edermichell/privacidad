@@ -14,7 +14,7 @@ let chromium; try { chromium = require('playwright-core').chromium; } catch (e) 
 const ROOT = __dirname;
 const DEF = { puerto: 8080, nombreServidor: 'Servidor', salas: [{ id: 'SALA1', nombre: 'Refugio 1' }, { id: 'SALA2', nombre: 'Refugio 2' }], maxJugadores: 10, salasActivasMax: 3, dormirTrasMin: 10,
   semilla: '', modo: 'casual', dificultad: 'normal', tamano: 'huge', zombis: 1, botin: 1, lluvia: 1, mundo: 'region',
-  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null, autoridadPersonaje: true, validarDano: true, versionMinimaApp: 0, muerteBorraPersonaje: 'modo', personajeCaducaDias: 60, alianzaMax: 4, traidorHoras: 24, misionesGrupo: true, parcheAppAntigua: true, botinReapareceHoras: 3, proteccionBases: true, proteccionBasesMin: 10, temporadaDias: 14, auditarInventario: true, validarMovimiento: true };
+  simularSinJugadores: false, fpsServidor: 30, urlPublica: '', claveAdmin: '', maxConexionesPorIp: 20, conexionesPorMinutoIp: 40, registrosPorDiezMinIp: 60, reportesParaExpulsar: 3, exigirIdentidad: true, salasUsuario: true, gratisSalasMax: 1, gratisCaducaDias: 14, salas247Max: 2, simular247: false, salasUsuarioMax: 40, licenciaSalasPorDefecto: 3, guardarCadaSeg: 120, copias: 12, escuchar: 'tailscale', usarStunTurn: false, navegador: '', canal: '', carpetaDatos: 'datos', appUltima: null, autoridadPersonaje: true, validarDano: true, versionMinimaApp: 0, muerteBorraPersonaje: 'modo', personajeCaducaDias: 60, alianzaMax: 4, traidorHoras: 24, misionesGrupo: true, parcheAppAntigua: true, botinReapareceHoras: 3, proteccionBases: true, proteccionBasesMin: 10, temporadaDias: 14, auditarInventario: true, validarMovimiento: true, chatVoz: true, radioVoz: 40 };
 let CFG = Object.assign({}, DEF);
 try { CFG = Object.assign(CFG, JSON.parse(fs.readFileSync(process.env.CONFIG || path.join(ROOT, 'config.json'), 'utf8'))); } catch (e) { if (e.code !== 'ENOENT') { console.error('config.json inválido:', e.message); process.exit(1); } }
 if (process.env.PORT) CFG.puerto = +process.env.PORT;
@@ -246,7 +246,7 @@ class Room {
       }
       await page.waitForFunction(() => STATE === 'play', null, { timeout: 90000 });
       await page.waitForTimeout(2500); await page.keyboard.press('Space').catch(() => { }); await page.waitForTimeout(800);
-      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps, aut: c.aut, val: c.val, minB: c.minB, muerte: c.muerte, pvp: c.pvp, amax: c.amax, thoras: c.thoras, gm: c.gm, oldfix: c.oldfix, loot: c.loot, prot: c.prot, protMin: c.protMin, tfin: c.tfin, audit: c.audit, mov: c.mov }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor, aut: CFG.autoridadPersonaje !== false, val: CFG.validarDano !== false, minB: Math.max(CFG.versionMinimaApp | 0, this.cfg.pvp ? 155 : 0), muerte: this.cfg.pvp ? true : (CFG.muerteBorraPersonaje === undefined ? 'modo' : CFG.muerteBorraPersonaje), pvp: !!this.cfg.pvp, amax: Math.max(2, Math.min(8, CFG.alianzaMax | 0 || 4)), thoras: CFG.traidorHoras > 0 ? +CFG.traidorHoras : 24, gm: CFG.misionesGrupo !== false, oldfix: CFG.parcheAppAntigua !== false, loot: CFG.botinReapareceHoras === undefined ? 3 : +CFG.botinReapareceHoras || 0, prot: CFG.proteccionBases !== false, protMin: +CFG.proteccionBasesMin || 10, tfin: this.cfg.pvp ? this.seasonEnd() : 0, audit: CFG.auditarInventario !== false, mov: CFG.validarMovimiento !== false });
+      await page.evaluate(c => { SRV.boot({ pausar: c.pausar, ice: c.ice, max: c.max, code: c.code, fps: c.fps, aut: c.aut, val: c.val, minB: c.minB, muerte: c.muerte, pvp: c.pvp, amax: c.amax, thoras: c.thoras, gm: c.gm, oldfix: c.oldfix, loot: c.loot, prot: c.prot, protMin: c.protMin, tfin: c.tfin, audit: c.audit, mov: c.mov, voz: c.voz, vozR: c.vozR }); SRV.spawn = [P.x, P.y]; if (NET.role !== 'host') netHost(); }, { pausar: !(this.plan247 ? CFG.simular247 : CFG.simularSinJugadores), ice: ICE(), max: CFG.maxJugadores, code: this.id, fps: CFG.fpsServidor, aut: CFG.autoridadPersonaje !== false, val: CFG.validarDano !== false, minB: Math.max(CFG.versionMinimaApp | 0, this.cfg.pvp ? 155 : 0), muerte: this.cfg.pvp ? true : (CFG.muerteBorraPersonaje === undefined ? 'modo' : CFG.muerteBorraPersonaje), pvp: !!this.cfg.pvp, amax: Math.max(2, Math.min(8, CFG.alianzaMax | 0 || 4)), thoras: CFG.traidorHoras > 0 ? +CFG.traidorHoras : 24, gm: CFG.misionesGrupo !== false, oldfix: CFG.parcheAppAntigua !== false, loot: CFG.botinReapareceHoras === undefined ? 3 : +CFG.botinReapareceHoras || 0, prot: CFG.proteccionBases !== false, protMin: +CFG.proteccionBasesMin || 10, tfin: this.cfg.pvp ? this.seasonEnd() : 0, audit: CFG.auditarInventario !== false, mov: CFG.validarMovimiento !== false, voz: CFG.chatVoz !== false && this.cfg.voz !== false, vozR: +CFG.radioVoz || 40 });
       this.startedAt = Date.now(); this.failN = 0; this.lastBusy = Date.now(); this.status = 'activa'; log('[' + this.id + '] sala lista (máx. ' + CFG.maxJugadores + ' jugadores)');
     } catch (e) {
       this.failN++; this.nextTry = Date.now() + Math.min(60000, 5000 * this.failN); this.status = 'dormida'; log('[' + this.id + '] no pudo arrancar:', String(e.message || e).split('\n')[0]);
@@ -489,7 +489,7 @@ function onUpgrade(req, socket, head) {
 }
 function wsHost(ws, room) {
   if (room.ctl && room.ctl.readyState === 1) { try { room.ctl.terminate(); } catch (e) { } } room.ctl = ws; ws.on('close', () => { if (room.ctl === ws) room.ctl = null; });
-  ws.on('message', d => { let m; try { m = JSON.parse(d.toString()); } catch (e) { return; } if (m.k === 'deny') { const b = room.bridges.get(m.pid); if (b) { room.bridges.delete(m.pid); clearTimeout(b.timer); wsClose(b.guest, 4409, m.m || 'No puedes entrar.'); } } });
+  ws.on('message', d => { let m; try { m = JSON.parse(d.toString()); } catch (e) { return; } if (m.k === 'pos' && Array.isArray(m.l)) { vozPos(room, m.l); return; } if (m.k === 'deny') { const b = room.bridges.get(m.pid); if (b) { room.bridges.delete(m.pid); clearTimeout(b.timer); wsClose(b.guest, 4409, m.m || 'No puedes entrar.'); } } });
 }
 function wsGuest(ws, room, u, ip) {
   const n = ipConns(ip, +1); ws.on('close', () => ipConns(ip, -1)); if (n > CFG.maxConexionesPorIp && ip !== '127.0.0.1' && ip !== '::1') return wsClose(ws, 4429, 'Demasiadas conexiones desde tu red.');
@@ -498,11 +498,28 @@ function wsGuest(ws, room, u, ip) {
   const pid = newCode(10), b = { guest: ws, peer: null, buf: [], bytes: 0, timer: null, rate: { t: Date.now(), n: 0 } }; room.bridges.set(pid, b);
   b.timer = setTimeout(() => { if (!b.peer) { room.bridges.delete(pid); wsClose(ws, 4504, 'La sala no respondió.'); } }, 10000);
   ws.on('message', (d, isBin) => {
+    if (isBin && d.length > 7 && d[0] === 0x56) { vozRelay(room, b, d); return; }   /* v16.3: voz (no pasa por la simulación) */
     const t = Date.now(); if (t - b.rate.t > 1000) { b.rate.t = t; b.rate.n = 0; } if (++b.rate.n > 400) return wsClose(ws, 1008, 'Demasiados mensajes.');
     if (b.peer) { if (b.peer.readyState === 1) b.peer.send(d, { binary: isBin }); } else if (b.buf.length < 200 && b.bytes < 1e6) { b.buf.push([d, isBin]); b.bytes += d.length; }
   });
   ws.on('close', () => { clearTimeout(b.timer); room.bridges.delete(pid); if (b.peer) wsClose(b.peer, 1000, ''); });
   try { room.ctl.send(JSON.stringify({ k: 'join', pid, uid: v.uid || '' })); } catch (e) { wsClose(ws, 4503, 'La sala no está lista.'); }
+}
+/* v16.3 · CHAT DE VOZ DE PROXIMIDAD: la sala informa cada 0,5 s de dónde está cada jugador (solo los que ya juegan y tienen app 16.3+);
+   la voz de un jugador se reenvía solo a los que están a menos de radioVoz casillas. Nada se guarda. */
+function vozPos(room, l) {
+  for (const b of room.bridges.values()) b.vok = false;
+  for (const e of l) { const b = room.bridges.get(String(e[0])); if (b && isFinite(+e[1]) && isFinite(+e[2])) { b.vok = true; b.vx = +e[1]; b.vy = +e[2]; b.vs = (e[3] | 0) & 255; } }
+}
+function vozRelay(room, b, d) {
+  if (CFG.chatVoz === false || (room.cfg && room.cfg.voz === false) || !b.vok || d.length > 900) return;
+  const t = Date.now(), r = b.vrate || (b.vrate = { t, n: 0 }); if (t - r.t > 1000) { r.t = t; r.n = 0; } if (++r.n > 50) return;
+  const R = +CFG.radioVoz || 40, out = Buffer.allocUnsafe(d.length + 1); out[0] = 0x56; out[1] = b.vs; d.copy(out, 2, 1);
+  for (const o of room.bridges.values()) {
+    if (o === b || !o.vok || !o.guest || o.guest.readyState !== 1) continue;
+    const dx = o.vx - b.vx, dy = o.vy - b.vy; if (dx > R || dx < -R || dy > R || dy < -R || dx * dx + dy * dy > R * R) continue;
+    if (o.guest.bufferedAmount > 262144) continue; o.guest.send(out, { binary: true });
+  }
 }
 function wsPeer(ws, room, pid) {
   const b = room.bridges.get(String(pid || '')); if (!b || b.peer) return wsClose(ws, 4404, 'sin pareja');

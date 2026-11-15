@@ -89,3 +89,7 @@
 
 ## Clave de sala, arranque rápido y pantalla de juego (v16.2) — ver `actualizacion_v162/CAMBIOS_v16.2.md`
 - Clave elegida al crear sala (4 a 6 letras o números) o al azar; arranque −54 % desde la segunda vez; tutorial sin tapar botones, barras y mensajes más legibles.
+
+## Chat de voz y sala PvP oficial (v16.3) — ver `actualizacion_v163/CAMBIOS_v16.3.md`
+- Chat de voz de proximidad en las salas (40 casillas, volumen por distancia, los zombis lo oyen, silenciar jugadores, apagar en Ajustes; nada se graba).
+- Herramienta para añadir la sala oficial «Frontera PvP».

@@ -1,32 +1,33 @@
-# Lanzar la v16.2 en Google Play · paso a paso
+# Lanzar la v16.3 en Google Play · paso a paso
 
-**Qué subes:** la app **16.2** (versionCode **159**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
+**Qué subes:** la app **16.3** (versionCode **160**) a la misma pista de **prueba cerrada (alpha)** donde ya está aprobada la 14.0. Después actualizas el servidor de tu PC.
 **Tiempo:** ~1 h de trabajo tuyo + la revisión de Google (de horas a varios días).
 
 ## Archivos de esta carpeta
 | Archivo | Para qué |
 |---|---|
-| `UltimoRefugio_AndroidStudio_v16.2.zip` | Proyecto de Android Studio (versionCode 159, versionName «16.2») |
-| `privacy.html` | Política de privacidad actualizada («noviembre de 2026 (v15.9)») |
-| `NOVEDADES_PLAY_v16.2.txt` | Texto de «Novedades» para Play (español 309 caracteres, inglés 281; máximo 500) |
+| `UltimoRefugio_AndroidStudio_v16.3.zip` | Proyecto de Android Studio (versionCode 160, versionName «16.3») |
+| `privacy.html` | Política de privacidad actualizada («noviembre de 2026 (v16.3)») |
+| `NOVEDADES_PLAY_v16.3.txt` | Texto de «Novedades» para Play (español 356 caracteres, inglés 322; máximo 500) |
 | `UltimoRefugio_Servidor_Tailscale.zip` | Kit del servidor nuevo (se instala **después**, paso 7) |
-| `correo_testers_v162/` | Correo para testers (HTML con imágenes y texto) |
-| `CAMBIOS_v14.0_a_v16.2.md` | Todo lo que cambió desde la 14.0 aprobada |
+| `correo_testers_v163/` | Correo para testers (HTML con imágenes y texto) |
+| `CAMBIOS_v14.0_a_v16.3.md` | Todo lo que cambió desde la 14.0 aprobada |
 
 ---
 
 ## Paso 1 · Política de privacidad (5 min)
 1. Sube `privacy.html` a **tu URL pública de siempre** (la que está en Play Console → Contenido de la app → Política de privacidad, y en la variable `PRIVACY_URL`), sustituyendo la anterior.
-2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v15.9)»** (las 16.x no cambian la política).
+2. Ábrela desde el teléfono: arriba debe decir **«noviembre de 2026 (v16.3)»** (la 16.3 añade el chat de voz y quita la frase «No usamos micrófono»).
 
 ## Paso 2 · Formularios de Play Console (solo si no los actualizaste con la 15.x)
-Desde la 15.9 hay un dato nuevo: **el nombre de jugador que cada uno elige** (visible para los demás, guardado en tu servidor). Si aún no lo declaraste, añádelo en Seguridad de los datos (ver abajo). Las versiones 16.x no añaden ningún dato nuevo.
+Desde la 15.9 hay un dato nuevo: **el nombre de jugador que cada uno elige** (visible para los demás, guardado en tu servidor). Si aún no lo declaraste, añádelo en Seguridad de los datos (ver abajo). **La 16.3 añade el chat de voz:** declara también la voz (ver abajo).
 - **Seguridad de los datos:** *ID de usuario* (identificador anónimo del multijugador **y el nombre de jugador que elige**; si el formulario lo pide aparte, decláralo como *Otros contenidos generados por el usuario*) e *Interacciones/actividad en la app*: recopilados, finalidad «Funcionalidad de la app» (y «Prevención de fraudes y seguridad» si el formulario la ofrece), **no compartidos**, cifrados en tránsito, y se puede pedir el borrado por correo. Lo de Unity Ads y las compras sigue igual. Comprueba cada casilla con el formulario actual.
-- **Clasificación de contenido (IARC):** los usuarios interactúan entre sí (multijugador por salas, **sin chat de texto ni voz**), hay violencia de fantasía contra zombis y combate entre jugadores en la sala PvP.
+- **Voz (nuevo en la 16.3):** en *Seguridad de los datos* añade **Audio → Grabaciones de voz o sonido**: recopilado, **procesado de forma efímera** (solo se reenvía en tiempo real, no se guarda), finalidad «Funcionalidad de la app», **opcional**, cifrado en tránsito si tu servidor usa https (Tailscale Funnel lo usa). No es «compartido»: lo envía el propio usuario a otros jugadores. El permiso `RECORD_AUDIO` aparece en la ficha; no necesita formulario especial.
+- **Clasificación de contenido (IARC):** los usuarios interactúan entre sí (multijugador por salas **con chat de voz**, sin chat de texto), hay violencia de fantasía contra zombis y combate entre jugadores en la sala PvP.
 
 ## Paso 3 · Compilar el AAB firmado (15–30 min)
-1. Descomprime `UltimoRefugio_AndroidStudio_v16.2.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
-2. Revisa `app/build.gradle`: debe tener `versionCode 159` y `versionName "16.2"`.
+1. Descomprime `UltimoRefugio_AndroidStudio_v16.3.zip` y abre la carpeta `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle (necesita internet).
+2. Revisa `app/build.gradle`: debe tener `versionCode 160` y `versionName "16.3"`.
 3. Revisa tus valores de compilación (los mismos de la 14.0): `UNITY_TEST_MODE=false`, `PRIVACY_URL` con tu dirección real, `UNITY_GAME_ID` y la firma (`KEYSTORE_FILE`…).
 4. **Build ▸ Generate Signed Bundle / APK… ▸ Android App Bundle**, con **la misma llave `.jks` de la 14.0** (si usas otra, Play la rechaza) ▸ **release** ▸ Finish. El archivo queda en `app/release/app-release.aab`.
 5. Si Gradle da un error, mándame el texto exacto. El código Java (actualización dentro de la app y recuperación del WebView) es distinto del de la 14.0 y no pude compilarlo con el SDK real.
@@ -36,33 +37,35 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 1. Que el juego abre, se puede jugar una partida individual y se conserva el guardado anterior.
 2. **MULTIJUGADOR:** aparecen las salas y puedes entrar a una (con el servidor encendido).
 3. Una compra de prueba, un anuncio recompensado y la pantalla de consentimiento.
-4. **NOVEDADES:** la primera entrada de la lista es la 16.2, «Tu clave de sala y arranque rápido».
+4. **NOVEDADES:** la primera entrada de la lista es la 16.3, «Chat de voz de proximidad».
+7. **Chat de voz:** entra a una sala con otro teléfono cerca, pulsa VOZ: Android pide el permiso de micrófono; el otro debe oírte. **Esta es la parte nueva de Java: si algo falla al compilar o el permiso no aparece, mándame el error.**
 6. **Arranque rápido:** cierra la app del todo y ábrela otra vez: la segunda vez debe llegar al menú bastante antes.
 5. **MULTIJUGADOR → TU NOMBRE:** escribe un nombre, entra a una sala y comprueba que otro jugador lo ve sobre tu personaje.
 
 ## Paso 5 · Subir a Play Console (10 min)
 1. Play Console → tu app → **Pruebas → Prueba cerrada (alpha)** → **Crear nueva versión**.
-2. Sube `app-release.aab`. Nombre de la versión: **16.2 (159)**.
-3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v16.2.txt` (es-419 / es-ES y en-US).
+2. Sube `app-release.aab`. Nombre de la versión: **16.3 (160)**.
+3. En **«Novedades de esta versión»** pega los dos bloques de `NOVEDADES_PLAY_v16.3.txt` (es-419 / es-ES y en-US).
 4. **Siguiente → Revisar versión**: lee los avisos (permisos, API objetivo, dispositivos). Los avisos amarillos no impiden publicar; los rojos sí (mándamelos).
 5. **Guardar → Enviar cambios a revisión** (en *Resumen de la publicación*).
 6. Mientras dure la revisión **no cambies la ficha ni los formularios**, porque cada cambio puede alargar la espera.
 
 ## Paso 6 · Cuando Google la apruebe
-1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 16.2. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
-2. Manda el correo de `correo_testers_v162/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
+1. Comprueba en un teléfono de tester que Play ofrece la actualización a la 16.3. Con la 14.9 o posterior instalada, la app avisa sola en el menú («Versión nueva disponible · ACTUALIZAR»).
+2. Manda el correo de `correo_testers_v163/`: rellena `[PEGAR AQUÍ…]` con el enlace de la prueba, la dirección de `/prueba` y el horario.
 
-## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 16.2
-**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 16.2**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 16.2 esté en Play.
+## Paso 7 · Actualizar el servidor de tu PC (10 min), cuando los testers ya tengan la 16.3
+**Importante:** con el kit nuevo, la **sala PvP solo deja entrar a la app 15.8 o posterior** y el **chat de voz necesita la 16.3**; quien tenga una versión anterior ve que debe actualizar. Las salas normales siguen admitiendo las apps antiguas. Por eso conviene actualizar el servidor **después** de que la 16.3 esté en Play.
 1. Cierra el servidor (ventana de `INICIAR_SERVIDOR.bat` → Ctrl+C).
 2. Haz una copia de la carpeta del servidor (por seguridad).
-3. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo estos archivos: `servidor.js`, `srv_layer.js`, `admin.html`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** ni la carpeta `datos`.
-4. Abre `INICIAR_SERVIDOR.bat` y entra con tu teléfono a una sala normal y a la sala PvP.
-5. Opcional: `PRUEBA_DURA.bat` con todo cerrado. Debe decir **APROBADO**.
-6. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 159, "version": "16.2", "notas": ["Pon tu nombre en las salas", "Apareces en tu cama o donde lo dejaste"] }`.
+3. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo estos archivos: `servidor.js`, `srv_layer.js`, `admin.html`, `LEEME_SERVIDOR.md`, `juego\index.html`, `AGREGAR_SALA_PVP.bat` y `herramientas\agregar_sala_pvp.js`. **No pises tu `config.json`** ni la carpeta `datos`.
+4. **Sala PvP oficial:** ejecuta `AGREGAR_SALA_PVP.bat` (con el servidor cerrado) y escribe SI: añade «Frontera PvP» a tu `config.json` con copia de seguridad, sin tocar tus 3 salas.
+5. Abre `INICIAR_SERVIDOR.bat` y entra con tu teléfono a una sala normal y a «Frontera PvP».
+6. Opcional: `PRUEBA_DURA.bat` con todo cerrado. Debe decir **APROBADO**.
+7. Opcional: para que Play avise a todos, añade a `config.json` `"appUltima": { "codigo": 160, "version": "16.3", "notas": ["Chat de voz de proximidad", "Nueva sala PVP oficial"] }`.
 
 ## Paso 8 · Vigilar 2–3 días
-- **Play Console → Android vitals:** cierres y ANR de la 16.2.
+- **Play Console → Android vitals:** cierres y ANR de la 16.3.
 - **Panel `/admin` del servidor:** memoria y pasos/s.
 - **Registro del servidor:** si ves `INVENTARIO SOSPECHOSO de jugador N` o `movimiento imposible` de alguien que juega limpio, mándame esas líneas y qué estaba haciendo. Mientras tanto puedes apagar el control con `"auditarInventario": false` o `"validarMovimiento": false` en `config.json`.
 - Cuando la alpha vaya bien 1–2 semanas, puedes **promover la versión a producción** desde la misma pantalla (Play exige haber cumplido los requisitos de prueba cerrada de tu cuenta).
@@ -72,8 +75,10 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 |---|---|
 | Play rechaza la versión | Copia el motivo (*Recibidos* / *Política y programas*) y mándamelo |
 | «Clave de firma incorrecta» | Usaste otra llave: compila con la `.jks` de la 14.0 |
-| «Version code 159 ya usado» | Ya subiste un 159 antes: dime y lo paso a 159 |
-| La sala PvP no deja entrar | Ese teléfono no tiene aún la 16.2 (es lo esperado) |
+| «Version code 160 ya usado» | Ya subiste un 160 antes: dime y lo paso a 160 |
+| La sala PvP no deja entrar | Ese teléfono tiene una app anterior a la 15.8 (es lo esperado) |
+| No aparece el botón VOZ | Ese teléfono no tiene la 16.3, o el servidor no se actualizó, o está apagado en Ajustes → Sonido |
+| VOZ dice «falta el permiso» | Ajustes del teléfono → Aplicaciones → Último Refugio → Permisos → Micrófono → Permitir |
 | Fallo del servidor nuevo | Restaura la copia del paso 7.2 y mándame el registro |
 
 ---
@@ -200,3 +205,9 @@ Instala la compilación release en un teléfono (o súbela primero a **Prueba in
 - **Arranque rápido:** de 5,9 s a 2,7 s desde la segunda vez (procesador frenado ×4).
 - **Pantalla de juego:** el tutorial ya no tapa los botones; barras y mensajes más legibles.
 - Detalle y pruebas: `actualizacion_v162/CAMBIOS_v16.2.md`.
+
+## Chat de voz y sala PvP oficial (nuevo en la 16.3)
+- **Chat de voz de proximidad** (app 16.3 + servidor nuevo): botón VOZ (o tecla T), solo se oye a menos de 40 casillas, los zombis también lo oyen, nada se graba. Requiere el permiso de micrófono (Java y manifiesto nuevos) y actualizar la política y *Seguridad de los datos*.
+- **Sala PvP oficial:** `AGREGAR_SALA_PVP.bat` añade «Frontera PvP» (mapa 480) a tu config.
+- Opciones en `config.json`: `"chatVoz": false` lo apaga; `"radioVoz": 40` es la distancia en casillas. En cada sala, `"voz": false` lo apaga solo ahí.
+- Detalle y pruebas: `actualizacion_v163/CAMBIOS_v16.3.md`.

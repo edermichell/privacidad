@@ -9,10 +9,21 @@
     {
       "id": "SALA2",
       "nombre": "Refugio 2"
+    },
+    {
+      "id": "SALA3",
+      "nombre": "Refugio 3"
+    },
+    {
+      "id": "SALA4",
+      "nombre": "Frontera PvP",
+      "pvp": true,
+      "tamano": "huge",
+      "mundo": "town"
     }
   ],
   "maxJugadores": 10,
-  "salasActivasMax": 3,
+  "salasActivasMax": 5,
   "dormirTrasMin": 10,
   "simularSinJugadores": false,
   "fpsServidor": 30,

@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v16.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v16.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -1137,6 +1137,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
         <div class="srow"><span>Música <b id="musv"></b></span><div class="pips" id="pipM"></div><button id="bMusDn" class="sq" aria-label="Menos">−</button><button id="bMusUp" class="sq" aria-label="Más">+</button></div>
         <div class="srow"><span>Ambiente <b id="ambv"></b><small>viento, lluvia, campanas, animales</small></span><div class="pips" id="pipA"></div><button id="bAmbDn" class="sq" aria-label="Menos">−</button><button id="bAmbUp" class="sq" aria-label="Más">+</button></div>
         <div class="srow"><span>Sonido<small>silencia todo el juego</small></span><button id="bSndP" type="button">Sí</button></div>
+        <div class="srow"><span>Chat de voz<small>salas del servidor: botón VOZ o tecla T · nada se graba</small></span><button id="bVozP" type="button">Activado</button></div>
       </div>
       <div class="stp" data-t="1" hidden>
         <div class="srow"><span>Calidad gráfica<small>automático ajusta y recupera detalle según el rendimiento</small></span><button id="bQual" type="button"></button></div>
@@ -2327,8 +2328,13 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 159, UR_VERSION = '16.2', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 160, UR_VERSION = '16.3', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '16.3', t: 'Chat de voz de proximidad', it: [
+    'En las salas del servidor hay <b>chat de voz</b>: solo te oyen los que están cerca, y más fuerte cuanto más cerca.',
+    'Botón <b>VOZ</b> (o tecla T): <b>mantén pulsado</b> para hablar, o <b>tócalo</b> para dejar el micrófono abierto y vuelve a tocarlo para cerrarlo.',
+    '<b>¡Cuidado!</b> Los zombis cercanos también te oyen.',
+    'Puedes silenciar a quien quieras (botón junto a su nombre) o apagar las voces en Ajustes → Sonido. Nada se graba.' ] },
   { v: '16.2', t: 'Tu clave de sala y arranque rápido', it: [
     'Al <b>crear una sala</b> puedes elegir su clave (4 a 6 letras o números). Si la dejas vacía, se crea una al azar como antes.',
     'El juego <b>arranca bastante más rápido</b> a partir de la segunda vez: guarda en el teléfono los dibujos que antes generaba en cada arranque.',
@@ -12791,6 +12797,7 @@ function netMsg(o) {
     case 'AI': if (NET.role === 'guest') { NET.ali = { n: o.n | 0, max: o.max | 0 || 4, mem: Array.isArray(o.mem) ? o.mem.slice(0, 6) : [], tr: +o.tr || 0, bd: +o.bd || 0, top: Array.isArray(o.top) ? o.top.slice(0, 5) : [], tf: +o.tf || 0 }; try { aliRender(); netUI(); } catch (e) { } } break;   /* v15.3: estado de mi alianza */
     case 'AQ': if (NET.role === 'guest') { const nm = String(o.n || 'Un jugador').slice(0, 14); urAsk(nm + ' te propone una alianza (hasta 4 jugadores: se ven en el mapa, se mandan señales y pueden abrir sus candados entre sí). Ojo: un aliado también puede traicionarte. ¿Aceptar?', 'ACEPTAR', 'RECHAZAR').then(y => netSend({ t: y ? 'AA' : 'AD' })); } break;
     case 'SGR': if (NET.role === 'guest') { const dx = (+o.x || 0) - P.x, dy = (+o.y || 0) - P.y, dd = Math.round(Math.hypot(dx, dy)), a8 = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)), dir = ['E', 'SE', 'S', 'SO', 'O', 'NO', 'N', 'NE'][((a8 % 8) + 8) % 8]; say('[' + String(o.n || 'Aliado').slice(0, 14) + '] ' + (SIGT[o.k | 0] || '?') + ' · ' + dd + ' m al ' + dir, (o.k | 0) === 3 ? 'bad' : 'tip'); try { sfx('click', 0); } catch (e) { } } break;
+    case 'VO': if (NET.role === 'guest') VOZ.enable(o); break;   /* v16.3: el servidor ofrece chat de voz */
     case 'PZ': if (NET.role === 'guest' && P && !P.dead && isFinite(o.x) && isFinite(o.y)) { if (P.drive) { try { leaveCar(true); } catch (e) { } } P.x = +o.x; P.y = +o.y; P.moving = false; try { snapCam(); } catch (e) { } say('El servidor te devolvió a tu posición (movimiento imposible).', 'bad'); } break;   /* v15.8 */
     case 'IV': if (NET.role === 'guest' && Array.isArray(o.rm)) { try { for (const [id, n0] of o.rm) { const d = ITEMS[id]; if (!d) continue; let r = n0 | 0; for (let k = P.inv.length - 1; k >= 0 && r > 0; k--) { const it = P.inv[k]; if (!it || it.id !== id) continue; if (d.stack) { const u = Math.min(r, it.n | 0); r -= u; removeItem(it, u); } else { r--; removeItem(it, it.n || 1); } } if (d.t === 'ammo') for (const it of P.inv) { if (r <= 0) break; const g = ITEMS[it.id]; if (g && g.gun && g.ammo === id && (it.a | 0) > 0) { const u = Math.min(r, it.a | 0); it.a -= u; r -= u; } } } if (!$('inv').hidden) UI.renderInv(); } catch (e) { typeof dbgc === 'function' && dbgc(e); } } break;   /* v15.8 */
     case 'PX': if (NET.role === 'guest') { say(o.k ? 'Mataste a ' + String(o.n || '?').slice(0, 14) : 'Acertaste a ' + String(o.n || '?').slice(0, 14), o.k ? 'good' : 'tip'); try { sfx('hit', 0); } catch (e) { } } break;   /* v15.2: aviso de impacto o baja */
@@ -12828,7 +12835,8 @@ async function netSendWorld() {
     netSend({ t: 'W1' });
   } catch (e) { if (typeof console !== 'undefined') console.error(e); netFail('No se pudo enviar el mundo.'); }
 }
-function netBin(buf) { if (NET.rx) { NET.rx.parts.push(new Uint8Array(buf)); NET.rx.got += buf.byteLength; } }
+function netBin(buf) { if (!NET.rx && buf && buf.byteLength > 7 && new Uint8Array(buf, 0, 1)[0] === 0x56) { try { VOZ.rx(buf); } catch (e) { } return; }   /* v16.3: voz */
+  if (NET.rx) { NET.rx.parts.push(new Uint8Array(buf)); NET.rx.got += buf.byteLength; } }
 async function netGuestLoad() {
   const rx = NET.rx; NET.rx = null; if (!rx || NET.role !== 'guest') return;
   try {
@@ -21878,6 +21886,7 @@ class WsChan {
   send(d) { this.ws.send(d); }
   close() { try { this.ws.close(); } catch (e) { } }
 }
+{ const _nl = netLeave; netLeave = function () { try { VOZ.stop(); VOZ.ok = false; VOZ.spk.clear(); VOZ.ui(); } catch (e) { } return _nl.apply(this, arguments); }; }
 function netJoinWs(room) {
   NET.err = ''; if (NET.role) netLeave(true); NET.name = urNick();   /* v15.9 */
   NET.role = 'guest'; NET.on = true; NET.code = String(room.id).toUpperCase(); NET.st = 'connecting'; NET.ready = false; NET.id = Math.random().toString(36).slice(2, 9); NET.gotOffer = true; NET.srv = 1; NET.cap = room.max; NET.es = null; NET.pc = null; netUI();
@@ -22947,6 +22956,115 @@ try { urNewsInit(); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
 /* ===== v16.2 · ARRANQUE RÁPIDO: los dibujos generados (muebles, muros, árboles, coches…) se guardan en el teléfono la primera vez
    y se reutilizan en los arranques siguientes en lugar de volver a dibujarlos píxel a píxel (~2,5 s en un teléfono modesto).
    Se guarda: SPR, HI, EVS y DCS (objetos, listas y lienzos; nada más). Clave: versión + resolución interna. Cualquier fallo → se dibuja como siempre. */
+/* ===== v16.3 · CHAT DE VOZ DE PROXIMIDAD (solo en las salas del servidor) =====
+   - Botón VOZ (o tecla T): MANTENER pulsado = hablar mientras lo sostienes. TOQUE corto = micrófono abierto; otro toque lo cierra.
+   - El micrófono se capta a 8 kHz en μ-law (calidad de teléfono, 64 kbps) en trozos de ~43 ms; los silencios no se envían.
+   - El servidor reenvía la voz SOLO a quien esté cerca (40 casillas); cada uno la oye más fuerte cuanto más cerca, y a izquierda/derecha.
+   - Mientras hablas haces ruido: los zombis cercanos te oyen (el anfitrión de la sala lo convierte en ruido en el mapa).
+   - Nada se graba ni se guarda. Puedes silenciar a cualquiera (se recuerda por su nombre) o apagar las voces en Ajustes → Sonido. */
+const VOZ = {
+  ok: false, R: 40, on: true, tx: false, mode: 0, stream: null, src: null, proc: null, seq: 0, nzT: 0, spk: new Map(), mute: new Set(), out: null, busy: 0, lvl: 0, latchOff: false,
+  MU: (function () { const t = new Float32Array(256); for (let i = 0; i < 256; i++) { const u = ~i & 255, sg = u & 128, ex = (u >> 4) & 7, mn = u & 15; let x = ((mn << 3) + 132) << ex; x -= 132; t[i] = (sg ? -x : x) / 32768; } return t; })(),
+  enc(s) { let x = Math.round(Math.max(-1, Math.min(1, s)) * 32635); const sg = x < 0 ? 128 : 0; if (sg) x = -x; x += 132; let ex = 7; for (let m = 0x4000; (x & m) === 0 && ex > 0; m >>= 1) ex--; const mn = (x >> (ex + 3)) & 15; return (~(sg | (ex << 4) | mn)) & 255; },
+  init() { try { this.on = localStorage.getItem('ur_voz') !== '0'; this.mute = new Set(JSON.parse(localStorage.getItem('ur_voz_mute') || '[]')); } catch (e) { } this.ui(); },
+  saveMute() { try { localStorage.setItem('ur_voz_mute', JSON.stringify([...this.mute].slice(-200))); } catch (e) { } },
+  setOn(v) { this.on = !!v; try { localStorage.setItem('ur_voz', v ? '1' : '0'); } catch (e) { } if (!v) this.stop(); this.ui(); },
+  enable(o) { this.ok = !!(o && o.on) && NET.role === 'guest' && !!NET.srv; if (o && +o.r > 0) this.R = +o.r; this.ui(); },
+  avail() { return this.ok && this.on && typeof STATE !== 'undefined' && STATE === 'play' && NET.role === 'guest' && NET.st === 'playing' && P && !P.dead; },
+  ac() { try { audioInit(); } catch (e) { } return typeof AC !== 'undefined' ? AC : null; },
+  outNode() { const ac = this.ac(); if (!ac) return null; if (!this.out || this.out.context !== ac) { this.out = ac.createGain(); this.out.gain.value = 1.15; this.out.connect(ac.destination); } return this.out; },
+  async start(mode) {
+    if (!this.avail()) return; this.mode = mode; if (this.tx || this.busy) { this.ui(); return; }
+    const ac = this.ac(); if (!ac) { say('Tu dispositivo no permite audio.', 'bad'); this.mode = 0; return; }
+    this.busy = 1; this.ui();
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('este dispositivo no permite usar el micrófono aquí');
+      const st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
+      this.busy = 0;
+      if (!this.mode || !this.avail()) { for (const t of st.getTracks()) t.stop(); this.mode = 0; this.ui(); return; }   /* lo soltó mientras pedía permiso */
+      this.stream = st; if (ac.state === 'suspended') { try { await ac.resume(); } catch (e) { } }
+      this.src = ac.createMediaStreamSource(st); this.proc = ac.createScriptProcessor(2048, 1, 1);
+      const ratio = ac.sampleRate / 8000;
+      this.proc.onaudioprocess = e => { try { this.frame(e.inputBuffer.getChannelData(0), ratio); } catch (er) { } const o = e.outputBuffer.getChannelData(0); o.fill(0); };
+      this.src.connect(this.proc); this.proc.connect(ac.destination); this.tx = true; this.ui();
+    } catch (e) {
+      this.busy = 0; this.mode = 0; this.tx = false; this.ui();
+      say('No se pudo usar el micrófono: ' + (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError') ? 'falta el permiso (Ajustes del teléfono → Aplicaciones → Último Refugio → Permisos → Micrófono).' : String(e && e.message || e)), 'bad');
+    }
+  },
+  stop() {
+    this.mode = 0; this.tx = false; this.latchOff = false;
+    try { if (this.proc) { this.proc.onaudioprocess = null; this.proc.disconnect(); } if (this.src) this.src.disconnect(); } catch (e) { }
+    this.proc = this.src = null; if (this.stream) { for (const t of this.stream.getTracks()) { try { t.stop(); } catch (e) { } } this.stream = null; } this.ui();
+  },
+  frame(x, ratio) {
+    if (!this.tx) return; if (!this.avail()) { this.stop(); return; }
+    const n = Math.floor(x.length / ratio); if (n < 8) return; const pk = new Uint8Array(4 + n); let ss = 0;
+    for (let i = 0; i < n; i++) { const a = Math.floor(i * ratio), b = Math.min(x.length, Math.floor((i + 1) * ratio)); let s = 0; for (let k = a; k < b; k++) s += x[k]; s /= Math.max(1, b - a); ss += s * s; pk[4 + i] = this.enc(s * 1.6); }
+    const rms = Math.sqrt(ss / n); this.lvl = this.lvl * .7 + rms * .3;
+    if (rms < .006) return;                                                  /* silencio: no se envía */
+    this.seq = (this.seq + 1) & 0xffff; pk[0] = 0x56; pk[1] = 1; pk[2] = this.seq >> 8; pk[3] = this.seq & 255;
+    const ch = NET.ch; if (!ch || ch.readyState !== 'open' || ch.bufferedAmount > 200000) return;
+    try { ch.send(pk.buffer); NET.txBytes += pk.length; } catch (e) { }
+    const now = performance.now(); if (now - this.nzT > 600) { this.nzT = now; netSend({ t: 'VZ', l: Math.min(1, +(rms * 8).toFixed(2)) }); }   /* los zombis te oyen */
+  },
+  rx(buf) {
+    const u = new Uint8Array(buf); if (u.length < 8 || u[2] !== 1) return; const slot = u[1]; if (!this.on || !this.ok) return;
+    const R = NET.oth.get(slot), name = (R && R.name) || ('Jugador ' + slot);
+    let s = this.spk.get(slot); if (!s) { s = { g: null, p: null, next: 0, last: 0, name }; this.spk.set(slot, s); }
+    s.last = performance.now(); s.name = name; this.listT = 0;
+    if (this.mute.has(name)) return;
+    const ac = this.ac(), out = this.outNode(); if (!ac || !out || ac.state !== 'running') return;
+    if (!s.g || s.g.context !== ac) { s.g = ac.createGain(); s.g.gain.value = 0; s.p = ac.createStereoPanner ? ac.createStereoPanner() : null; if (s.p) { s.g.connect(s.p); s.p.connect(out); } else s.g.connect(out); this.mix(slot, s, true); }
+    const d = u.subarray(5), b = ac.createBuffer(1, d.length, 8000), c = b.getChannelData(0); for (let i = 0; i < d.length; i++) c[i] = this.MU[d[i]];
+    const now = ac.currentTime; let t = Math.max(now + .08, s.next); if (t - now > .45) t = now + .08;      /* poco retraso: si se acumula, se recorta */
+    const src = ac.createBufferSource(); src.buffer = b; src.connect(s.g); src.start(t); s.next = t + b.duration;
+  },
+  mix(slot, s, inst) {
+    if (!s.g) return; const R = NET.oth.get(slot); let v = .5, pan = 0;
+    if (R && P) { const d = Math.hypot((R.nx !== undefined ? R.nx : R.x) - P.x, (R.ny !== undefined ? R.ny : R.y) - P.y), k = Math.max(0, Math.min(1, 1 - (d - 2) / 30)); v = d < 2 ? 1 : k * k; pan = Math.max(-.85, Math.min(.85, (((R.x - R.y) - (P.x - P.y)) / 14))); }
+    const ac = s.g.context, now = ac.currentTime; if (inst) { s.g.gain.value = v; if (s.p) s.p.pan.value = pan; } else { s.g.gain.setTargetAtTime(v, now, .06); if (s.p) s.p.pan.setTargetAtTime(pan, now, .08); }
+  },
+  tick() {
+    const now = performance.now(); for (const [slot, s] of this.spk) { if (now - s.last > 6000) { try { if (s.g) s.g.disconnect(); if (s.p) s.p.disconnect(); } catch (e) { } this.spk.delete(slot); continue; } this.mix(slot, s, false); }
+    if ((this.tx || this.mode) && !this.avail()) this.stop(); this.ui();
+  },
+  ui() {
+    const b = document.getElementById('vozBtn'), L = document.getElementById('vozList'); if (!b || !L) return;
+    const show = this.ok && this.on && typeof STATE !== 'undefined' && STATE === 'play' && NET.role === 'guest';
+    b.hidden = !show; b.classList.toggle('tx', this.tx); b.classList.toggle('fijo', this.mode === 2); b.classList.toggle('esp', !!this.busy);
+    const bp = document.getElementById('bVozP'); if (bp) bp.textContent = this.on ? 'Activado' : 'Apagado';
+    const lb = b.querySelector('small'); if (lb) lb.textContent = this.busy ? 'permiso…' : this.mode === 2 ? 'abierto' : this.tx ? 'hablando' : 'pulsa';
+    const now = performance.now(), act = [...this.spk.entries()].filter(([, s]) => now - s.last < 700);
+    const key = show ? act.map(([k, s]) => k + (this.mute.has(s.name) ? 'm' : '')).join(',') : '';
+    if (key === this.lkey) return; this.lkey = key; L.hidden = !key;
+    L.innerHTML = act.map(([slot, s]) => { const m = this.mute.has(s.name); return '<span class="vz' + (m ? ' m' : '') + '"><i></i>' + String(s.name).replace(/[<>&"]/g, '') + '<button type="button" data-vz="' + slot + '">' + (m ? 'oír' : 'silenciar') + '</button></span>'; }).join('');
+  },
+  toggleMute(slot) { const s = this.spk.get(+slot); if (!s) return; if (this.mute.has(s.name)) { this.mute.delete(s.name); say('Vuelves a oír a ' + s.name + '.', 'tip'); } else { this.mute.add(s.name); say('Silenciaste a ' + s.name + '. No lo oirás más (aunque salgas y vuelvas).', 'tip'); } this.saveMute(); this.lkey = null; this.ui(); },
+  down() { if (!this.avail()) return; this.t0 = performance.now(); if (this.mode === 2) { this.latchOff = true; return; } this.start(1); },
+  up() { if (this.t0 === undefined) return; const held = performance.now() - this.t0; this.t0 = undefined;
+    if (this.latchOff) { this.stop(); return; }
+    if (held < 300) { this.mode = 2; if (!this.tx && !this.busy) this.start(2); this.ui(); return; }   /* toque corto: micrófono abierto */
+    this.stop(); }
+};
+(function vozBind() {
+  setTimeout(() => { const bp = document.getElementById('bVozP'); if (bp) bp.addEventListener('click', () => { VOZ.setOn(!VOZ.on); say(VOZ.on ? 'Chat de voz activado.' : 'Chat de voz apagado: no oirás a nadie ni podrás hablar.', 'tip'); }); }, 0);
+  const host = document.body; if (!host) return;
+  const b = document.createElement('button'); b.id = 'vozBtn'; b.type = 'button'; b.hidden = true; b.setAttribute('aria-label', 'Chat de voz: mantén pulsado para hablar, toca para dejar el micrófono abierto');
+  b.innerHTML = '<svg viewBox="0 0 12 12" width="22" height="22" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M5 0h2v1h1v5H7v1H5V6H4V1h1zM2 4h1v2h1v1h4V6h1V4h1v3H9v1H7v2h2v1H3v-1h2V8H3V7H2z"/></svg><b>VOZ</b><small></small>';
+  const L = document.createElement('div'); L.id = 'vozList'; L.hidden = true; host.appendChild(b); host.appendChild(L);
+  const dn = e => { e.preventDefault(); e.stopPropagation(); try { b.setPointerCapture && e.pointerId !== undefined && b.setPointerCapture(e.pointerId); } catch (x) { } VOZ.down(); };
+  const upf = e => { e.preventDefault(); e.stopPropagation(); VOZ.up(); };
+  b.addEventListener('pointerdown', dn); b.addEventListener('pointerup', upf); b.addEventListener('pointercancel', upf); b.addEventListener('contextmenu', e => e.preventDefault());
+  L.addEventListener('click', e => { const t = e.target.closest('button[data-vz]'); if (t) { e.stopPropagation(); VOZ.toggleMute(t.dataset.vz); } });
+  window.addEventListener('keydown', e => { if (e.code !== 'KeyT' || e.repeat || e.ctrlKey || e.altKey || e.metaKey) return; const tg = e.target; if (tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA')) return; if (!VOZ.avail()) return; e.preventDefault(); VOZ.down(); });
+  window.addEventListener('keyup', e => { if (e.code !== 'KeyT') return; if (VOZ.t0 !== undefined) VOZ.up(); });
+  window.addEventListener('blur', () => { if (VOZ.mode === 1) VOZ.stop(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) VOZ.stop(); });
+  setInterval(() => { try { VOZ.tick(); } catch (e) { } }, 120);
+  VOZ.init();
+})();
+
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
   key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
@@ -24324,7 +24442,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24365,7 +24483,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24388,7 +24506,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+  if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24417,7 +24535,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24451,7 +24569,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+  if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24482,7 +24600,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24515,7 +24633,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24544,12 +24662,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.2') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 16.3') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.2';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 16.3';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24690,6 +24808,28 @@ body #tut button,body #quest button{border-radius:999px}
   body #toasts{top:calc(104px + env(safe-area-inset-top,0px))}
   body .toast{font-size:14px;padding:2px 8px 3px}
 }
+</style>
+<style id="voz163">
+/* ===== v16.3 · CHAT DE VOZ ===== */
+#vozBtn{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(200px + env(safe-area-inset-bottom,0px));z-index:7;width:64px;height:64px;border-radius:50%;border:2px solid #000;background:#14201ad9;color:#e8efe2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;box-shadow:0 0 0 2px #4f6b57,0 4px 0 #000b;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font-family:var(--disp);padding:0;cursor:pointer}
+#vozBtn[hidden]{display:none}
+#vozBtn b{font-weight:400;font-size:9px;letter-spacing:.08em;margin-top:1px}
+#vozBtn small{font-family:var(--font);font-size:11px;color:#a3b4a7;line-height:1;margin-top:1px;white-space:nowrap}
+#vozBtn.tx{background:#8a1f16eb;color:#fff;box-shadow:0 0 0 2px #ff7a6c,0 0 18px #ff5a4a88;animation:vozp 1s ease-in-out infinite}
+#vozBtn.tx small{color:#ffd9d3}
+#vozBtn.fijo{box-shadow:0 0 0 2px var(--amber),0 0 18px #eab24488}
+#vozBtn.esp{opacity:.75}
+@keyframes vozp{50%{transform:scale(1.06)}}
+#vozList{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(50px + env(safe-area-inset-bottom,0px));z-index:7;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:70vw}
+#vozList[hidden]{display:none}
+#vozList .vz{display:flex;align-items:center;gap:6px;background:#0a0f0cd9;border:1px solid #000;box-shadow:0 0 0 1px #ffffff14;border-radius:999px;padding:3px 4px 3px 9px;font-size:15px;color:#e8efe2}
+#vozList .vz i{width:8px;height:8px;border-radius:50%;background:#7ee08a;box-shadow:0 0 6px #7ee08a}
+#vozList .vz.m{opacity:.7}#vozList .vz.m i{background:#888;box-shadow:none}
+#vozList button{font-family:var(--disp);font-size:7px;padding:5px 9px;border-radius:999px;border:1px solid #3d5244;background:#16201a;color:#cfd9d0}
+@media (max-height:520px){#vozBtn{width:54px;height:54px}#vozList{bottom:calc(40px + env(safe-area-inset-bottom,0px))}}
+@media (prefers-reduced-motion:reduce){#vozBtn.tx{animation:none}}
+/* teléfono en horizontal: el aviso de la sala a la derecha, bajo los botones (antes se montaba sobre el tutorial) */
+@media (max-height:520px){body #netchip{left:auto;right:calc(8px + env(safe-area-inset-right,0px));transform:none;top:calc(34px + env(safe-area-inset-top,0px))}}
 </style>
 </body>
 </html>

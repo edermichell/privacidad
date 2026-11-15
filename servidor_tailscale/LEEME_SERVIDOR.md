@@ -144,3 +144,7 @@ Ver `MAPA_NUEVO_960.md` (migración con copia de seguridad: `MIGRAR_A_MAPA_NUEVO
 
 ## Clave elegida al crear sala (v16.2)
 Con la app 16.2, quien crea una sala puede elegir su clave (4 a 6 letras o números; se rechazan las repetidas y las que empiezan por `SALA`). Si la deja vacía, se genera una al azar como antes. Las apps antiguas siguen creando salas con clave al azar y pueden entrar a cualquier sala escribiendo su clave.
+
+## Chat de voz de proximidad y sala PvP oficial (v16.3)
+- **Voz:** con la app 16.3 los jugadores hablan con el botón VOZ (o la tecla T). El servidor reenvía la voz solo a los jugadores a menos de `radioVoz` casillas (40 por defecto); no pasa por la simulación ni se guarda nada. Hablar hace ruido en el mapa y atrae a los zombis. Para apagarlo: `"chatVoz": false` (todo el servidor) o `"voz": false` dentro de una sala.
+- **Sala PvP oficial:** `AGREGAR_SALA_PVP.bat` añade «Frontera PvP» (mapa 480×480) a tu `config.json` con copia de seguridad y sin tocar tus otras salas.

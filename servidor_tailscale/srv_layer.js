@@ -434,6 +434,18 @@ SRV.boot = function (opt) {
   };
   { const _np2 = netPeerLost; netPeerLost = function (peer) { try { SRV.posFlush(peer); } catch (e) { } return _np2.apply(this, arguments); }; }
   { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
+  /* ===== v16.3 · CHAT DE VOZ: posiciones para el servidor, aviso al jugador y ruido para los zombis ===== */
+  SRV.voz = opt.voz !== false; SRV.vozR = +opt.vozR || 40;
+  setInterval(() => { try { if (!SRV.ctl || SRV.ctl.readyState !== 1) return; const l = [];
+    if (SRV.voz) for (const p of NET.peers) { if (!p.ready || !p.rp || !p.rp.ok || p.chDead || (p.build | 0) < 160 || !p.gid) continue; const q = SRV.vpos ? SRV.vpos(p) : [p.rp.x, p.rp.y]; l.push([String(p.gid).slice(2), Math.round(q[0] * 10) / 10, Math.round(q[1] * 10) / 10, p.slot]); }
+    SRV.ctl.send(JSON.stringify({ k: 'pos', l })); } catch (e) { } }, 500);
+  { const _mv = netMsg; netMsg = function (o) {
+      const peer = NET.role === 'host' ? NET.cur : null;
+      if (peer && o && o.t === 'VZ') { try { const now = performance.now(); if (SRV.voz && peer.rp && !peer.chDead && now - (peer.vzT || 0) > 450) { peer.vzT = now; const l = Math.max(0, Math.min(1, +o.l || 0)), q = SRV.vpos ? SRV.vpos(peer) : [peer.rp.x, peer.rp.y]; makeNoise(q[0], q[1], 5 + l * 9); } } catch (e) { } return; }   /* hablar hace ruido */
+      const r = _mv.apply(this, arguments);
+      try { if (peer && o && o.t === 'R' && (peer.build | 0) >= 160) setTimeout(() => { try { netSendRaw(peer, { t: 'VO', on: SRV.voz ? 1 : 0, r: SRV.vozR }); } catch (e) { } }, 800); } catch (e) { }
+      return r;
+    }; }
   { const _m = netMsg; netMsg = function (o) {
       const peer = NET.role === 'host' ? NET.cur : null;
       if (peer && o && typeof o.t === 'string') {
