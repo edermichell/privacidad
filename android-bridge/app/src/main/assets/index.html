@@ -1,0 +1,1294 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mini 2 Control</title>
+<style>
+:root{--bg:#0b0f14;--bg2:#111823;--bg3:#18222f;--line:#243245;--tx:#e6edf5;--mut:#8fa1b6;--acc:#2dd4a7;--acc2:#38bdf8;--warn:#fbbf24;--bad:#f87171;--r:10px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{display:flex;flex-direction:column;overflow:hidden}
+button,select,input{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap}
+.brand{font-weight:700;letter-spacing:.3px;white-space:nowrap}.brand b{color:var(--acc)}
+#chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.chip{background:var(--bg3);border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:12px;white-space:nowrap}
+.chip.ok{border-color:#1f7a63;color:var(--acc)}.chip.warn{border-color:#8a6a10;color:var(--warn)}.chip.bad{border-color:#8a2f2f;color:var(--bad)}
+.ib{background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer}
+.ib.on{border-color:var(--bad);color:var(--bad)}
+main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 430px;min-height:0}
+#stage{min-width:0;position:relative;background:#000;min-height:0;overflow:hidden;touch-action:none;user-select:none}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+#touch{position:absolute;left:0;right:0;bottom:0;height:190px;display:none;justify-content:space-between;align-items:flex-end;padding:0 18px 18px;pointer-events:none}
+#touch.on{display:flex}
+.stick{width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.3);position:relative;pointer-events:auto;touch-action:none}
+.stick i{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;background:rgba(45,212,167,.55);border:2px solid rgba(255,255,255,.7)}
+.stick span{position:absolute;left:0;right:0;top:-18px;text-align:center;font-size:11px;color:#cfe;text-shadow:0 0 4px #000}
+#quick{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px}
+#quick button{width:54px;height:54px;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(0,0,0,.4);font-size:22px;cursor:pointer}
+#quick button.rec{border-color:var(--bad)}
+#panel{min-width:0;background:var(--bg2);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+#tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);flex:0 0 auto}
+#tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:9px 9px;cursor:pointer;color:var(--mut);white-space:nowrap}
+#tabs button.on{color:var(--tx);border-bottom-color:var(--acc)}
+.pane{display:none;overflow-y:auto;padding:12px;flex:1;min-height:0}
+.pane.on{display:block}
+h3{margin:0 0 8px;font-size:15px}h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.btn{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:10px 8px;cursor:pointer;text-align:center;touch-action:manipulation;position:relative;overflow:hidden}
+.btn:hover{border-color:#3a506b}.btn:active{transform:scale(.98)}
+.btn small{display:block;font-size:10px;color:var(--mut)}
+.btn.ok{border-color:#1f7a63}.btn.acc{border-color:#1e6a8f}.btn.danger{border-color:#8a2f2f;color:#fecaca}.btn.wide{width:100%;margin-top:8px}
+.btn.hold{background:linear-gradient(90deg,rgba(45,212,167,.45) calc(var(--p,0)*100%),transparent 0),var(--bg3)}
+.btn.danger.hold{background:linear-gradient(90deg,rgba(248,113,113,.5) calc(var(--p,0)*100%),transparent 0),var(--bg3)}
+.btn.on{background:#13392f;border-color:var(--acc)}
+.btn.sm{padding:5px 8px;font-size:12px}
+.seg{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.seg button{flex:1;background:var(--bg3);border:0;border-right:1px solid var(--line);padding:8px 4px;cursor:pointer}
+.seg button:last-child{border:0}.seg button.on{background:#13392f;color:var(--acc)}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0}.row>label{flex:1;color:var(--tx)}
+.row input[type=number],.row select,.row input[type=text],.row input[type=url]{background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:5px 7px;min-width:0}
+.row input[type=number]{width:84px}.row input[type=text],.row input[type=url]{flex:1}
+.row input[type=range]{flex:1.4;accent-color:var(--acc)}
+.row .val{min-width:48px;text-align:right;color:var(--mut);font-variant-numeric:tabular-nums}
+.tv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tv div{background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.tv small{display:block;font-size:10px;color:var(--mut);text-transform:uppercase}.tv b{font-variant-numeric:tabular-nums;font-size:14px}
+.note{font-size:12px;color:var(--mut)}.warnbox{border:1px solid #8a6a10;background:#2a2208;color:#fde68a;border-radius:var(--r);padding:8px 10px;font-size:12px;margin:8px 0}
+.infobox{border:1px solid #1e4f6e;background:#0b2230;color:#bae6fd;border-radius:var(--r);padding:8px 10px;font-size:12px;margin:8px 0}
+details{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:6px 10px;margin:8px 0}summary{cursor:pointer;font-weight:600}
+pre{background:#05080c;border:1px solid var(--line);border-radius:8px;padding:8px;overflow:auto;font-size:11px;white-space:pre-wrap;margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.bar{height:8px;background:var(--bg);border:1px solid var(--line);border-radius:4px;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;left:50%;background:var(--acc);width:0}
+.dots{display:flex;flex-wrap:wrap;gap:3px}.dots b{width:16px;height:16px;border-radius:4px;background:var(--bg);border:1px solid var(--line);font-size:9px;text-align:center;line-height:14px;font-weight:400;color:var(--mut)}.dots b.on{background:var(--acc);color:#000}
+.padcard{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:8px;margin:6px 0}
+.padcard .nm{font-size:12px;word-break:break-all}
+#log{font:11px ui-monospace,Menlo,Consolas,monospace;max-height:260px;overflow:auto;background:#05080c;border:1px solid var(--line);border-radius:8px;padding:6px}
+#log div.warn{color:var(--warn)}#log div.bad{color:var(--bad)}
+#mapBig{width:100%;height:280px;background:#0c141d;border:1px solid var(--line);border-radius:var(--r);touch-action:none;display:block}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0}.chk input{margin-top:3px;accent-color:var(--acc)}
+#toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0b2230;border:1px solid #1e6a8f;padding:8px 14px;border-radius:99px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9;max-width:90vw}
+#toast.on{opacity:1}
+.learn{background:#3b2f08!important;border-color:var(--warn)!important}
+@media (max-width:900px){
+ body{overflow:auto}main{grid-template-columns:minmax(0,1fr);grid-template-rows:56vh auto;overflow:visible}.brand{flex:1}#chips{order:3;flex-basis:100%}
+ #panel{border-left:0;border-top:1px solid var(--line)}.pane{max-height:none;overflow:visible}
+ #stage{min-height:56vh}
+}
+@media (max-width:480px){.tv{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🛩 DJI Mini 2 <b>Control</b></div>
+  <div id="chips">
+    <span class="chip" id="chLink">Simulador</span>
+    <span class="chip" id="chState">En tierra</span>
+    <span class="chip" id="chMode">N</span>
+    <span class="chip" id="chBat">🔋 100%</span>
+    <span class="chip" id="chGps">🛰 0</span>
+    <span class="chip" id="chSig">📶 —</span>
+    <span class="chip" id="chPad">🎮 0</span>
+  </div>
+  <button class="ib" id="btnLock" title="Bloquear mandos (los sticks se ignoran)">🔓 Mandos</button>
+  <button class="ib" id="btnFs" title="Pantalla completa">⛶</button>
+</header>
+<main>
+<section id="stage">
+  <canvas id="scene"></canvas><canvas id="hud"></canvas><div id="flash"></div>
+  <div id="quick">
+    <button data-act="photo" title="Foto">📷</button>
+    <button data-act="record" class="rec" id="qRec" title="Grabar">⏺</button>
+  </div>
+  <div id="touch">
+    <div class="stick" id="stL"><span>IZQ</span><i></i></div>
+    <div class="stick" id="stR"><span>DER</span><i></i></div>
+  </div>
+</section>
+<aside id="panel">
+<nav id="tabs">
+  <button data-tab="fly" class="on">Vuelo</button><button data-tab="cam">Cámara</button><button data-tab="mis">Misión</button>
+  <button data-tab="pad">Mandos</button><button data-tab="con">Conexión</button><button data-tab="log">Registro</button><button data-tab="set">Ajustes</button>
+</nav>
+
+<!-- VUELO -->
+<div class="pane on" id="p-fly">
+  <div class="grid2">
+    <button class="btn hold ok" data-act="takeoff">🛫 Despegar<small>mantén pulsado</small></button>
+    <button class="btn hold" data-act="land">🛬 Aterrizar<small>mantén pulsado</small></button>
+    <button class="btn hold acc" data-act="rth">🏠 Volver a casa (RTH)<small>mantén · otra vez = cancelar</small></button>
+    <button class="btn" data-act="brake">✋ Freno / Pausa<small>detiene y mantiene posición</small></button>
+  </div>
+  <button class="btn hold danger wide" data-act="emergency">⛔ Parada de emergencia (corta motores)<small>mantén 1,5 s · el dron caerá</small></button>
+  <button class="btn sm wide" id="bConfLand">✅ Confirmar aterrizaje (si el dron lo pide)</button>
+  <h4>Modo de vuelo</h4>
+  <div class="seg" id="segMode"><button data-m="C">Cine · 6 m/s</button><button data-m="N">Normal · 10 m/s</button><button data-m="S">Sport · 16 m/s</button></div>
+  <h4>Telemetría</h4>
+  <div class="tv" id="tv"></div>
+  <h4>Seguridad</h4>
+  <div class="row"><label>Altura de RTH</label><input type="number" data-set="rthAlt" data-send min="20" max="500" step="5"><span class="note">m</span></div>
+  <div class="row"><label>Altura máxima</label><input type="number" data-set="maxAlt" data-send min="2" max="500" step="5"><span class="note">m</span></div>
+  <div class="row"><label>Distancia máxima</label><input type="number" data-set="maxDist" data-send min="15" max="8000" step="10"><span class="note">m</span></div>
+  <div class="row"><label>Modo principiante (30 m / 30 m, velocidad reducida)</label><input type="checkbox" data-set="beginner" data-send></div>
+  <div class="row"><label>Sensores de visión inferiores</label><input type="checkbox" data-set="vision" data-send></div>
+  <div class="row"><label>RTH inteligente por batería</label><input type="checkbox" data-set="smartRth" data-send></div>
+  <div class="row"><label>Aviso de batería baja</label><input type="number" data-set="lowBat" data-send min="10" max="50"><span class="note">%</span></div>
+  <div class="row"><label>Batería crítica (aterriza solo)</label><input type="number" data-set="critBat" data-send min="5" max="30"><span class="note">%</span></div>
+  <div class="row"><label>Si se pierde la señal</label>
+    <select data-set="failsafe" data-send><option value="rth">Volver a casa</option><option value="land">Aterrizar</option><option value="hover">Mantener posición</option></select></div>
+  <h4>Origen y calibración</h4>
+  <div class="grid2">
+    <button class="btn sm" id="bHome">📍 Actualizar punto de origen</button>
+    <button class="btn sm" data-cal="compass">🧭 Calibrar brújula</button>
+    <button class="btn sm" data-cal="imu">⚖ Calibrar IMU</button>
+    <button class="btn sm" data-cal="gimbal">🎛 Calibrar gimbal</button>
+  </div>
+</div>
+
+<!-- CÁMARA -->
+<div class="pane" id="p-cam">
+  <div class="grid2">
+    <button class="btn" id="bShutter" style="font-size:16px">📷 Disparar</button>
+    <button class="btn" id="bRec" style="font-size:16px">⏺ Grabar</button>
+  </div>
+  <div class="seg" style="margin-top:8px" id="segCamMode"><button data-cm="photo">Foto</button><button data-cm="video">Vídeo</button></div>
+  <div class="tv" style="margin-top:8px"><div><small>Fotos</small><b id="cPhotos">0</b></div><div><small>Grabando</small><b id="cRecT">00:00</b></div><div><small>Tarjeta libre</small><b id="cSd">—</b></div></div>
+
+  <h4>Foto</h4>
+  <div class="row"><label>Modo</label><select data-cam="photoMode"><option value="single">Único</option><option value="burst">Ráfaga</option><option value="aeb">AEB (horquillado)</option><option value="timer">Temporizador</option></select></div>
+  <div class="row" id="rBurst"><label>Fotos de la ráfaga</label><select data-cam="burstN"><option>3</option><option>5</option><option>7</option></select></div>
+  <div class="row" id="rAeb"><label>Fotos AEB</label><select data-cam="aebN"><option>3</option><option>5</option></select></div>
+  <div class="row" id="rTimer"><label>Temporizador</label><select data-cam="timerS"><option>2</option><option>3</option><option>5</option><option>7</option><option>10</option><option>15</option><option>20</option><option>30</option><option>60</option></select><span class="note">s</span></div>
+  <div class="row"><label>Formato</label><select data-cam="fmt"><option>JPG</option><option>RAW</option><option>JPG+RAW</option></select></div>
+
+  <h4>Vídeo</h4>
+  <div class="row"><label>Resolución</label><select data-cam="res"><option value="4K">4K</option><option value="2.7K">2.7K</option><option value="1080p">1080p</option></select></div>
+  <div class="row"><label>Fotogramas</label><select data-cam="fps" id="selFps"></select><span class="note">fps</span></div>
+  <div class="row"><label>Zoom digital</label><input type="range" id="rngZoom" min="1" max="4" step="0.1"><span class="val" id="vZoom">1.0x</span></div>
+
+  <h4>Exposición</h4>
+  <div class="row"><label>Exposición</label><select data-cam="exp"><option value="auto">Automática</option><option value="manual">Manual</option></select></div>
+  <div class="row" id="rIso"><label>ISO</label><select data-cam="iso"><option>100</option><option>200</option><option>400</option><option>800</option><option>1600</option><option>3200</option></select></div>
+  <div class="row" id="rShut"><label>Obturador</label><select data-cam="shutter"></select></div>
+  <div class="row"><label>Compensación EV</label><input type="range" id="rngEv" min="-3" max="3" step="0.3"><span class="val" id="vEv">0.0</span></div>
+  <div class="row"><label>Balance de blancos</label><select data-cam="wb"><option value="auto">Auto</option><option value="sunny">Soleado (5600 K)</option><option value="cloudy">Nublado (6000 K)</option><option value="incand">Incandescente (3200 K)</option><option value="manual">Manual</option></select></div>
+  <div class="row" id="rWbk"><label>Temperatura</label><input type="range" data-cam="wbK" min="2000" max="10000" step="100"><span class="val" id="vWbk">5600K</span></div>
+  <div class="row"><label>Color</label><select data-cam="color"><option value="normal">Normal</option><option value="dcine">D-Cinelike</option></select></div>
+  <div class="row"><label>Anti-parpadeo</label><select data-cam="flicker"><option value="auto">Auto</option><option value="off">Off</option><option value="50">50 Hz</option><option value="60">60 Hz</option></select></div>
+  <div class="row"><label>Cuadrícula</label><select data-cam="grid"><option value="off">Sin cuadrícula</option><option value="thirds">Tercios</option><option value="diag">Diagonales</option><option value="center">Centro</option></select></div>
+
+  <h4>Gimbal (−90° a +20°)</h4>
+  <div class="row"><label>Ángulo</label><input type="range" id="rngGim" min="-90" max="20" step="1"><span class="val" id="vGim">0°</span></div>
+  <div class="grid3">
+    <button class="btn sm" data-gim="20">+20°</button><button class="btn sm" data-gim="0">0°</button><button class="btn sm" data-gim="-45">−45°</button>
+    <button class="btn sm" data-gim="-90">−90°</button><button class="btn sm" data-act="gimbalCenter">Centrar</button><button class="btn sm" data-act="gimbalDown">Mirar abajo</button>
+  </div>
+  <div class="row"><label>Velocidad del gimbal</label><input type="range" data-set="gimbalSpeed" min="1" max="10" step="1"><span class="val" id="vGs">5</span></div>
+  <div class="infobox">Los discos de formato, resolución y zoom respetan los límites del Mini 2: 4K hasta 2x, 2.7K hasta 3x y 1080p hasta 4x. No se puede hacer foto mientras se graba.</div>
+</div>
+
+<!-- MISIÓN -->
+<div class="pane" id="p-mis">
+  <h4 style="margin-top:0">QuickShots</h4>
+  <div class="grid3" id="qsBtns">
+    <button class="btn sm" data-qs="dronie">Dronie</button><button class="btn sm" data-qs="rocket">Rocket</button><button class="btn sm" data-qs="circle">Círculo</button>
+    <button class="btn sm" data-qs="helix">Helix</button><button class="btn sm" data-qs="boomerang">Boomerang</button><button class="btn sm danger" id="qsStop">■ Parar tarea</button>
+  </div>
+  <div class="row"><label>Distancia / radio</label><input type="number" id="qsDist" value="30" min="10" max="120"><span class="note">m</span></div>
+  <div class="row"><label>Altura (Rocket / Helix)</label><input type="number" id="qsH" value="40" min="5" max="120"><span class="note">m</span></div>
+  <div class="note">Distancia = Dronie · radio = Círculo/Helix/Boomerang (se limita a 5–40 m). Pon el dron a unos 2 m del suelo con el sujeto delante. Al terminar vuelve al punto inicial.</div>
+
+  <h4>Hyperlapse</h4>
+  <div class="row"><label>Tipo</label><select id="hlType"><option value="libre">Libre (pilotas tú)</option><option value="circulo">Círculo</option><option value="rumbo">Rumbo fijo</option></select></div>
+  <div class="row"><label>Intervalo</label><select id="hlInt"><option>2</option><option>3</option><option>4</option><option>5</option><option>10</option></select><span class="note">s</span></div>
+  <div class="row"><label>Duración</label><input type="number" id="hlDur" value="60" min="10" max="900"><span class="note">s</span></div>
+  <button class="btn wide" id="hlGo">▶ Iniciar Hyperlapse</button>
+
+  <h4>Panorama</h4>
+  <div class="grid2">
+    <button class="btn sm" data-pano="sphere">Esfera (26)</button><button class="btn sm" data-pano="180">180° (21)</button>
+    <button class="btn sm" data-pano="wide">Gran angular (9)</button><button class="btn sm" data-pano="vertical">Vertical (3)</button>
+  </div>
+
+  <h4>Waypoints</h4>
+  <canvas id="mapBig"></canvas>
+  <div class="grid3" style="margin-top:6px">
+    <button class="btn sm" id="mpPlan">✏ Añadir puntos</button><button class="btn sm" id="mpCenter">⌖ Centrar dron</button><button class="btn sm" id="mpAddHere">＋ En el dron</button>
+  </div>
+  <div id="wpList"></div>
+  <div class="row"><label>Al terminar</label><select id="mpFinish"><option value="hover">Mantener posición</option><option value="rth">Volver a casa</option><option value="land">Aterrizar</option></select></div>
+  <div class="note" id="mpInfo">Sin puntos.</div>
+  <div class="grid2" style="margin-top:6px">
+    <button class="btn ok" id="mpStart">▶ Ejecutar misión</button><button class="btn" id="mpPause">⏸ Pausar</button>
+    <button class="btn" id="mpStop">■ Detener</button><button class="btn" id="mpClear">🗑 Borrar todo</button>
+    <button class="btn sm" id="mpExport">Exportar JSON</button><button class="btn sm" id="mpImport">Importar JSON</button>
+  </div>
+</div>
+
+<!-- MANDOS -->
+<div class="pane" id="p-pad">
+  <div class="infobox">Compatible con cualquier mando que tu sistema reconozca (Xbox, PlayStation, Switch Pro, 8BitDo, Logitech, mandos genéricos, joysticks/HOTAS, emisoras RC en modo USB-joystick como RadioMaster/TX16S/FrSky). Pulsa un botón del mando para que el navegador lo detecte. Todos los botones y ejes se pueden reasignar con «Aprender».</div>
+  <div class="row"><label>Mando activo</label><select id="padSel" data-set="padSel"></select></div>
+  <div id="padList"></div>
+  <h4>Perfil del mando seleccionado</h4>
+  <div id="padProfile"><div class="note">Conecta un mando y pulsa cualquier botón.</div></div>
+  <h4>Teclado</h4>
+  <div id="kbProfile"></div>
+  <h4>Perfiles</h4>
+  <div class="grid3">
+    <button class="btn sm" id="pfReset">Restablecer</button><button class="btn sm" id="pfExport">Exportar</button><button class="btn sm" id="pfImport">Importar</button>
+  </div>
+  <h4>Pantalla táctil</h4>
+  <div class="row"><label>Joysticks en pantalla</label><select data-set="touch"><option value="auto">Auto (solo táctil)</option><option value="on">Siempre</option><option value="off">Nunca</option></select></div>
+  <div class="note">Las flechas del teclado también funcionan: ↑↓ = altura, ←→ = giro. Shift reduce la sensibilidad a la mitad.</div>
+</div>
+
+<!-- CONEXIÓN -->
+<div class="pane" id="p-con">
+  <div class="warnbox"><b>Importante:</b> un navegador no puede conectarse directamente al DJI Mini 2 (usa un enlace propietario OcuSync 2.0/Wi-Fi cifrado y sin API web). Esta app incluye un <b>simulador completo</b> para practicar y un cliente <b>WebSocket</b> para conectarla a un puente que tú instales (explicado abajo). Con el simulador no se mueve ningún dron real.</div>
+  <h4>Enlace</h4>
+  <div class="seg" id="segLink"><button data-l="sim">Simulador</button><button data-l="ws">Puente WebSocket</button></div>
+  <div class="row"><label>URL del puente</label><input type="text" data-set="wsUrl" placeholder="ws://192.168.1.50:8765"></div>
+  <div class="row"><label>Reconexión automática</label><input type="checkbox" data-set="autoReconnect"></div>
+  <div class="grid2"><button class="btn ok" id="lkConnect">Conectar</button><button class="btn" id="lkDisc">Desconectar</button></div>
+  <div class="note" id="lkInfo" style="margin-top:6px">—</div>
+
+  <h4>Vídeo</h4>
+  <div class="row"><label>Fuente</label><select id="vidKind" data-set="vidKind">
+    <option value="sim">Escena del simulador</option><option value="ws">Fotogramas JPEG por el WebSocket</option><option value="mjpeg">MJPEG (URL)</option>
+    <option value="video">Vídeo / HLS (URL)</option><option value="capture">Capturadora USB / webcam</option><option value="screen">Captura de pantalla (p. ej. scrcpy con DJI Fly)</option><option value="none">Ninguna</option></select></div>
+  <div class="row" id="rVidUrl"><label>URL</label><input type="url" data-set="vidUrl" placeholder="http://192.168.1.50:8080/video"></div>
+  <div class="row" id="rVidDev"><label>Dispositivo</label><select id="vidDev"></select><button class="btn sm" id="vidRefresh">↻</button></div>
+  <button class="btn wide" id="vidApply">Aplicar fuente de vídeo</button>
+
+  <details><summary>¿Cómo controlar el Mini 2 real?</summary>
+    <p class="note">El mando DJI RC-N1 se conecta por USB a un móvil y solo habla con apps que usen el <b>DJI Mobile SDK V4</b> (el Mini 2 es compatible con esa versión). Montaje típico:</p>
+    <ol class="note"><li>Crea (o instala) una app Android con Mobile SDK V4 conectada al RC-N1 por USB.</li><li>Esa app abre un servidor WebSocket en el móvil (p. ej. puerto 8765) y traduce los mensajes de abajo a llamadas del SDK.</li><li>Pon móvil y navegador en la misma red (o el hotspot del móvil) y escribe aquí la URL <code>ws://IP:8765</code>.</li><li>Vídeo: o bien el puente envía JPEG por el mismo WebSocket, o usa «Captura de pantalla» sobre una ventana de espejo del móvil con DJI Fly, o una capturadora HDMI.</li></ol>
+    <table><tr><th>Mensaje</th><th>Llamada del SDK V4 (referencia)</th></tr>
+    <tr><td>sticks</td><td>FlightController.sendVirtualStickFlightControlData(pitch, roll, yaw, throttle) a 5–25 Hz, con virtual stick activado (velocidad/ángulo-velocidad/velocidad vertical)</td></tr>
+    <tr><td>takeoff / land / rth</td><td>startTakeoff() / startLanding() / startGoHome(); cancel_rth → cancelGoHome()</td></tr>
+    <tr><td>photo / record_*</td><td>Camera.startShootPhoto() / startRecordVideo() / stopRecordVideo()</td></tr>
+    <tr><td>gimbal_angle</td><td>Gimbal.rotate(...) en modo absoluto</td></tr>
+    <tr><td>camera_set</td><td>Camera.setISO / setShutterSpeed / setExposureCompensation / setWhiteBalance / setVideoResolutionAndFrameRate / setDigitalZoomFactor…</td></tr>
+    <tr><td>mission_*</td><td>WaypointMissionOperator (upload, start, pause, resume, stop)</td></tr>
+    <tr><td>emergency</td><td>turnOffMotors() (solo en emergencia real)</td></tr></table>
+    <p class="note">En la carpeta <code>android-bridge/</code> del proyecto hay un puente base listo para compilar (DJI Mobile SDK V4): abre esta misma interfaz dentro del celular y reenvía vídeo, telemetría y comandos.</p>
+    <p class="note">Las funciones de QuickShot, Hyperlapse y Panorama no tienen API pública en el SDK: el puente debe emularlas con sticks/waypoints o devolver <code>ack ok:false</code>. <b>El puente es responsabilidad tuya</b>: debe aplicar un failsafe si deja de recibir <code>sticks</code> durante ~500 ms.</p>
+  </details>
+  <details><summary>Protocolo WebSocket (JSON)</summary>
+<pre>// APP → PUENTE
+{"t":"hello","app":"mini2-web","v":1}
+{"t":"sticks","seq":123,"mode":"N","throttle":0.0,"yaw":0.0,"pitch":0.3,"roll":0.0,"gimbal":0.0,"zoom":0.0}
+   // ejes −1…1 (pitch + = adelante, roll + = derecha, yaw + = horario,
+   //  throttle + = subir, gimbal + = subir cámara, zoom + = acercar). Enviado a 25 Hz.
+{"t":"cmd","id":7,"name":"takeoff","args":{}}
+   // name: takeoff land cancel_land rth cancel_rth emergency brake set_mode
+   //   photo record_start record_stop gimbal_angle gimbal_center zoom_set camera_set settings_set
+   //   set_home calibrate quickshot hyperlapse panorama shot_stop
+   //   mission_start mission_pause mission_resume mission_stop
+{"t":"ping","ts":1700000000000}
+
+// PUENTE → APP
+{"t":"telemetry","state":"flying","motors":true,"mode":"N","lat":40.4,"lon":-3.7,
+ "homeLat":40.4,"homeLon":-3.7,"x":12.3,"y":-4.1,"alt":35.2,"hs":4.2,"vz":0.5,
+ "yaw":120,"pitch":-3,"roll":2,"gim":-20,"bat":78,"volt":7.9,"temp":31,"sats":16,
+ "rc":92,"vid":88,"ft":312,"rec":false,"recT":0,"photos":4,"sdFreeMB":90000,
+ "sdTotalMB":128000,"zoom":1,"wind":3.1,"windDir":210}
+   // x,y = metros (este, norte) respecto al origen; si faltan, se calculan desde lat/lon.
+   // state: ground takeoff flying landing rth mission task emergency
+{"t":"ack","id":7,"ok":true,"msg":""}
+{"t":"event","level":"warn","msg":"Viento fuerte"}
+{"t":"pong","ts":1700000000000}
+// Binario: cada mensaje binario = un fotograma JPEG (vídeo)</pre>
+  </details>
+</div>
+
+<!-- REGISTRO -->
+<div class="pane" id="p-log">
+  <h4 style="margin-top:0">Lista de verificación previa</h4>
+  <div id="chkList"></div>
+  <div class="row"><label>Exigir lista completa para despegar</label><input type="checkbox" data-set="requireChecklist"></div>
+  <h4>Estadísticas de la sesión</h4>
+  <div class="tv" id="stats"></div>
+  <h4>Eventos</h4>
+  <div id="log"></div>
+  <div class="grid2" style="margin-top:8px">
+    <button class="btn sm" id="exTxt">Exportar registro</button><button class="btn sm" id="exCsv">Telemetría CSV</button>
+    <button class="btn sm" id="exGpx">Trayectoria GPX</button><button class="btn sm" id="exClr">Borrar</button>
+  </div>
+</div>
+
+<!-- AJUSTES -->
+<div class="pane" id="p-set">
+  <h4 style="margin-top:0">Unidades</h4>
+  <div class="row"><label>Distancia</label><select data-set="units"><option value="m">Metros</option><option value="ft">Pies</option></select></div>
+  <div class="row"><label>Velocidad</label><select data-set="spd"><option value="ms">m/s</option><option value="kmh">km/h</option><option value="mph">mph</option></select></div>
+  <h4>Alertas</h4>
+  <div class="row"><label>Sonidos</label><input type="checkbox" data-set="sound"></div>
+  <div class="row"><label>Voz (español)</label><input type="checkbox" data-set="voice"></div>
+  <div class="row"><label>Vibración del mando</label><input type="checkbox" data-set="haptics"></div>
+  <div class="row"><label>Minimapa en pantalla</label><input type="checkbox" data-set="pip"></div>
+  <div class="row"><label>Tiempo de pulsación larga</label><input type="range" data-set="holdMul" min="0.5" max="2" step="0.1"><span class="val" id="vHold">1.0x</span></div>
+  <h4>Herramientas del simulador</h4>
+  <div class="grid2">
+    <button class="btn sm" id="sLoss">📡 Simular pérdida de señal</button><button class="btn sm" id="sBat">🔋 Batería al 22 %</button>
+    <button class="btn sm" id="sReset">↺ Reiniciar simulador</button><button class="btn sm" id="sGps">🛰 Alternar GPS</button>
+  </div>
+  <h4>Normativa y seguridad</h4>
+  <div class="warnbox">Vuela solo en línea de vista, por debajo de 120 m (límite habitual en la UE), lejos de personas, aeropuertos y zonas restringidas, y cumpliendo el registro y la normativa de tu país. Esta app es un proyecto independiente y no está afiliada a DJI. Úsala bajo tu responsabilidad.</div>
+</div>
+</aside>
+</main>
+<div id="toast"></div>
+<video id="vsrc" autoplay muted playsinline style="display:none"></video>
+<img id="isrc" alt="" style="display:none" crossorigin="anonymous">
+
+<script>
+'use strict';
+/* =====================================================================
+   Utilidades y persistencia
+===================================================================== */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v)), lerp=(a,b,t)=>a+(b-a)*t, D2R=Math.PI/180;
+const wrap360=a=>((a%360)+360)%360;
+const store={get(k,d){try{const v=localStorage.getItem('m2.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('m2.'+k,JSON.stringify(v))}catch(e){}}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+const SET=Object.assign({units:'m',spd:'ms',rthAlt:50,maxAlt:120,maxDist:500,beginner:false,failsafe:'rth',smartRth:true,vision:true,
+  lowBat:25,critBat:12,sound:true,voice:false,haptics:true,padSel:'auto',gimbalSpeed:5,touch:'auto',holdMul:1,requireChecklist:false,pip:true,
+  autoReconnect:true,wsUrl:'ws://192.168.1.50:8765',linkKind:'sim',vidKind:'sim',vidUrl:''},store.get('set',{}));
+const saveSet=()=>store.set('set',SET);
+if(['capture','screen'].includes(SET.vidKind))SET.vidKind='sim';SET.linkKind='sim'; // requieren gesto del usuario
+// Modo puente: la app Android del puente sirve este HTML en http://127.0.0.1:8080/?bridge=1
+const BRIDGE=/[?&]bridge\b/.test(location.search)&&/^https?:$/.test(location.protocol);
+if(BRIDGE){SET.wsUrl='ws://'+location.hostname+':8765';SET.vidKind='ws';}
+
+const CAM=Object.assign({mode:'photo',photoMode:'single',burstN:3,aebN:3,timerS:5,fmt:'JPG',res:'4K',fps:30,exp:'auto',iso:'100',shutter:'1/100',
+  ev:0,wb:'auto',wbK:5600,color:'normal',flicker:'auto',grid:'off'},store.get('cam',{}));
+const saveCam=()=>store.set('cam',CAM);
+const FPS={'4K':[24,25,30],'2.7K':[24,25,30,48,50,60],'1080p':[24,25,30,48,50,60]};
+const ZMAX={'4K':2,'2.7K':3,'1080p':4};
+const BITRATE={'4K':100,'2.7K':80,'1080p':60}; // Mbps aprox.
+const SHUTTERS=['1/8000','1/4000','1/2000','1/1000','1/500','1/250','1/125','1/100','1/60','1/50','1/30','1/15','1/8','1/4','1/2','1"','2"','4"'];
+
+const MODE_LIM={C:{vh:6,up:2,down:1.5,yaw:60,tau:.7,name:'Cine'},N:{vh:10,up:3,down:3,yaw:100,tau:.45,name:'Normal'},S:{vh:16,up:5,down:3.5,yaw:150,tau:.3,name:'Sport'}};
+const STATE_LABEL={ground:'En tierra',takeoff:'Despegando',flying:'En vuelo',landing:'Aterrizando',rth:'Regreso a casa',mission:'Misión',task:'Tarea',emergency:'EMERGENCIA'};
+
+function newT(){return {link:false,state:'ground',motors:false,mode:'N',lat:40.4168,lon:-3.7038,homeLat:40.4168,homeLon:-3.7038,homeX:0,homeY:0,x:0,y:0,alt:0,
+  yaw:0,pitch:0,roll:0,gim:0,gimT:0,vx:0,vy:0,vz:0,hs:0,bat:100,volt:8.4,temp:22,sats:0,rc:0,vid:0,dist:0,ft:0,rec:false,recT:0,photos:0,
+  sdFreeMB:128000,sdTotalMB:128000,zoom:1,wind:0,windDir:0,countdown:0,task:'',progress:0,cal:null,msg:''}}
+let T=newT();
+const SIMLOC={lat:40.4168,lon:-3.7038};
+
+/* ---- Unidades / formato ---- */
+const fmtLen=m=>SET.units==='ft'?(m*3.28084).toFixed(0)+' ft':(Math.abs(m)<100?m.toFixed(1):m.toFixed(0))+' m';
+const fmtSpd=v=>SET.spd==='kmh'?(v*3.6).toFixed(1)+' km/h':SET.spd==='mph'?(v*2.23694).toFixed(1)+' mph':v.toFixed(1)+' m/s';
+const mmss=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const xy2ll=(x,y)=>({lat:T.homeLat+(y-T.homeY)/111320,lon:T.homeLon+(x-T.homeX)/(111320*Math.cos(T.homeLat*D2R))});
+
+/* =====================================================================
+   Registro de eventos, avisos, sonido, voz, vibración
+===================================================================== */
+const LOG=[]; let ALERT={msg:'',lvl:'info',until:0};
+let actx=null;
+function beep(f=880,d=.12,v=.05){ if(!SET.sound)return; try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=f;o.type='sine';g.gain.value=v;o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d);}catch(e){} }
+function speak(t){ if(!SET.voice||!window.speechSynthesis)return; try{const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';speechSynthesis.speak(u);}catch(e){} }
+function haptic(ms=200,strong=.6){ if(!SET.haptics)return; for(const gp of (navigator.getGamepads?navigator.getGamepads():[])){ if(gp&&gp.vibrationActuator&&gp.vibrationActuator.playEffect){ try{gp.vibrationActuator.playEffect('dual-rumble',{startDelay:0,duration:ms,weakMagnitude:strong/2,strongMagnitude:strong});}catch(e){} } } }
+let toastT; function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200);}
+function log(msg,lvl='info'){
+  const e={t:Date.now(),lvl,msg};LOG.push(e);if(LOG.length>800)LOG.shift();
+  const d=document.createElement('div');d.className=lvl;d.textContent=new Date(e.t).toLocaleTimeString()+'  '+msg;
+  const box=$('#log');box.prepend(d);while(box.children.length>300)box.lastChild.remove();
+  if(lvl==='warn'||lvl==='bad'){ALERT={msg,lvl,until:performance.now()+5000};beep(lvl==='bad'?440:660,.25,.08);haptic(250,.8);speak(msg);}
+}
+
+/* =====================================================================
+   Bus de comandos hacia el dron (simulador o puente)
+===================================================================== */
+let link=null;
+const QUIET=new Set(['gimbal_angle','zoom_set','camera_set','settings_set','set_mode']);
+function cmd(name,args={}){
+  if(!link||!T.link){toast('Sin conexión con el dron');return false;}
+  if(!QUIET.has(name))log('› '+name+(Object.keys(args).length&&name!=='mission_start'?' '+JSON.stringify(args).slice(0,120):''));
+  link.sendCmd(name,args);return true;
+}
+
+/* =====================================================================
+   SIMULADOR (física simplificada con los límites del Mini 2)
+===================================================================== */
+const WORLD=(()=>{let s=20231120;const r=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;const boxes=[];
+  for(let i=0;i<80;i++){const a=r()*Math.PI*2,d=55+r()*260;boxes.push({x:Math.cos(a)*d,y:Math.sin(a)*d,w:4+r()*14,l:4+r()*14,h:3+r()*(r()<.2?42:14),c:Math.floor(r()*3)});}
+  return {boxes};})();
+
+class SimLink{
+  constructor(){this.kind='sim';this.sticks={throttle:0,yaw:0,pitch:0,roll:0,gimbal:0,zoom:0};this.vel={e:0,n:0,u:0};this.auto=null;this.task=null;this.photoQ=[];this.sigLoss=0;this.t=0;this.lowWarned=false;this.critWarned=false;this.noGps=false;this.pose=null;}
+  connect(){T=newT();T.link=true;T.sats=16;T.gps=4;T.rc=100;T.vid=100;T.msg='';this.vel={e:0,n:0,u:0};this.auto=null;this.task=null;this.photoQ=[];this.lowWarned=this.critWarned=false;
+    Object.assign(T,SIMLOC,{homeLat:SIMLOC.lat,homeLon:SIMLOC.lon});
+    $('#lkInfo').textContent='Simulador activo (sin dron real).';log('Simulador listo. GPS fijado, punto de origen registrado.');return Promise.resolve();}
+  disconnect(){T.link=false;}
+  sendSticks(ax,mode){this.sticks=ax;}
+  lim(){const l=Object.assign({},MODE_LIM[T.mode]||MODE_LIM.N);if(SET.beginner){l.vh=Math.min(l.vh,4);l.up=Math.min(l.up,1.5);l.down=Math.min(l.down,1.5);l.yaw=Math.min(l.yaw,50);}return l;}
+  maxAlt(){return SET.beginner?Math.min(30,SET.maxAlt):SET.maxAlt;}
+  maxDist(){return SET.beginner?Math.min(30,SET.maxDist):SET.maxDist;}
+  airborne(){return T.motors&&T.state!=='emergency';}
+  photo1(){T.photos++;T.sdFreeMB-=CAM.fmt==='JPG'?5:CAM.fmt==='RAW'?25:30;}
+  cancelAuto(){this.auto=null;if(this.task){this.endTask(false);}}
+  sendCmd(n,a={}){
+    const air=this.airborne()&&T.alt>.3;
+    switch(n){
+      case 'takeoff': if(T.motors){log('Ya está en vuelo','warn');break;} if(T.bat<10){log('Batería insuficiente para despegar','bad');break;}
+        T.motors=true;T.state='takeoff';Object.assign(T,xy2ll(T.x,T.y));T.homeLat=T.lat;T.homeLon=T.lon;T.homeX=T.x;T.homeY=T.y;log('Despegando… punto de origen actualizado');break;
+      case 'land': if(!air&&T.state!=='takeoff'){log('No está en el aire','warn');break;} this.cancelAuto();T.state='landing';log('Aterrizando');break;
+      case 'cancel_land': if(T.state==='landing'){T.state='flying';log('Aterrizaje cancelado');}break;
+      case 'rth': if(!air){log('Necesitas estar en el aire','warn');break;} this.cancelAuto();this.auto={type:'rth',phase:0};T.state='rth';log('Regreso a casa iniciado a '+fmtLen(SET.rthAlt),'warn');break;
+      case 'cancel_rth': if(T.state==='rth'){this.auto=null;T.state='flying';log('RTH cancelado');}break;
+      case 'emergency': if(T.motors&&T.alt>.2){T.state='emergency';T.motors=false;this.auto=null;this.task=null;log('¡MOTORES APAGADOS EN EL AIRE!','bad');}else if(T.motors){T.motors=false;T.state='ground';}break;
+      case 'brake': if(T.state==='mission'||T.state==='rth'||T.state==='task'){this.cancelAuto();T.state='flying';log('Pausado: manteniendo posición');}this.vel={e:this.vel.e*.2,n:this.vel.n*.2,u:this.vel.u*.2};break;
+      case 'set_mode': T.mode=a.mode;break;
+      case 'photo': if(T.rec){log('No se puede hacer foto mientras se graba','warn');break;}
+        if(a.photoMode==='burst')this.photoQ.push({n:a.n||3,gap:.25,t:0});else if(a.photoMode==='aeb')this.photoQ.push({n:a.n||3,gap:.4,t:0});
+        else if(a.photoMode==='timer'){T.countdown=a.secs||5;}else this.photo1();break;
+      case 'record_start': if(!T.rec){T.rec=true;T.recT=0;}break;
+      case 'record_stop': T.rec=false;break;
+      case 'gimbal_angle': T.gimT=clamp(a.angle,-90,20);break;
+      case 'gimbal_center': T.gimT=0;break;
+      case 'zoom_set': T.zoom=clamp(a.zoom,1,ZMAX[CAM.res]);break;
+      case 'camera_set': if(a.res)T.zoom=clamp(T.zoom,1,ZMAX[a.res]);break;
+      case 'settings_set': break;
+      case 'set_home': if(T.sats>=6){T.homeX=T.x;T.homeY=T.y;T.homeLat=T.lat;T.homeLon=T.lon;log('Punto de origen actualizado');}else log('GPS insuficiente para actualizar el origen','warn');break;
+      case 'calibrate': if(T.motors){log('Calibración solo en tierra','warn');break;} T.cal={what:a.what,t:0,dur:a.what==='compass'?8:5};log('Calibrando '+a.what+'…');break;
+      case 'quickshot': case 'hyperlapse': case 'panorama': if(!air||T.state!=='flying'){log('Esta tarea requiere vuelo estable (no en RTH/misión)','warn');break;} this.startTask(n,a);break;
+      case 'shot_stop': if(this.task){this.endTask(false);log('Tarea detenida');}break;
+      case 'mission_start': if(!air){log('Despega antes de iniciar la misión','warn');break;} if(!a.wps||a.wps.length<2){log('La misión necesita al menos 2 puntos','warn');break;}
+        this.cancelAuto();this.auto={type:'mission',i:0,wps:a.wps,finish:a.finish||'hover',hold:0,paused:false};T.state='mission';log('Misión iniciada: '+a.wps.length+' puntos');break;
+      case 'mission_pause': if(this.auto&&this.auto.type==='mission')this.auto.paused=true;break;
+      case 'mission_resume': if(this.auto&&this.auto.type==='mission')this.auto.paused=false;break;
+      case 'mission_stop': if(this.auto&&this.auto.type==='mission'){this.auto=null;T.state='flying';log('Misión detenida');}break;
+    }
+  }
+  startTask(kind,a){
+    const S0={x:T.x,y:T.y,z:T.alt,yaw:T.yaw},yr=T.yaw*D2R,F=[Math.sin(yr),Math.cos(yr)],ease=p=>p*p*(3-2*p),g0=T.gim;
+    const look=(x,y,z,px,py,pz)=>({yaw:wrap360(Math.atan2(px-x,py-y)/D2R),gim:clamp(-Math.atan2(z-pz,Math.hypot(px-x,py-y)||.01)/D2R,-90,20)});
+    const ma=this.maxAlt();let k=null;
+    const orbit=(R,dir,dur,name,extra)=>{const P=[S0.x+F[0]*R,S0.y+F[1]*R],th0=Math.atan2(S0.x-P[0],S0.y-P[1]);
+      return Object.assign({name,dur,rec:true,back:true,fn:p=>{const th=th0+dir*2*Math.PI*p*(extra&&extra.turns||1);const rr=R*(1+(extra&&extra.grow||0)*p);
+        const x=P[0]+rr*Math.sin(th),y=P[1]+rr*Math.cos(th),z=S0.z+((extra&&extra.rise)||0)*p;return Object.assign({x,y,z},look(x,y,z,P[0],P[1],1.5));}},{});};
+    if(kind==='quickshot'){
+      const R=clamp(a.radius||a.distance||10,5,40);
+      switch(a.type){
+        case 'dronie':{const D=clamp(a.distance||30,10,120),H=Math.max(0,Math.min(D*.6,ma-S0.z));
+          k={name:'Dronie',dur:14,rec:true,back:true,fn:p=>{const e=ease(p),z=S0.z+H*e;return {x:S0.x-F[0]*D*e,y:S0.y-F[1]*D*e,z,yaw:S0.yaw,gim:clamp(-Math.atan2(z-1.5,5+D*e)/D2R,-90,20)};}};break;}
+        case 'rocket':{const H=Math.max(0,Math.min(a.height||50,ma-S0.z));k={name:'Rocket',dur:10,rec:true,back:true,fn:p=>({z:S0.z+H*ease(p),gim:lerp(g0,-90,Math.min(1,p*4))})};break;}
+        case 'circle':k=orbit(R,1,36,'Círculo');break;
+        case 'helix':k=orbit(R,1,40,'Helix',{turns:2,grow:.8,rise:Math.max(0,Math.min(a.height||20,ma-S0.z))});break;
+        case 'boomerang':{const P=[S0.x+F[0]*R,S0.y+F[1]*R],u=[S0.x-P[0],S0.y-P[1]],l=Math.hypot(u[0],u[1]);u[0]/=l;u[1]/=l;const v=[-u[1],u[0]];
+          k={name:'Boomerang',dur:30,rec:true,back:true,fn:p=>{const f=2*Math.PI*p,x=P[0]+R*Math.cos(f)*u[0]+.6*R*Math.sin(f)*v[0],y=P[1]+R*Math.cos(f)*u[1]+.6*R*Math.sin(f)*v[1],z=S0.z+Math.min(8,ma-S0.z)*Math.sin(Math.PI*p);return Object.assign({x,y,z},look(x,y,z,P[0],P[1],1.5));}};break;}
+      }
+    }else if(kind==='hyperlapse'){
+      const dur=a.dur||60,iv=a.interval||3;
+      if(a.type==='circulo'){k=orbit(10,1,dur,'Hyperlapse círculo');k.rec=false;}
+      else if(a.type==='rumbo'){const v=2;k={name:'Hyperlapse rumbo fijo',dur,rec:false,back:false,fn:p=>({x:S0.x+F[0]*v*dur*p,y:S0.y+F[1]*v*dur*p})};}
+      else k={name:'Hyperlapse libre',dur,rec:false,back:false,control:true};
+      k.interval=iv;k.photos=Math.floor(dur/iv);
+    }else if(kind==='panorama'){
+      const cfg={sphere:{n:26,dur:48,rows:[0,-30,-60,-90],span:360},'180':{n:21,dur:30,rows:[-10,-40,-70],span:180},wide:{n:9,dur:20,rows:[0,-30,-60],span:120},vertical:{n:3,dur:10,rows:[0,-45,-90],span:0}}[a.type||'sphere'];
+      k={name:'Panorama '+(a.type||'esfera'),dur:cfg.dur,rec:false,back:false,interval:cfg.dur/cfg.n,photos:cfg.n,fn:p=>{
+        const R=cfg.rows,row=Math.min(R.length-1,Math.floor(p*R.length)),loc=p*R.length-row;
+        const yaw=cfg.span===360?S0.yaw+360*loc:cfg.span?S0.yaw+(loc-.5)*cfg.span:S0.yaw;return {yaw:wrap360(yaw),gim:R[row]};}};
+    }
+    if(!k)return;
+    k.t=0;k.shots=0;k.S0=S0;if(k.rec&&!T.rec){T.rec=true;T.recT=0;k.recStarted=true;}
+    this.task=k;T.state=k.control?'flying':'task';T.task=k.name;log('Iniciando '+k.name);
+  }
+  endTask(finished){
+    const k=this.task;if(!k)return;this.task=null;T.task='';T.progress=0;
+    if(k.recStarted)T.rec=false;
+    if(finished&&k.back){this.auto={type:'return',to:k.S0};T.state='task';T.task='Volviendo al inicio';}
+    else if(T.state==='task')T.state='flying';
+    if(finished)log(k.name+' completado');
+  }
+  tick(dt){
+    // --- Entorno y señal
+    this.t+=dt;const dist=Math.hypot(T.x-T.homeX,T.y-T.homeY);
+    T.wind=Math.max(0,3.2+1.8*Math.sin(this.t/37)+Math.sin(this.t/11)*.8);T.windDir=wrap360(210+30*Math.sin(this.t/90));
+    T.dist=dist;T.rc=this.sigLoss>0?0:clamp(100-dist/16+Math.sin(this.t*2)*2,0,100);T.vid=this.sigLoss>0?0:clamp(T.rc-4+Math.sin(this.t*3),0,100);
+    if(this.sigLoss>0)this.sigLoss-=dt;
+    T.sats=this.noGps?0:clamp(Math.round(16+Math.sin(this.t/9)),12,19);
+    if(T.cal){T.cal.t+=dt;T.progress=T.cal.t/T.cal.dur;if(T.cal.t>=T.cal.dur){log('Calibración de '+T.cal.what+' completada');T.cal=null;T.progress=0;}}
+    // --- Cámara
+    if(T.countdown>0){T.countdown-=dt;if(T.countdown<=0){T.countdown=0;this.photo1();}}
+    if(this.photoQ.length){const q=this.photoQ[0];q.t-=dt;if(q.t<=0){this.photo1();q.n--;q.t=q.gap;if(q.n<=0)this.photoQ.shift();}}
+    if(T.rec){T.recT+=dt;T.sdFreeMB-=BITRATE[CAM.res]/8*dt;if(T.sdFreeMB<=0){T.rec=false;T.sdFreeMB=0;log('Tarjeta llena: grabación detenida','bad');}}
+    // --- Gimbal / zoom
+    const gs=SET.gimbalSpeed*8+10;T.gimT=clamp(T.gimT+this.sticks.gimbal*SET.gimbalSpeed*7*dt,-90,20);
+    const dg=T.gimT-T.gim;T.gim+=clamp(dg,-gs*dt,gs*dt);
+    T.zoom=clamp(T.zoom+this.sticks.zoom*.7*dt,1,ZMAX[CAM.res]);
+
+    if(!T.motors&&T.state!=='emergency'){ this.vel={e:0,n:0,u:0};T.vx=T.vy=T.vz=T.hs=0;T.pitch*=.9;T.roll*=.9;return; }
+    const lim=this.lim(),s=this.sticks;
+    const sy=Math.sin(T.yaw*D2R),cy=Math.cos(T.yaw*D2R);
+    let tgt={e:0,n:0,u:0},yawRate=0,direct=false,limits=true;
+    const stickCtl=(vert=true)=>{const f=s.pitch*lim.vh,r=s.roll*lim.vh;tgt.e=f*sy+r*cy;tgt.n=f*cy-r*sy;if(vert)tgt.u=s.throttle>0?s.throttle*lim.up:s.throttle*lim.down;yawRate=s.yaw*lim.yaw;};
+    const goTo=(x,y,z,sp,vsp=3)=>{const dx=x-T.x,dy=y-T.y,d=Math.hypot(dx,dy);if(d>.05){const v=Math.min(sp,d*1.1);tgt.e=dx/d*v;tgt.n=dy/d*v;}
+      const dz=z-T.alt;tgt.u=clamp(dz*1.2,-vsp,vsp);return {d,dz};};
+    const turnTo=(yaw,rate=90)=>{const e=((yaw-T.yaw+540)%360)-180;yawRate=clamp(e*2,-rate,rate);return Math.abs(e);};
+    const lowFuel=T.bat<=SET.lowBat;
+    if(T.state==='emergency'){this.vel.u-=9.81*dt;tgt=null;limits=false;}
+    else if(this.sigLoss>0&&T.rc<=0&&!this.failDone){ this.failDone=true;log('Señal perdida: aplicando failsafe ('+SET.failsafe+')','bad');
+        if(SET.failsafe==='rth'){this.cancelAuto();this.auto={type:'rth',phase:0};T.state='rth';}else if(SET.failsafe==='land'){this.cancelAuto();T.state='landing';}else{this.cancelAuto();T.state='flying';} }
+    if(this.sigLoss<=0)this.failDone=false;
+    // --- Batería
+    if(T.state!=='emergency'){
+      const need=(dist/8+Math.max(0,SET.rthAlt-T.alt)/3+T.alt/1.5)*.056+4;
+      if(!this.lowWarned&&T.bat<=SET.lowBat){this.lowWarned=true;log('Batería baja ('+T.bat.toFixed(0)+'%)','warn');}
+      if(SET.smartRth&&T.state==='flying'&&dist>15&&T.bat<=need){log('Batería justa para volver: RTH automático','bad');this.cancelAuto();this.auto={type:'rth',phase:0};T.state='rth';}
+      if(!this.critWarned&&T.bat<=SET.critBat&&T.alt>.3){this.critWarned=true;log('Batería crítica: aterrizaje automático','bad');this.cancelAuto();T.state='landing';}
+    }
+    if(tgt){
+      switch(T.state){
+        case 'takeoff': tgt.u=1.0;yawRate=0;if(T.alt>=1.2){T.state='flying';log('Despegue completado, vuelo estable');}break;
+        case 'flying': if(this.auto&&this.auto.type==='return'){} else stickCtl();break;
+        case 'landing': stickCtl(false);tgt.u=-(T.alt<3?.7:1.5);if(T.alt<=.04){T.alt=0;T.motors=false;T.state='ground';this.vel={e:0,n:0,u:0};log('Aterrizaje completado. Motores parados.');return;}break;
+        case 'rth': {const A=this.auto;if(!A){T.state='flying';break;}
+          if(A.phase===0){if(T.alt<SET.rthAlt-.5&&dist>6){tgt.u=lim.up;}else A.phase=1;}
+          if(A.phase===1){const e=turnTo(wrap360(Math.atan2(T.homeX-T.x,T.homeY-T.y)/D2R));tgt.u=clamp((Math.max(T.alt,Math.min(SET.rthAlt,T.alt))-T.alt),-1,1);if(e<6||dist<2)A.phase=2;}
+          if(A.phase===2){const r=goTo(T.homeX,T.homeY,Math.max(T.alt,dist>6?Math.min(SET.rthAlt,Math.max(T.alt,SET.rthAlt)):T.alt),8);turnTo(wrap360(Math.atan2(T.homeX-T.x,T.homeY-T.y)/D2R));if(r.d<.8){A.phase=3;this.auto=null;T.state='landing';log('Sobre el punto de origen: aterrizando');}}
+          limits=false;break;}
+        case 'mission': {const A=this.auto;if(!A||A.type!=='mission'){T.state='flying';break;}
+          if(A.paused){break;}const w=A.wps[A.i];
+          if(A.hold>0){A.hold-=dt;if(A.hold<=0){A.i++;if(A.i>=A.wps.length){this.missionEnd(A);break;}}break;}
+          T.gimT=w.gim!=null?w.gim:T.gimT;
+          const r=goTo(w.x,w.y,w.alt,w.speed||5,2.5);if(r.d>1)turnTo(wrap360(Math.atan2(w.x-T.x,w.y-T.y)/D2R),60);
+          if(r.d<1&&Math.abs(r.dz)<1){log('Punto '+(A.i+1)+' alcanzado');
+            if(w.action==='photo'){this.photo1();}else if(w.action==='rec_start'){T.rec=true;T.recT=0;}else if(w.action==='rec_stop'){T.rec=false;}
+            A.hold=Math.max(.01,w.hold||0);}
+          T.progress=A.i/A.wps.length;limits=false;break;}
+        case 'task': {
+          if(this.auto&&this.auto.type==='return'){const S=this.auto.to,r=goTo(S.x,S.y,S.z,8,3),e=turnTo(S.yaw,90);if(r.d<.8&&Math.abs(r.dz)<.8&&e<5){this.auto=null;T.state='flying';T.task='';T.progress=0;log('De vuelta en el punto inicial');}limits=false;break;}
+          const k=this.task;if(!k){T.state='flying';break;}
+          k.t+=dt;const p=clamp(k.t/k.dur,0,1);T.progress=p;
+          if(k.fn){const o=k.fn(p),px=T.x,py=T.y,pz=T.alt;if(o.x!=null)T.x=o.x;if(o.y!=null)T.y=o.y;if(o.z!=null)T.alt=clamp(o.z,0,this.maxAlt());if(o.yaw!=null)T.yaw=o.yaw;if(o.gim!=null){T.gim=o.gim;T.gimT=o.gim;}
+            this.vel={e:(T.x-px)/dt,n:(T.y-py)/dt,u:(T.alt-pz)/dt};direct=true;}
+          if(k.interval){const n=Math.min(k.photos,Math.floor(k.t/k.interval));while(k.shots<n){k.shots++;this.photo1();}}
+          if(k.t>=k.dur)this.endTask(true);
+          break;}
+      }
+      if(T.state==='flying'&&this.task&&this.task.control){const k=this.task;k.t+=dt;T.progress=k.t/k.dur;const n=Math.min(k.photos,Math.floor(k.t/k.interval));while(k.shots<n){k.shots++;this.photo1();}if(k.t>=k.dur)this.endTask(true);}
+    }
+    // --- Integración
+    const D=(T.state==='emergency');
+    if(!direct){
+      if(tgt){const a=1-Math.exp(-dt/lim.tau);this.vel.e+=(tgt.e-this.vel.e)*a;this.vel.n+=(tgt.n-this.vel.n)*a;this.vel.u+=(tgt.u-this.vel.u)*a;}
+      T.x+=this.vel.e*dt;T.y+=this.vel.n*dt;T.alt+=this.vel.u*dt;T.yaw=wrap360(T.yaw+yawRate*dt);
+    }
+    if(limits&&!D){
+      const ma=this.maxAlt();if(T.alt>=ma){T.alt=ma;if(this.vel.u>0)this.vel.u=0;}
+      const dx=T.x-T.homeX,dy=T.y-T.homeY,dd=Math.hypot(dx,dy),md=this.maxDist();
+      if(dd>md){const nx=dx/dd,ny=dy/dd;T.x=T.homeX+nx*md;T.y=T.homeY+ny*md;const vr=this.vel.e*nx+this.vel.n*ny;if(vr>0){this.vel.e-=vr*nx;this.vel.n-=vr*ny;}if(!this._geo||this.t-this._geo>6){this._geo=this.t;log('Límite de distancia alcanzado','warn');}}
+    }
+    if(T.alt<=0){T.alt=0;if(D){this.vel={e:0,n:0,u:0};T.state='ground';log('Impacto: el dron cayó al suelo','bad');}else if(this.vel.u<0)this.vel.u=0;}
+    // --- Actitud y telemetría derivada
+    const fwd=this.vel.e*sy+this.vel.n*cy,rgt=this.vel.e*cy-this.vel.n*sy;
+    T.pitch=lerp(T.pitch,-clamp(fwd/lim.vh,-1,1)*22+(T.motors?Math.sin(this.t*7)*.3:0),Math.min(1,dt*6));
+    T.roll=lerp(T.roll,clamp(rgt/lim.vh,-1,1)*22+(T.motors?Math.cos(this.t*5)*.3:0),Math.min(1,dt*6));
+    T.vx=fwd;T.vy=rgt;T.vz=this.vel.u;T.hs=Math.hypot(this.vel.e,this.vel.n);
+    if(T.motors){T.ft+=dt;const sp=T.hs/16;T.bat=Math.max(0,T.bat-(100/(31*60)*(1+2.2*sp*sp)+(T.rec?.004:0))*dt);T.temp=Math.min(48,T.temp+dt*.02);}
+    T.volt=6.6+2.0*Math.pow(T.bat/100,.85);
+    Object.assign(T,xy2ll(T.x,T.y));
+  }
+  missionEnd(A){log('Misión completada');this.auto=null;if(A.finish==='rth'){this.auto={type:'rth',phase:0};T.state='rth';}else if(A.finish==='land'){T.state='landing';}else T.state='flying';}
+  update(dt){this.tick(dt);}
+}
+
+/* =====================================================================
+   Enlace WebSocket (puente real)
+===================================================================== */
+class WsLink{
+  constructor(url){this.kind='ws';this.url=url;this.ws=null;this.seq=0;this.n=0;this.frame=null;this.latency=null;this.closing=false;this.retry=0;this.pingT=null;}
+  connect(){return new Promise((res,rej)=>{
+    this.closing=false;let ws;try{ws=new WebSocket(this.url);}catch(e){log('URL inválida: '+this.url,'bad');return rej(e);}
+    ws.binaryType='blob';this.ws=ws;$('#lkInfo').textContent='Conectando a '+this.url+'…';
+    ws.onopen=()=>{T=Object.assign(newT(),{link:true});this.retry=0;ws.send(JSON.stringify({t:'hello',app:'mini2-web',v:1}));log('Conectado al puente '+this.url);$('#lkInfo').textContent='Conectado a '+this.url;
+      this.pingT=setInterval(()=>this.send({t:'ping',ts:Date.now()}),2000);res();};
+    ws.onmessage=async ev=>{
+      if(typeof ev.data==='string'){let m;try{m=JSON.parse(ev.data);}catch(e){return;}
+        if(m.t==='telemetry'){const d=Object.assign({},m);delete d.t;Object.assign(T,d);if(d.x==null&&d.lat!=null){const hl=T.homeLat,ho=T.homeLon;T.x=(d.lon-ho)*111320*Math.cos(hl*D2R);T.y=(d.lat-hl)*111320;}T.link=true;}
+        else if(m.t==='event')log('Dron: '+m.msg,m.level==='bad'?'bad':m.level==='warn'?'warn':'info');
+        else if(m.t==='ack'){if(!m.ok)log('Comando rechazado'+(m.msg?': '+m.msg:''),'warn');}
+        else if(m.t==='pong'){this.latency=Date.now()-m.ts;$('#lkInfo').textContent='Conectado · latencia '+this.latency+' ms';}
+      }else{try{const bmp=await createImageBitmap(ev.data);if(this.frame)this.frame.close();this.frame=bmp;}catch(e){}}
+    };
+    ws.onerror=()=>{rej(new Error('ws'));};
+    ws.onclose=()=>{clearInterval(this.pingT);T.link=false;$('#lkInfo').textContent='Desconectado';if(!this.closing){log('Conexión con el puente perdida','bad');if(SET.autoReconnect&&link===this){const d=Math.min(8000,1000*Math.pow(2,this.retry++));setTimeout(()=>{if(link===this&&!this.closing)this.connect().catch(()=>{});},d);}}};
+  });}
+  disconnect(){this.closing=true;clearInterval(this.pingT);try{this.ws&&this.ws.close();}catch(e){}T.link=false;}
+  send(o){if(this.ws&&this.ws.readyState===1)this.ws.send(JSON.stringify(o));}
+  sendSticks(ax,mode){this.send(Object.assign({t:'sticks',seq:++this.seq,mode},ax));}
+  sendCmd(name,args){this.send({t:'cmd',id:++this.n,name,args});}
+  update(){}
+}
+
+async function setLink(kind,connect=true){
+  if(link)link.disconnect();
+  SET.linkKind=kind;saveSet();
+  $$('#segLink button').forEach(b=>b.classList.toggle('on',b.dataset.l===kind));
+  link=kind==='ws'?new WsLink(SET.wsUrl):new SimLink();
+  if(connect){try{await link.connect();}catch(e){if(kind==='ws')log('No se pudo conectar con el puente','bad');}}
+  refreshCamUI();
+}
+
+/* =====================================================================
+   Entrada: mandos, teclado, táctil
+===================================================================== */
+const AXES=['throttle','yaw','pitch','roll','gimbal','zoom'];
+const BTN=['takeoff','land','rth','cancelRth','photo','record','brake','modeNext','modePrev','gimbalCenter','gimbalDown','evUp','evDown','toggleView','emergency'];
+const BTN_LABEL={takeoff:'Despegar (mantener)',land:'Aterrizar (mantener)',rth:'RTH / cancelar (mantener)',cancelRth:'Cancelar RTH',photo:'Foto',record:'Grabar / parar',brake:'Freno / pausa',modeNext:'Modo de vuelo +',modePrev:'Modo de vuelo −',gimbalCenter:'Centrar gimbal',gimbalDown:'Gimbal abajo ↔ frente',evUp:'EV +',evDown:'EV −',toggleView:'Mapa grande ↔ vídeo',emergency:'Parada emergencia (mantener)'};
+const AX_LABEL={gimbal:'Gimbal (− abajo / + arriba)',zoom:'Zoom (− alejar / + acercar)',throttle:'Altura',yaw:'Giro',pitch:'Adelante/atrás',roll:'Izquierda/derecha'};
+const HOLD={takeoff:800,land:800,rth:1000,emergency:1500};
+const MODEMAP={1:{LX:'yaw',LY:'pitch',RX:'roll',RY:'throttle'},2:{LX:'yaw',LY:'throttle',RX:'roll',RY:'pitch'},3:{LX:'roll',LY:'pitch',RX:'yaw',RY:'throttle'},4:{LX:'roll',LY:'throttle',RX:'yaw',RY:'pitch'}};
+const PHYS_LABEL={LX:'Stick izq. horizontal',LY:'Stick izq. vertical',RX:'Stick der. horizontal',RY:'Stick der. vertical'};
+
+let PROFILES=store.get('profiles',{});
+const saveProfiles=()=>store.set('profiles',PROFILES);
+function defaultProfile(gp){
+  const std=gp.mapping==='standard',n=gp.axes.length;
+  const ry=std||n<4?3:(n>=6?5:3);
+  return {mode:2,dz:.08,expo:.25,
+    phys:{LX:{i:0,inv:false,rest:0},LY:{i:1,inv:true,rest:0},RX:{i:2,inv:false,rest:0},RY:{i:ry,inv:true,rest:0}},
+    ana:{gimbal:{kind:'pair',neg:6,pos:7},zoom:{kind:'pair',neg:13,pos:12}},
+    btn:{takeoff:9,land:8,rth:10,cancelRth:null,photo:0,record:1,brake:2,modeNext:3,modePrev:null,gimbalCenter:4,gimbalDown:5,evUp:15,evDown:14,toggleView:11,emergency:null}};
+}
+const padKey=gp=>gp.id;
+function getProfile(gp){const k=padKey(gp);if(!PROFILES[k]){PROFILES[k]=defaultProfile(gp);saveProfiles();}return PROFILES[k];}
+
+const KB_DEFAULT={pairs:{throttle:['KeyF','KeyR'],yaw:['KeyQ','KeyE'],pitch:['KeyS','KeyW'],roll:['KeyA','KeyD'],gimbal:['KeyK','KeyI'],zoom:['Minus','Equal']},
+  btn:{takeoff:'KeyT',land:'KeyL',rth:'KeyH',cancelRth:null,photo:'KeyP',record:'KeyV',brake:'Space',modeNext:'KeyM',modePrev:null,gimbalCenter:'KeyG',gimbalDown:'KeyB',evUp:'Period',evDown:'Comma',toggleView:'KeyN',emergency:null}};
+let KB=Object.assign(clone(KB_DEFAULT),store.get('kb',{}));
+const saveKb=()=>store.set('kb',KB);
+const keysDown=new Set();
+const kbVal={throttle:0,yaw:0,pitch:0,roll:0,gimbal:0,zoom:0};
+
+const virt=new Set();               // botones de pantalla
+const touchSticks={L:{x:0,y:0},R:{x:0,y:0}};
+let controlsLocked=false, learn=null, lastActivePad=null;
+let AX={throttle:0,yaw:0,pitch:0,roll:0,gimbal:0,zoom:0};
+const ZERO={throttle:0,yaw:0,pitch:0,roll:0,gimbal:0,zoom:0};
+const padPrev=new Map();            // detección de actividad
+const keyName=c=>c.replace('Key','').replace('Digit','').replace('Arrow','↔').replace('Equal','+').replace('Minus','−').replace('Period','.').replace('Comma',',').replace('Space','Espacio');
+
+function readAna(gp,b){
+  if(!b)return 0;
+  if(b.kind==='axis'){let v=gp.axes[b.i];if(v==null)return 0;const r=b.rest||0;if(Math.abs(r)>.5)v=(v-r)/(2*-Math.sign(r));else if(b.inv)v=-v;else{}return v;}
+  if(b.kind==='pair'){const n=gp.buttons[b.neg],p=gp.buttons[b.pos];return (p?p.value:0)-(n?n.value:0);}
+  return 0;
+}
+function shape(v,dz,expo){const a=Math.abs(v);if(a<dz)return 0;let r=(a-dz)/(1-dz);r=(1-expo)*r+expo*r*r*r;return Math.sign(v)*Math.min(1,r);}
+
+function pickPad(){
+  const pads=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);
+  if(SET.padSel!=='auto'){const p=pads.find(g=>String(g.index)===String(SET.padSel));if(p)return p;}
+  // auto: el que tuvo actividad más reciente
+  let best=null,bt=-1;
+  for(const g of pads){const prev=padPrev.get(g.index)||{t:0,a:[],b:[]};let act=false;
+    g.axes.forEach((v,i)=>{if(Math.abs(v-(prev.a[i]||0))>.15)act=true;});g.buttons.forEach((b,i)=>{if(b.pressed&&!prev.b[i])act=true;});
+    if(act)prev.t=performance.now();prev.a=[...g.axes];prev.b=g.buttons.map(b=>b.pressed);padPrev.set(g.index,prev);
+    if(prev.t>bt){bt=prev.t;best=g;}}
+  if(best)lastActivePad=best.index;
+  return best;
+}
+
+function readInputs(dt,now){
+  const out={throttle:0,yaw:0,pitch:0,roll:0,gimbal:0,zoom:0};const pressed={};
+  const gp=pickPad(), padsAll=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);
+  // --- aprendizaje
+  if(learn)handleLearn(gp||padsAll[0]);
+  if(gp&&!learn){
+    const p=getProfile(gp),mm=MODEMAP[p.mode]||MODEMAP[2];
+    for(const k of ['LX','LY','RX','RY']){const ph=p.phys[k];let v=readAna(gp,{kind:'axis',i:ph.i,inv:ph.inv,rest:ph.rest});out[mm[k]]+=shape(v,p.dz,p.expo);}
+    for(const a of ['gimbal','zoom'])out[a]+=shape(readAna(gp,p.ana[a]),Math.max(.05,p.dz),0);
+    for(const a of BTN){const i=p.btn[a];if(i!=null&&gp.buttons[i]&&gp.buttons[i].pressed)pressed[a]=true;}
+  }
+  // --- teclado
+  for(const a of AXES){const [n,pz]=KB.pairs[a];let t=(keysDown.has(pz)?1:0)-(keysDown.has(n)?1:0);
+    if(a==='throttle')t+=(keysDown.has('ArrowUp')?1:0)-(keysDown.has('ArrowDown')?1:0);
+    if(a==='yaw')t+=(keysDown.has('ArrowRight')?1:0)-(keysDown.has('ArrowLeft')?1:0);
+    t=clamp(t,-1,1);if(keysDown.has('ShiftLeft')||keysDown.has('ShiftRight'))t*=.5;
+    const r=t===0?10:5;kbVal[a]+=clamp(t-kbVal[a],-r*dt,r*dt);out[a]+=kbVal[a];}
+  for(const a of BTN){const c=KB.btn[a];if(c&&keysDown.has(c))pressed[a]=true;}
+  // --- táctil (L: LX/LY, R: RX/RY)
+  const mm=MODEMAP[(gp&&getProfile(gp).mode)||store.get('touchMode',2)];
+  out[mm.LX]+=touchSticks.L.x;out[mm.LY]+=touchSticks.L.y;out[mm.RX]+=touchSticks.R.x;out[mm.RY]+=touchSticks.R.y;
+  for(const a of virt)pressed[a]=true;
+  for(const a of AXES)out[a]=clamp(out[a],-1,1);
+  processButtons(now,pressed);
+  return controlsLocked?Object.assign({},ZERO,{gimbal:out.gimbal,zoom:out.zoom}):out;
+}
+
+const btnPrev={},holdT={},holdFired={};let holdAct=null,holdProg=0;
+function processButtons(now,pressed){
+  holdAct=null;holdProg=0;
+  for(const a of BTN){
+    const p=!!pressed[a],was=!!btnPrev[a];
+    if(HOLD[a]){
+      if(p&&!was){holdT[a]=now;holdFired[a]=false;}
+      if(p&&!holdFired[a]){const pr=clamp((now-holdT[a])/(HOLD[a]*SET.holdMul),0,1);holdAct=a;holdProg=pr;if(pr>=1){holdFired[a]=true;ACT[a]();haptic(120,.5);}}
+      if(!p)holdFired[a]=false;
+    }else if(p&&!was)ACT[a]();
+    btnPrev[a]=p;
+  }
+}
+
+/* ---- Acciones ---- */
+const MODES=['C','N','S'];
+function cycleMode(d){const i=(MODES.indexOf(T.mode)+d+3)%3;setMode(MODES[i]);}
+function setMode(m){T.mode=m;cmd('set_mode',{mode:m});toast('Modo '+MODE_LIM[m].name);}
+function takePhoto(){
+  if(T.rec){toast('No se puede hacer foto mientras se graba');return;}
+  if(CAM.mode!=='photo')camSet('mode','photo');
+  const n=CAM.photoMode==='burst'?+CAM.burstN:CAM.photoMode==='aeb'?+CAM.aebN:1;
+  cmd('photo',{photoMode:CAM.photoMode,n,secs:+CAM.timerS},true);
+}
+function toggleRecord(){
+  if(T.rec){cmd('record_stop');return;}
+  if(CAM.mode!=='video')camSet('mode','video');
+  cmd('record_start',{res:CAM.res,fps:+CAM.fps});
+}
+function setEv(d){const v=clamp(Math.round((CAM.ev+d*0.3)*10)/10,-3,3);camSet('ev',v);toast('EV '+(v>0?'+':'')+v.toFixed(1));}
+let bigMap=false;function toggleView(){bigMap=!bigMap;}
+const allChecked=()=>{const c=store.get('chk',{});return CHECKS.every((_,i)=>c[i]);};
+const ACT={
+  takeoff(){if(SET.requireChecklist&&!allChecked()){log('Completa la lista de verificación antes de despegar','warn');return;}cmd('takeoff');},
+  land(){cmd(T.state==='landing'?'cancel_land':'land');},
+  rth(){cmd(T.state==='rth'?'cancel_rth':'rth');},
+  cancelRth(){cmd('cancel_rth');},
+  photo:takePhoto,record:toggleRecord,
+  brake(){cmd('brake');},
+  modeNext(){cycleMode(1);},modePrev(){cycleMode(-1);},
+  gimbalCenter(){cmd('gimbal_angle',{angle:0});},
+  gimbalDown(){cmd('gimbal_angle',{angle:T.gim<-85?0:-90});},
+  evUp(){setEv(1);},evDown(){setEv(-1);},toggleView,
+  emergency(){cmd('emergency');}
+};
+
+/* ---- Teclado ---- */
+addEventListener('keydown',e=>{
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)&&!learn)return;
+  if(learn&&learn.kb){e.preventDefault();finishKbLearn(e.code);return;}
+  if(learn&&e.code==='Escape'){learn=null;renderPads();return;}
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))return;
+  keysDown.add(e.code);
+  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+});
+addEventListener('keyup',e=>keysDown.delete(e.code));
+addEventListener('blur',()=>keysDown.clear());
+document.addEventListener('visibilitychange',()=>{if(document.hidden){keysDown.clear();if(T.motors)log('Pestaña en segundo plano: los mandos dejan de enviarse','warn');}});
+
+/* ---- Sticks táctiles ---- */
+function makeStick(el,st){
+  const knob=el.querySelector('i');let id=null;
+  const mv=e=>{const r=el.getBoundingClientRect(),R=r.width/2;let dx=(e.clientX-r.left-R)/(R*.75),dy=(e.clientY-r.top-R)/(R*.75);const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l;}
+    st.x=shape(dx,.05,.2);st.y=shape(-dy,.05,.2);knob.style.transform=`translate(${dx*R*.75}px,${dy*R*.75}px)`;};
+  const up=e=>{if(e.pointerId!==id)return;id=null;st.x=st.y=0;knob.style.transform='';};
+  el.addEventListener('pointerdown',e=>{id=e.pointerId;el.setPointerCapture(id);mv(e);e.preventDefault();});
+  el.addEventListener('pointermove',e=>{if(e.pointerId===id)mv(e);});
+  el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+}
+makeStick($('#stL'),touchSticks.L);makeStick($('#stR'),touchSticks.R);
+function refreshTouch(){const on=SET.touch==='on'||(SET.touch==='auto'&&matchMedia('(pointer:coarse)').matches);$('#touch').classList.toggle('on',on);}
+
+/* ---- Botones en pantalla (mantener / pulsar) ---- */
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-act]');if(!b)return;virt.add(b.dataset.act);b._p=e.pointerId;});
+const relV=e=>{$$('[data-act]').forEach(b=>{if(b._p===e.pointerId){virt.delete(b.dataset.act);b._p=null;}});};
+document.addEventListener('pointerup',relV);document.addEventListener('pointercancel',relV);
+document.addEventListener('contextmenu',e=>{if(e.target.closest('[data-act]'))e.preventDefault();});
+
+/* ---- Aprendizaje de mandos/teclas ---- */
+function startLearn(spec){
+  if(spec.kb){learn=spec;renderPads();toast('Pulsa una tecla (Esc cancela)');return;}
+  const gp=pickPad()||[...navigator.getGamepads()].find(Boolean);
+  if(!gp){toast('Conecta un mando y pulsa un botón');return;}
+  learn=Object.assign({gi:gp.index,baseA:[...gp.axes],baseB:gp.buttons.map(b=>b.pressed)},spec);renderPads();
+  toast(spec.target==='phys'?(spec.key.endsWith('Y')?'Empuja el stick hacia ARRIBA hasta el tope…':'Empuja el stick hacia la DERECHA hasta el tope…'):spec.type==='axis'?'Mueve el eje (gatillo/stick) hasta el tope…':'Pulsa el botón…');
+}
+function handleLearn(gp){
+  if(!gp||learn.kb)return;
+  const g=[...navigator.getGamepads()].find(x=>x&&x.index===learn.gi)||gp,p=getProfile(g);
+  if(learn.type==='axis'){
+    for(let i=0;i<g.axes.length;i++){if(Math.abs(g.axes[i]-learn.baseA[i])>.6){const rest=Math.abs(learn.baseA[i])>.5?learn.baseA[i]:0;
+      if(learn.target==='phys')p.phys[learn.key]={i,inv:g.axes[i]<learn.baseA[i],rest};
+      else p.ana[learn.key]={kind:'axis',i,inv:g.axes[i]<learn.baseA[i],rest};
+      return doneLearn();}}
+  }else if(learn.type==='btn'){
+    for(let i=0;i<g.buttons.length;i++){if(g.buttons[i].pressed&&!learn.baseB[i]){
+      if(learn.target==='btn')p.btn[learn.key]=i;
+      else if(learn.target==='pairneg'){p.ana[learn.key]=Object.assign({kind:'pair',neg:6,pos:7},p.ana[learn.key].kind==='pair'?p.ana[learn.key]:{});p.ana[learn.key].kind='pair';p.ana[learn.key].neg=i;}
+      else if(learn.target==='pairpos'){p.ana[learn.key]=Object.assign({kind:'pair',neg:6,pos:7},p.ana[learn.key].kind==='pair'?p.ana[learn.key]:{});p.ana[learn.key].kind='pair';p.ana[learn.key].pos=i;}
+      return doneLearn();}}
+  }
+}
+function doneLearn(){learn=null;saveProfiles();renderPads();beep(1200,.08);}
+function finishKbLearn(code){const L=learn;learn=null;
+  if(code!=='Escape'){if(L.target==='btn')KB.btn[L.key]=code;else KB.pairs[L.key][L.idx]=code;saveKb();}
+  renderPads();}
+
+/* =====================================================================
+   UI de mandos
+===================================================================== */
+function bindText(b){if(!b)return '—';if(b.kind==='axis')return 'Eje '+b.i;if(b.kind==='pair')return '− Bot.'+b.neg+' / + Bot.'+b.pos;return '—';}
+function renderPads(){
+  const pads=[...(navigator.getGamepads?navigator.getGamepads():[])].filter(Boolean);
+  $('#chPad').textContent='🎮 '+pads.length;$('#chPad').className='chip'+(pads.length?' ok':'');
+  const sel=$('#padSel'),cur=SET.padSel;
+  sel.innerHTML='<option value="auto">Automático (el último que uses)</option>'+pads.map(g=>`<option value="${g.index}">#${g.index} ${g.id.slice(0,40)}</option>`).join('');
+  sel.value=pads.some(g=>String(g.index)===String(cur))||cur==='auto'?cur:'auto';
+  $('#padList').innerHTML=pads.length?pads.map(g=>`<div class="padcard"><div class="nm"><b>#${g.index}</b> ${esc(g.id)}<br><span class="note">mapeo: ${g.mapping||'no estándar'} · ${g.axes.length} ejes · ${g.buttons.length} botones</span></div>
+    <div id="ax${g.index}" style="margin-top:6px">${g.axes.map((_,i)=>`<div class="row" style="margin:2px 0"><span class="note" style="width:38px">Eje ${i}</span><div class="bar" style="flex:1"><i></i></div><span class="val" style="min-width:42px">0.00</span></div>`).join('')}</div>
+    <div class="dots" id="bt${g.index}" style="margin-top:6px">${g.buttons.map((_,i)=>`<b>${i}</b>`).join('')}</div></div>`).join(''):'<div class="note">Ningún mando detectado. Conéctalo (USB/Bluetooth) y pulsa un botón.</div>';
+  const gp=pickPad()||pads[0];const box=$('#padProfile');
+  if(!gp){box.innerHTML='<div class="note">Conecta un mando y pulsa cualquier botón.</div>';}
+  else{
+    const p=getProfile(gp),L=learn;const lc=(t,k,tg)=>L&&!L.kb&&L.type===t&&L.key===k&&L.target===tg?' learn':'';
+    let h=`<div class="note">Editando: <b>${esc(gp.id.slice(0,50))}</b></div>
+    <div class="row"><label>Modo de sticks</label><select id="pfMode">${[1,2,3,4].map(m=>`<option value="${m}"${p.mode==m?' selected':''}>Modo ${m}${m==2?' (izq: altura/giro · der: avance/lateral)':m==1?' (izq: avance/giro · der: altura/lateral)':m==3?' (izq: avance/lateral · der: altura/giro)':' (izq: altura/lateral · der: avance/giro)'}</option>`).join('')}</select></div>
+    <div class="row"><label>Zona muerta</label><input type="range" id="pfDz" min="0" max="0.4" step="0.01" value="${p.dz}"><span class="val">${p.dz.toFixed(2)}</span></div>
+    <div class="row"><label>Expo (suavizado centro)</label><input type="range" id="pfExpo" min="0" max="0.9" step="0.05" value="${p.expo}"><span class="val">${p.expo.toFixed(2)}</span></div>
+    <table><tr><th colspan="4">Sticks físicos</th></tr>`;
+    for(const k of ['LX','LY','RX','RY']){const ph=p.phys[k];h+=`<tr><td>${PHYS_LABEL[k]}</td><td>Eje ${ph.i}${ph.rest?' (reposo '+ph.rest+')':''}</td><td><label><input type="checkbox" data-pinv="${k}"${ph.inv?' checked':''}> inv.</label></td><td><button class="btn sm${lc('axis',k,'phys')}" data-lax="${k}">Aprender</button></td></tr>`;}
+    h+=`<tr><th colspan="4">Cámara analógica</th></tr>`;
+    for(const a of ['gimbal','zoom']){const b=p.ana[a];h+=`<tr><td>${AX_LABEL[a]}</td><td>${bindText(b)}${b.kind==='axis'&&b.inv?' (inv)':''}</td><td colspan="2">
+      <button class="btn sm${lc('axis',a,'ana')}" data-lana="${a}">Eje</button>
+      <button class="btn sm${lc('btn',a,'pairneg')}" data-lpair="${a}:neg">−</button><button class="btn sm${lc('btn',a,'pairpos')}" data-lpair="${a}:pos">+</button></td></tr>`;}
+    h+=`<tr><th colspan="4">Botones</th></tr>`;
+    for(const a of BTN){const i=p.btn[a];h+=`<tr><td>${BTN_LABEL[a]}</td><td>${i==null?'—':'Botón '+i}</td><td colspan="2"><button class="btn sm${lc('btn',a,'btn')}" data-lbtn="${a}">Aprender</button> <button class="btn sm" data-cbtn="${a}">✕</button></td></tr>`;}
+    h+='</table>';
+    box.innerHTML=h;
+    $('#pfMode').onchange=e=>{p.mode=+e.target.value;store.set('touchMode',p.mode);saveProfiles();renderPads();};
+    $('#pfDz').oninput=e=>{p.dz=+e.target.value;e.target.nextElementSibling.textContent=p.dz.toFixed(2);saveProfiles();};
+    $('#pfExpo').oninput=e=>{p.expo=+e.target.value;e.target.nextElementSibling.textContent=p.expo.toFixed(2);saveProfiles();};
+    $$('[data-pinv]',box).forEach(c=>c.onchange=()=>{p.phys[c.dataset.pinv].inv=c.checked;saveProfiles();});
+    $$('[data-lax]',box).forEach(b=>b.onclick=()=>startLearn({type:'axis',target:'phys',key:b.dataset.lax}));
+    $$('[data-lana]',box).forEach(b=>b.onclick=()=>startLearn({type:'axis',target:'ana',key:b.dataset.lana}));
+    $$('[data-lpair]',box).forEach(b=>{const [k,w]=b.dataset.lpair.split(':');b.onclick=()=>startLearn({type:'btn',target:w==='neg'?'pairneg':'pairpos',key:k});});
+    $$('[data-lbtn]',box).forEach(b=>b.onclick=()=>startLearn({type:'btn',target:'btn',key:b.dataset.lbtn}));
+    $$('[data-cbtn]',box).forEach(b=>b.onclick=()=>{p.btn[b.dataset.cbtn]=null;saveProfiles();renderPads();});
+  }
+  // teclado
+  let k='<table>';
+  for(const a of AXES){const [n,pz]=KB.pairs[a];const ln=learn&&learn.kb&&learn.target==='pair'&&learn.key===a;
+    k+=`<tr><td>${AX_LABEL[a]}</td><td><button class="btn sm${ln&&learn.idx===0?' learn':''}" data-kp="${a}:0">− ${keyName(n)}</button> <button class="btn sm${ln&&learn.idx===1?' learn':''}" data-kp="${a}:1">+ ${keyName(pz)}</button></td></tr>`;}
+  for(const a of BTN){const c=KB.btn[a];const ln=learn&&learn.kb&&learn.target==='btn'&&learn.key===a;k+=`<tr><td>${BTN_LABEL[a]}</td><td><button class="btn sm${ln?' learn':''}" data-kb="${a}">${c?keyName(c):'—'}</button> <button class="btn sm" data-kc="${a}">✕</button></td></tr>`;}
+  $('#kbProfile').innerHTML=k+'</table>';
+  $$('[data-kp]').forEach(b=>b.onclick=()=>{const [a,i]=b.dataset.kp.split(':');startLearn({kb:true,target:'pair',key:a,idx:+i});});
+  $$('[data-kb]').forEach(b=>b.onclick=()=>startLearn({kb:true,target:'btn',key:b.dataset.kb}));
+  $$('[data-kc]').forEach(b=>b.onclick=()=>{KB.btn[b.dataset.kc]=null;saveKb();renderPads();});
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function updatePadLive(){
+  for(const g of navigator.getGamepads?navigator.getGamepads():[]){if(!g)continue;const ax=$('#ax'+g.index);if(!ax)continue;
+    g.axes.forEach((v,i)=>{const row=ax.children[i];if(!row)return;const bar=row.querySelector('.bar i');const w=Math.abs(v)*50;bar.style.width=w+'%';bar.style.left=v<0?(50-w)+'%':'50%';row.querySelector('.val').textContent=v.toFixed(2);});
+    const bt=$('#bt'+g.index);if(bt)g.buttons.forEach((b,i)=>{if(bt.children[i])bt.children[i].classList.toggle('on',b.pressed);});}
+}
+addEventListener('gamepadconnected',e=>{log('Mando conectado: '+e.gamepad.id);toast('🎮 Mando conectado');renderPads();});
+addEventListener('gamepaddisconnected',e=>{log('Mando desconectado: '+e.gamepad.id,'warn');renderPads();});
+
+/* =====================================================================
+   Renderizado del vídeo del simulador (pseudo-3D)
+===================================================================== */
+function renderSim(g,w,h){
+  const zoom=T.zoom||1,F=(w/2)/Math.tan(35*D2R)*zoom,cx=w/2,cy=h/2;
+  const yaw=T.yaw*D2R,pit=T.gim*D2R;
+  const f=[Math.sin(yaw)*Math.cos(pit),Math.cos(yaw)*Math.cos(pit),Math.sin(pit)],r=[Math.cos(yaw),-Math.sin(yaw),0];
+  const u=[r[1]*f[2]-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]-r[1]*f[0]];
+  const C=[T.x,T.y,T.alt+.05];
+  const hy=cy+F*Math.tan(pit);
+  const sky=g.createLinearGradient(0,Math.min(hy,h),0,Math.max(0,hy-h*.6));sky.addColorStop(0,'#cfe6f7');sky.addColorStop(1,'#4d8fd0');
+  g.fillStyle=sky;g.fillRect(0,0,w,h);
+  const gy=clamp(hy,0,h),gr=g.createLinearGradient(0,gy,0,h);gr.addColorStop(0,'#8ea17a');gr.addColorStop(1,'#3d5a34');
+  g.fillStyle=gr;g.fillRect(0,gy,w,h-gy);
+  const toCam=p=>{const dx=p[0]-C[0],dy=p[1]-C[1],dz=p[2]-C[2];return [dx*r[0]+dy*r[1]+dz*r[2],dx*u[0]+dy*u[1]+dz*u[2],dx*f[0]+dy*f[1]+dz*f[2]];};
+  const NEAR=.3;
+  const clip=(pc,closed)=>{const out=[],n=pc.length;for(let i=0;i<n;i++){const a=pc[i],b=pc[(i+1)%n];if(!closed&&i===n-1){if(a[2]>=NEAR)out.push(a);break;}
+      const ai=a[2]>=NEAR,bi=b[2]>=NEAR;if(ai)out.push(a);if(ai!==bi){const t=(NEAR-a[2])/(b[2]-a[2]);out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,NEAR]);}}return out;};
+  const sp=p=>[cx+p[0]/p[2]*F,cy-p[1]/p[2]*F];
+  // cuadrícula del suelo
+  const step=10,R=220;g.lineWidth=1;
+  for(const major of [false,true]){
+    g.strokeStyle=major?'rgba(255,255,255,.55)':'rgba(255,255,255,.25)';g.beginPath();
+    const s=major?50:10;
+    for(let ix=Math.floor((C[0]-R)/s);ix<=Math.ceil((C[0]+R)/s);ix++){if(!major&&ix%5===0)continue;const pc=clip([toCam([ix*s,C[1]-R,0]),toCam([ix*s,C[1]+R,0])],false);if(pc.length>1){const a=sp(pc[0]),b=sp(pc[1]);g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);}}
+    for(let iy=Math.floor((C[1]-R)/s);iy<=Math.ceil((C[1]+R)/s);iy++){if(!major&&iy%5===0)continue;const pc=clip([toCam([C[0]-R,iy*s,0]),toCam([C[0]+R,iy*s,0])],false);if(pc.length>1){const a=sp(pc[0]),b=sp(pc[1]);g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);}}
+    g.stroke();
+  }
+  // helipuerto de origen
+  g.strokeStyle='#fde047';g.lineWidth=2;g.beginPath();const ring=[];for(let i=0;i<24;i++){const a=i/24*Math.PI*2;ring.push(toCam([T.homeX+Math.sin(a)*1.5,T.homeY+Math.cos(a)*1.5,.02]));}
+  const rc=(Math.hypot(T.x-T.homeX,T.y-T.homeY)<2.5&&T.alt<3)?[]:clip(ring,true);if(rc.length>2){rc.forEach((p,i)=>{const q=sp(p);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);});g.closePath();g.stroke();}
+  // edificios
+  const faces=[];const pal=[[205,210,220],[205,150,110],[120,150,205]];
+  for(const b of WORLD.boxes){const x0=b.x-b.w/2,x1=b.x+b.w/2,y0=b.y-b.l/2,y1=b.y+b.l/2,hh=b.h;const col=pal[b.c];
+    const P=(x,y,z)=>[x,y,z];
+    const defs=[[[x0,y0,0],[x1,y0,0],[x1,y0,hh],[x0,y0,hh],.8],[[x1,y0,0],[x1,y1,0],[x1,y1,hh],[x1,y0,hh],.95],[[x1,y1,0],[x0,y1,0],[x0,y1,hh],[x1,y1,hh],.65],[[x0,y1,0],[x0,y0,0],[x0,y0,hh],[x0,y1,hh],.55],[[x0,y0,hh],[x1,y0,hh],[x1,y1,hh],[x0,y1,hh],1.1]];
+    for(const d of defs){const pts=d.slice(0,4),cxm=(pts[0][0]+pts[2][0])/2,cym=(pts[0][1]+pts[2][1])/2,czm=(pts[0][2]+pts[2][2])/2;const dist=Math.hypot(cxm-C[0],cym-C[1],czm-C[2]);if(dist>400)continue;faces.push({pts,k:d[4],col,dist});}}
+  faces.sort((a,b)=>b.dist-a.dist);
+  for(const fc of faces){const pc=clip(fc.pts.map(toCam),true);if(pc.length<3)continue;
+    const fog=clamp(1-fc.dist/380,.1,1),k=fc.k;g.globalAlpha=fog;g.fillStyle=`rgb(${Math.min(255,fc.col[0]*k)|0},${Math.min(255,fc.col[1]*k)|0},${Math.min(255,fc.col[2]*k)|0})`;
+    g.beginPath();pc.forEach((p,i)=>{const q=sp(p);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);});g.closePath();g.fill();g.strokeStyle='rgba(0,0,0,.25)';g.lineWidth=1;g.stroke();}
+  g.globalAlpha=1;
+  // exposición
+  if(CAM.ev!==0){g.fillStyle=CAM.ev>0?`rgba(255,255,255,${CAM.ev*.07})`:`rgba(0,0,0,${-CAM.ev*.1})`;g.fillRect(0,0,w,h);}
+  if(CAM.color==='dcine'){g.fillStyle='rgba(128,128,128,.18)';g.fillRect(0,0,w,h);}
+}
+
+/* ---- Fuente de vídeo ---- */
+const VID={kind:'sim',ready:false},vsrc=$('#vsrc'),isrc=$('#isrc');
+async function applyVideo(){
+  const k=SET.vidKind;VID.kind=k;VID.ready=false;
+  try{vsrc.pause();if(vsrc.srcObject){vsrc.srcObject.getTracks().forEach(t=>t.stop());vsrc.srcObject=null;}vsrc.removeAttribute('src');isrc.removeAttribute('src');}catch(e){}
+  $('#rVidUrl').style.display=(k==='mjpeg'||k==='video')?'flex':'none';$('#rVidDev').style.display=k==='capture'?'flex':'none';
+  try{
+    if(k==='mjpeg'){isrc.src=SET.vidUrl;}
+    else if(k==='video'){vsrc.src=SET.vidUrl;await vsrc.play();}
+    else if(k==='capture'){if(!$('#vidDev').value)await listDevices();const id=$('#vidDev').value;vsrc.srcObject=await navigator.mediaDevices.getUserMedia({video:id?{deviceId:{exact:id}}:true,audio:false});await vsrc.play();}
+    else if(k==='screen'){vsrc.srcObject=await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});await vsrc.play();}
+  }catch(e){log('Vídeo: '+(e.message||e),'warn');}
+}
+async function listDevices(){try{const tmp=await navigator.mediaDevices.getUserMedia({video:true});tmp.getTracks().forEach(t=>t.stop());}catch(e){}
+  try{const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='videoinput');$('#vidDev').innerHTML=d.map((x,i)=>`<option value="${x.deviceId}">${esc(x.label||'Cámara '+(i+1))}</option>`).join('')||'<option value="">(ninguna)</option>';}catch(e){toast('No hay acceso a dispositivos');}}
+
+function drawCover(g,src,sw,sh,w,h){const s=Math.max(w/sw,h/sh),dw=sw*s,dh=sh*s;g.drawImage(src,(w-dw)/2,(h-dh)/2,dw,dh);}
+function renderScene(g,w,h){
+  g.fillStyle='#000';g.fillRect(0,0,w,h);
+  const k=VID.kind;let ok=false;
+  if(k==='sim'){if(link&&link.kind==='sim'){renderSim(g,w,h);ok=true;}}
+  else if(k==='ws'){if(link&&link.frame){drawCover(g,link.frame,link.frame.width,link.frame.height,w,h);ok=true;}}
+  else if(k==='mjpeg'){if(isrc.naturalWidth){drawCover(g,isrc,isrc.naturalWidth,isrc.naturalHeight,w,h);ok=true;}}
+  else if(k==='video'||k==='capture'||k==='screen'){if(vsrc.readyState>=2&&vsrc.videoWidth){drawCover(g,vsrc,vsrc.videoWidth,vsrc.videoHeight,w,h);ok=true;}}
+  if(!ok){g.fillStyle='#10161e';g.fillRect(0,0,w,h);g.fillStyle='#6b7f95';g.font='600 16px system-ui';g.textAlign='center';
+    g.fillText(k==='none'?'Vídeo desactivado':(link&&link.kind==='ws'&&k==='sim')?'La escena simulada solo se muestra en modo Simulador':'Sin señal de vídeo',w/2,h/2);g.textAlign='left';}
+}
+
+/* =====================================================================
+   Mapa (minimapa y planificador)
+===================================================================== */
+const TRAIL=[];let trailT=0;
+const MISSION={wps:store.get('wps',[]),finish:'hover'};
+const saveWps=()=>store.set('wps',MISSION.wps);
+const nice=m=>{const a=[1,2,5,10,20,50,100,200,500,1000,2000,5000];for(const v of a)if(v>=m)return v;return 10000;};
+function drawMap(g,w,h,V,opt={}){
+  g.fillStyle='#0c141d';g.fillRect(0,0,w,h);
+  const wx=x=>w/2+(x-V.cx)*V.s,wy=y=>h/2-(y-V.cy)*V.s;
+  const st=nice(70/V.s);g.lineWidth=1;g.strokeStyle='rgba(255,255,255,.08)';g.fillStyle='rgba(255,255,255,.35)';g.font='10px system-ui';g.beginPath();
+  const x0=Math.floor((V.cx-w/2/V.s)/st)*st,x1=V.cx+w/2/V.s,y0=Math.floor((V.cy-h/2/V.s)/st)*st,y1=V.cy+h/2/V.s;
+  for(let x=x0;x<=x1;x+=st){g.moveTo(wx(x),0);g.lineTo(wx(x),h);}for(let y=y0;y<=y1;y+=st){g.moveTo(0,wy(y));g.lineTo(w,wy(y));}g.stroke();
+  if(opt.labels)g.fillText(st+' m / cuadro',6,h-6);
+  // geofence
+  g.strokeStyle='rgba(248,113,113,.6)';g.setLineDash([6,4]);g.beginPath();g.arc(wx(T.homeX),wy(T.homeY),SET.maxDist*V.s,0,7);g.stroke();
+  g.setLineDash([]);
+  // trayectoria
+  if(TRAIL.length>1){g.strokeStyle='rgba(45,212,167,.7)';g.lineWidth=2;g.beginPath();TRAIL.forEach((p,i)=>i?g.lineTo(wx(p[0]),wy(p[1])):g.moveTo(wx(p[0]),wy(p[1])));g.stroke();}
+  // waypoints
+  const W=MISSION.wps;
+  if(W.length){g.strokeStyle='#fbbf24';g.lineWidth=2;g.beginPath();W.forEach((p,i)=>i?g.lineTo(wx(p.x),wy(p.y)):g.moveTo(wx(p.x),wy(p.y)));g.stroke();
+    W.forEach((p,i)=>{g.fillStyle=opt.sel===i?'#fff':'#fbbf24';g.beginPath();g.arc(wx(p.x),wy(p.y),9,0,7);g.fill();g.fillStyle='#000';g.font='bold 11px system-ui';g.textAlign='center';g.fillText(i+1,wx(p.x),wy(p.y)+4);g.textAlign='left';});}
+  // origen
+  g.fillStyle='#fde047';g.font='bold 12px system-ui';g.textAlign='center';g.fillText('H',wx(T.homeX),wy(T.homeY)+4);g.textAlign='left';
+  g.strokeStyle='#fde047';g.lineWidth=1.5;g.beginPath();g.arc(wx(T.homeX),wy(T.homeY),9,0,7);g.stroke();
+  // dron
+  g.save();g.translate(wx(T.x),wy(T.y));g.rotate(T.yaw*D2R);g.fillStyle='#38bdf8';g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.moveTo(0,-11);g.lineTo(8,9);g.lineTo(0,5);g.lineTo(-8,9);g.closePath();g.fill();g.stroke();g.restore();
+  g.strokeStyle='#8fa1b6';g.lineWidth=1;g.strokeRect(.5,.5,w-1,h-1);
+}
+
+/* =====================================================================
+   HUD
+===================================================================== */
+let flashT=0,lastPhotos=0;
+function drawHUD(g,w,h){
+  g.clearRect(0,0,w,h);
+  const s=clamp(Math.min(w,h)/46,11,17),cx=w/2,cy=h/2;
+  g.font=`600 ${s}px ui-monospace,Menlo,Consolas,monospace`;g.fillStyle='#eafff7';g.strokeStyle='#eafff7';g.lineWidth=1.5;g.shadowColor='rgba(0,0,0,.85)';g.shadowBlur=4;g.textBaseline='middle';
+  // cuadrícula
+  g.save();g.shadowBlur=0;g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1;g.beginPath();
+  if(CAM.grid==='thirds'){for(let i=1;i<3;i++){g.moveTo(w*i/3,0);g.lineTo(w*i/3,h);g.moveTo(0,h*i/3);g.lineTo(w,h*i/3);}}
+  else if(CAM.grid==='diag'){g.moveTo(0,0);g.lineTo(w,h);g.moveTo(w,0);g.lineTo(0,h);}
+  else if(CAM.grid==='center'){g.moveTo(cx,0);g.lineTo(cx,h);g.moveTo(0,cy);g.lineTo(w,cy);}
+  g.stroke();g.restore();
+  // mira
+  g.beginPath();g.moveTo(cx-14,cy);g.lineTo(cx-4,cy);g.moveTo(cx+4,cy);g.lineTo(cx+14,cy);g.moveTo(cx,cy-14);g.lineTo(cx,cy-4);g.moveTo(cx,cy+4);g.lineTo(cx,cy+14);g.stroke();
+  // brújula
+  const cw=Math.min(380,w*.42),px=cw/60;g.save();g.beginPath();g.rect(cx-cw/2,6,cw,26);g.clip();g.textAlign='center';
+  for(let d=-40;d<=40;d++){const a=Math.round(T.yaw)+d;if(a%5)continue;const x=cx+(a-T.yaw)*px,A=wrap360(a);const long=A%15===0;g.beginPath();g.moveTo(x,8);g.lineTo(x,long?18:13);g.stroke();
+    if(A%45===0){g.fillText({0:'N',45:'NE',90:'E',135:'SE',180:'S',225:'SO',270:'O',315:'NO'}[A],x,26);}}
+  g.restore();g.textAlign='center';g.beginPath();g.moveTo(cx,6);g.lineTo(cx-5,0);g.lineTo(cx+5,0);g.fill();g.fillText(String(Math.round(T.yaw)%360).padStart(3,'0')+'°',cx,42);
+  // ADI y flecha a casa
+  const ar=Math.max(26,s*2.4),ax=16+ar,ay=22+ar+s;
+  g.save();g.beginPath();g.arc(ax,ay,ar,0,7);g.clip();g.translate(ax,ay);g.rotate(-T.roll*D2R);const off=clamp(T.pitch,-30,30)/30*ar*.8;
+  g.shadowBlur=0;g.fillStyle='#3b82c4';g.fillRect(-ar*2,-ar*2,ar*4,ar*2+off);g.fillStyle='#7a5a36';g.fillRect(-ar*2,off,ar*4,ar*2);g.fillStyle='#fff';g.fillRect(-ar*2,off-1,ar*4,2);g.restore();
+  g.beginPath();g.arc(ax,ay,ar,0,7);g.stroke();g.beginPath();g.moveTo(ax-ar*.55,ay);g.lineTo(ax-ar*.2,ay);g.moveTo(ax+ar*.2,ay);g.lineTo(ax+ar*.55,ay);g.stroke();
+  const hx=ax+ar*2.5,bear=wrap360(Math.atan2(T.homeX-T.x,T.homeY-T.y)/D2R)-T.yaw;
+  g.beginPath();g.arc(hx,ay,ar,0,7);g.stroke();g.save();g.translate(hx,ay);g.rotate(bear*D2R);g.fillStyle='#fde047';g.beginPath();g.moveTo(0,-ar*.8);g.lineTo(ar*.35,ar*.4);g.lineTo(0,ar*.15);g.lineTo(-ar*.35,ar*.4);g.closePath();g.fill();g.restore();
+  g.textAlign='center';g.fillText('H '+fmtLen(T.dist),hx,ay+ar+s);
+  // izquierda: velocidades
+  g.textAlign='left';let y=cy-s*2.2;
+  for(const L of [['VEL H',fmtSpd(T.hs)],['VEL V',(T.vz>=0?'+':'')+fmtSpd(T.vz)],['DIST',fmtLen(T.dist)]]){g.globalAlpha=.7;g.font=`600 ${s*.75}px ui-monospace,monospace`;g.fillText(L[0],14,y);g.globalAlpha=1;g.font=`700 ${s*1.2}px ui-monospace,monospace`;g.fillText(L[1],14,y+s*1.15);y+=s*3;}
+  // derecha: altura
+  g.textAlign='right';y=cy-s*2.2;const rx=w-14-(document.getElementById('quick')?60:0);
+  for(const L of [['ALT',fmtLen(T.alt)],['BAT',T.bat.toFixed(0)+'%  '+T.volt.toFixed(1)+'V'],['VUELO',mmss(T.ft)]]){g.globalAlpha=.7;g.font=`600 ${s*.75}px ui-monospace,monospace`;g.fillText(L[0],rx,y);g.globalAlpha=1;g.font=`700 ${s*1.2}px ui-monospace,monospace`;g.fillStyle=L[0]==='BAT'&&T.bat<=SET.lowBat?'#fbbf24':'#eafff7';g.fillText(L[1],rx,y+s*1.15);g.fillStyle='#eafff7';y+=s*3;}
+  // inferior: gimbal, zoom, EV, REC
+  g.textAlign='center';g.font=`600 ${s}px ui-monospace,monospace`;const by=h-(document.getElementById('touch').classList.contains('on')?200:36);
+  g.fillText(`GIM ${T.gim.toFixed(0)}°   ZOOM ${T.zoom.toFixed(1)}x   EV ${CAM.ev>0?'+':''}${CAM.ev.toFixed(1)}   ${CAM.res} ${CAM.fps}`,cx,by);
+  const gx0=cx-80,gw=160,gy=by-s*1.2;g.save();g.shadowBlur=0;g.fillStyle='rgba(255,255,255,.2)';g.fillRect(gx0,gy,gw,4);g.fillStyle='#2dd4a7';g.fillRect(gx0+(T.gim+90)/110*gw-3,gy-3,6,10);g.restore();
+  if(T.rec){const on=Math.floor(performance.now()/500)%2===0;g.textAlign='left';if(on){g.fillStyle='#f87171';g.beginPath();g.arc(cx-w*.1-40,38+s,6,0,7);g.fill();}g.fillStyle='#eafff7';g.fillText('REC '+mmss(T.recT),cx-w*.1-28,38+s);}
+  // estado superior derecho
+  g.textAlign='right';g.fillStyle='#2dd4a7';g.fillText(stateLabel().toUpperCase(),w-14,22);g.fillStyle='#eafff7';
+  // minimapa
+  if(SET.pip&&!bigMap){const ps=Math.min(170,w*.26),pxx=w-ps-10,pyy=36+s*1.5;g.save();g.translate(pxx,pyy);g.shadowBlur=0;drawMap(g,ps,ps,{cx:T.x,cy:T.y,s:Math.max(.4,ps/ (Math.max(60,T.dist*2.4)))});g.restore();}
+  // cuenta atrás
+  if(T.countdown>0){g.textAlign='center';g.font=`700 ${s*5}px system-ui`;g.fillText(Math.ceil(T.countdown),cx,cy-s*4);}
+  // pulsación larga
+  if(holdAct&&holdProg>0){const nm={takeoff:'DESPEGAR',land:'ATERRIZAR',rth:'VOLVER A CASA',emergency:'¡APAGAR MOTORES!'}[holdAct];const r=36;g.textAlign='center';g.lineWidth=6;g.strokeStyle='rgba(255,255,255,.25)';g.beginPath();g.arc(cx,cy+r*1.8,r,0,7);g.stroke();
+    g.strokeStyle=holdAct==='emergency'?'#f87171':'#2dd4a7';g.beginPath();g.arc(cx,cy+r*1.8,r,-Math.PI/2,-Math.PI/2+holdProg*Math.PI*2);g.stroke();g.lineWidth=1.5;g.fillText(nm,cx,cy+r*1.8);}
+  // avisos
+  if(performance.now()<ALERT.until){g.textAlign='center';const tw=g.measureText(ALERT.msg).width+30;g.shadowBlur=0;g.fillStyle=ALERT.lvl==='bad'?'rgba(180,30,30,.85)':'rgba(160,110,10,.85)';g.fillRect(cx-tw/2,64,tw,s*2);g.fillStyle='#fff';g.fillText(ALERT.msg,cx,64+s);}
+  if(controlsLocked){g.textAlign='center';g.fillStyle='#fbbf24';g.fillText('🔒 MANDOS BLOQUEADOS',cx,h*.2);}
+  if(!T.link){g.textAlign='center';g.fillStyle='#f87171';g.font=`700 ${s*1.4}px system-ui`;g.fillText('SIN ENLACE CON EL DRON',cx,cy+s*6);}
+}
+function stateLabel(){if(T.task&&(T.state==='task'||T.state==='flying'))return T.task+(T.progress?' '+Math.round(T.progress*100)+'%':'');if(T.state==='mission')return 'Misión '+Math.round((T.progress||0)*100)+'%';if(T.cal)return 'Calibrando '+Math.round((T.progress||0)*100)+'%';return STATE_LABEL[T.state]||T.state;}
+
+/* =====================================================================
+   Bucle de render
+===================================================================== */
+const scene=$('#scene'),hud=$('#hud'),sg=scene.getContext('2d'),hg=hud.getContext('2d');
+let W_=0,H_=0,DPR=1;
+function resize(){const r=$('#stage').getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);W_=r.width;H_=r.height;
+  for(const c of [scene,hud]){c.width=Math.round(W_*DPR);c.height=Math.round(H_*DPR);}
+  const mb=$('#mapBig');const mr=mb.getBoundingClientRect();mb.width=Math.round(mr.width*DPR);mb.height=Math.round(mr.height*DPR);}
+new ResizeObserver(resize).observe($('#stage'));new ResizeObserver(()=>resize()).observe($('#mapBig'));
+
+const MV={cx:0,cy:0,s:2,follow:true};let planMode=false,selWp=-1;
+function frame(){
+  requestAnimationFrame(frame);
+  if(!W_)return;
+  sg.setTransform(DPR,0,0,DPR,0,0);hg.setTransform(DPR,0,0,DPR,0,0);
+  if(bigMap){sg.fillStyle='#000';sg.fillRect(0,0,W_,H_);drawMap(sg,W_,H_,{cx:T.x,cy:T.y,s:Math.max(.3,Math.min(W_,H_)/(Math.max(80,T.dist*2.6))) },{labels:true});}
+  else renderScene(sg,W_,H_);
+  drawHUD(hg,W_,H_);
+  if(T.photos>lastPhotos){lastPhotos=T.photos;const f=$('#flash');f.style.transition='none';f.style.opacity=.7;requestAnimationFrame(()=>{f.style.transition='opacity .3s';f.style.opacity=0;});beep(1500,.05,.04);}
+  if(T.photos<lastPhotos)lastPhotos=T.photos;
+  if($('#p-mis').classList.contains('on'))drawBigMap();
+}
+function drawBigMap(){const c=$('#mapBig'),g=c.getContext('2d');g.setTransform(DPR,0,0,DPR,0,0);const w=c.width/DPR,h=c.height/DPR;if(MV.follow){MV.cx=T.x;MV.cy=T.y;}drawMap(g,w,h,MV,{labels:true,sel:selWp});}
+
+/* ---- trayecto y registro de vuelo ---- */
+const FLIGHT={samples:[],maxAlt:0,maxDist:0,maxSpd:0,dist:0,last:null};
+let lastSample=0;
+function recordTelemetry(now){
+  if(!T.motors){FLIGHT.last=null;return;}
+  if(FLIGHT.last){FLIGHT.dist+=Math.hypot(T.x-FLIGHT.last[0],T.y-FLIGHT.last[1]);}FLIGHT.last=[T.x,T.y];
+  FLIGHT.maxAlt=Math.max(FLIGHT.maxAlt,T.alt);FLIGHT.maxDist=Math.max(FLIGHT.maxDist,T.dist);FLIGHT.maxSpd=Math.max(FLIGHT.maxSpd,T.hs);
+  if(now-lastSample>=1000){lastSample=now;FLIGHT.samples.push({t:Date.now(),lat:T.lat,lon:T.lon,x:T.x,y:T.y,alt:T.alt,hs:T.hs,vz:T.vz,yaw:T.yaw,gim:T.gim,bat:T.bat,volt:T.volt,sats:T.sats,rc:T.rc,state:T.state});
+    if(FLIGHT.samples.length>20000)FLIGHT.samples.shift();TRAIL.push([T.x,T.y]);if(TRAIL.length>600)TRAIL.shift();}
+}
+
+/* =====================================================================
+   Bucle de control (20 ms): entradas, simulación, envío de sticks
+===================================================================== */
+let lastTick=performance.now(),sendAcc=0;
+setInterval(()=>{
+  const now=performance.now();let dt=Math.min(.25,(now-lastTick)/1000);lastTick=now;
+  AX=readInputs(dt,now);
+  sendAcc+=dt;if(sendAcc>=.04){sendAcc=0;if(link&&T.link)link.sendSticks(AX,T.mode);}
+  if(link&&link.update)link.update(dt);
+  recordTelemetry(now);
+},20);
+
+/* =====================================================================
+   Refresco de la interfaz (5 Hz)
+===================================================================== */
+const TV=[['alt','Altura',()=>fmtLen(T.alt)],['dist','Distancia',()=>fmtLen(T.dist)],['hs','Vel. horiz.',()=>fmtSpd(T.hs)],['vz','Vel. vert.',()=>fmtSpd(T.vz)],
+ ['yaw','Rumbo',()=>Math.round(T.yaw)+'°'],['gim','Gimbal',()=>T.gim.toFixed(0)+'°'],['sats','Satélites',()=>String(T.sats)],['bat','Batería',()=>T.bat.toFixed(0)+'% · '+T.volt.toFixed(2)+'V'],
+ ['temp','Temp.',()=>T.temp.toFixed(0)+' °C'],['wind','Viento',()=>fmtSpd(T.wind)+' '+Math.round(T.windDir)+'°'],['ft','T. vuelo',()=>mmss(T.ft)],['pitch','Cabeceo/alabeo',()=>T.pitch.toFixed(0)+'° / '+T.roll.toFixed(0)+'°'],
+ ['rc','Señal mando',()=>Math.round(T.rc)+'%'],['vid','Señal vídeo',()=>Math.round(T.vid)+'%'],['lat','Latitud',()=>T.lat.toFixed(6)],['lon','Longitud',()=>T.lon.toFixed(6)],['st','Estado',()=>stateLabel()]];
+$('#tv').innerHTML=TV.map(t=>`<div><small>${t[1]}</small><b data-tv="${t[0]}">—</b></div>`).join('');
+const STATS=[['ma','Altura máx.',()=>fmtLen(FLIGHT.maxAlt)],['md','Distancia máx.',()=>fmtLen(FLIGHT.maxDist)],['ms','Vel. máx.',()=>fmtSpd(FLIGHT.maxSpd)],['rd','Recorrido',()=>fmtLen(FLIGHT.dist)],['tf','Tiempo vuelo',()=>mmss(T.ft)],['ph','Fotos',()=>String(T.photos)]];
+$('#stats').innerHTML=STATS.map(t=>`<div><small>${t[1]}</small><b data-st="${t[0]}">—</b></div>`).join('');
+function refreshUI(){
+  const set=(id,t,c)=>{const e=$(id);if(e.textContent!==t)e.textContent=t;if(c!=null)e.className='chip '+c;};
+  set('#chLink',T.link?(link&&link.kind==='sim'?'● Simulador':'● Puente conectado'):'○ Sin enlace',T.link?'ok':'bad');
+  set('#chState',stateLabel(),T.state==='emergency'?'bad':T.motors?'ok':'');
+  set('#chMode',MODE_LIM[T.mode]?MODE_LIM[T.mode].name:T.mode,'');
+  set('#chBat','🔋 '+T.bat.toFixed(0)+'%',T.bat<=SET.critBat?'bad':T.bat<=SET.lowBat?'warn':'ok');
+  set('#chGps','🛰 '+T.sats,T.sats>=10?'ok':T.sats>=6?'warn':'bad');
+  set('#chSig','📶 '+Math.round(T.rc)+'%',T.rc>50?'ok':T.rc>20?'warn':'bad');
+  $$('[data-tv]').forEach(e=>{const t=TV.find(x=>x[0]===e.dataset.tv);if(t)e.textContent=t[2]();});
+  $$('[data-st]').forEach(e=>{const t=STATS.find(x=>x[0]===e.dataset.st);if(t)e.textContent=t[2]();});
+  $$('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.m===T.mode));
+  $$('#segCamMode button').forEach(b=>b.classList.toggle('on',b.dataset.cm===CAM.mode));
+  $('#qRec').style.background=T.rec?'rgba(248,113,113,.6)':'rgba(0,0,0,.4)';$('#bRec').textContent=T.rec?'⏹ Parar '+mmss(T.recT):'⏺ Grabar';$('#bRec').classList.toggle('on',T.rec);
+  $('#cPhotos').textContent=T.photos;$('#cRecT').textContent=mmss(T.recT);
+  const free=T.sdFreeMB;const secs=free/(BITRATE[CAM.res]/8);$('#cSd').textContent=free>1024?(free/1024).toFixed(1)+' GB':free.toFixed(0)+' MB';$('#cSd').title='≈ '+mmss(secs)+' de vídeo '+CAM.res;
+  if(document.activeElement!==$('#rngGim')){$('#rngGim').value=T.gim;$('#vGim').textContent=T.gim.toFixed(0)+'°';}
+  if(document.activeElement!==$('#rngZoom')){$('#rngZoom').value=T.zoom;$('#vZoom').textContent=T.zoom.toFixed(1)+'x';}
+  $$('[data-act]').forEach(b=>{if(b.classList.contains('hold'))b.style.setProperty('--p',holdAct===b.dataset.act?holdProg:0);});
+  if($('#p-pad').classList.contains('on'))updatePadLive();
+  if(link&&link.kind==='ws'&&!T.link&&$('#lkInfo').textContent.startsWith('Conectado'))$('#lkInfo').textContent='Sin telemetría…';
+}
+setInterval(refreshUI,200);
+
+/* =====================================================================
+   Cámara: UI
+===================================================================== */
+const selSh=$('[data-cam=shutter]');selSh.innerHTML=SHUTTERS.map(s=>`<option>${s}</option>`).join('');
+function refreshCamUI(){
+  $$('[data-cam]').forEach(e=>{const k=e.dataset.cam;if(CAM[k]!=null&&document.activeElement!==e)e.value=CAM[k];});
+  $('#selFps').innerHTML=FPS[CAM.res].map(f=>`<option>${f}</option>`).join('');$('#selFps').value=CAM.fps;
+  $('#rBurst').style.display=CAM.photoMode==='burst'?'flex':'none';$('#rAeb').style.display=CAM.photoMode==='aeb'?'flex':'none';$('#rTimer').style.display=CAM.photoMode==='timer'?'flex':'none';
+  $('#rIso').style.display=$('#rShut').style.display=CAM.exp==='manual'?'flex':'none';$('#rWbk').style.display=CAM.wb==='manual'?'flex':'none';
+  $('#rngEv').value=CAM.ev;$('#vEv').textContent=(CAM.ev>0?'+':'')+CAM.ev.toFixed(1);$('#vWbk').textContent=CAM.wbK+'K';
+  $('#rngZoom').max=ZMAX[CAM.res];
+  $('#vGs').textContent=SET.gimbalSpeed;
+}
+function camSet(k,v){
+  if(['burstN','aebN','timerS','fps','wbK'].includes(k))v=+v;
+  if(['ev'].includes(k))v=+v;
+  CAM[k]=v;
+  if(k==='res'){if(!FPS[v].includes(+CAM.fps))CAM.fps=30;T.zoom=Math.min(T.zoom,ZMAX[v]);}
+  if(k==='mode'&&v==='photo'&&T.rec){CAM.mode='video';toast('Para el vídeo antes de cambiar a foto');}
+  saveCam();refreshCamUI();
+  const args={[k]:CAM[k]};if(k==='res')args.fps=CAM.fps;cmd('camera_set',args);
+}
+$$('[data-cam]').forEach(e=>e.addEventListener('change',()=>camSet(e.dataset.cam,e.value)));
+$('[data-cam=wbK]').addEventListener('input',e=>{CAM.wbK=+e.target.value;$('#vWbk').textContent=CAM.wbK+'K';});
+$('#rngEv').addEventListener('input',e=>camSet('ev',e.target.value));
+$('#rngZoom').addEventListener('input',e=>{const z=+e.target.value;$('#vZoom').textContent=z.toFixed(1)+'x';cmd('zoom_set',{zoom:z});});
+$('#rngGim').addEventListener('input',e=>cmd('gimbal_angle',{angle:+e.target.value}));
+$$('[data-gim]').forEach(b=>b.onclick=()=>cmd('gimbal_angle',{angle:+b.dataset.gim}));
+$$('#segCamMode button').forEach(b=>b.onclick=()=>camSet('mode',b.dataset.cm));
+$('#bShutter').onclick=()=>CAM.mode==='video'?toggleRecord():takePhoto();
+$('#bRec').onclick=toggleRecord;
+
+/* =====================================================================
+   Misiones
+===================================================================== */
+const qsArgs=t=>({type:t,distance:+$('#qsDist').value,radius:+$('#qsDist').value,height:+$('#qsH').value});
+$$('[data-qs]').forEach(b=>b.onclick=()=>cmd('quickshot',qsArgs(b.dataset.qs)));
+$('#qsStop').onclick=()=>cmd('shot_stop');
+$('#hlGo').onclick=()=>cmd('hyperlapse',{type:$('#hlType').value,interval:+$('#hlInt').value,dur:+$('#hlDur').value});
+$$('[data-pano]').forEach(b=>b.onclick=()=>cmd('panorama',{type:b.dataset.pano}));
+
+function wpInfo(){const W=MISSION.wps;if(!W.length){$('#mpInfo').textContent='Sin puntos.';return;}
+  let d=0,t=0;for(let i=1;i<W.length;i++){const l=Math.hypot(W[i].x-W[i-1].x,W[i].y-W[i-1].y);d+=l;t+=l/(W[i].speed||5)+(W[i].hold||0);}
+  $('#mpInfo').textContent=`${W.length} puntos · ${fmtLen(d)} · ≈ ${mmss(t)}`;}
+function renderWps(){
+  const W=MISSION.wps;$('#wpList').innerHTML=W.map((p,i)=>`<div class="padcard" style="${selWp===i?'border-color:var(--acc)':''}"><div class="row"><b>#${i+1}</b>
+    <span class="note">${fmtLen(p.x)},${fmtLen(p.y)}</span><button class="btn sm" data-wdel="${i}" style="margin-left:auto">✕</button></div>
+    <div class="grid2"><div class="row"><label>Alt.</label><input type="number" data-wf="alt" data-i="${i}" value="${p.alt}" min="2" max="500"></div>
+    <div class="row"><label>m/s</label><input type="number" data-wf="speed" data-i="${i}" value="${p.speed}" min="1" max="16"></div>
+    <div class="row"><label>Espera</label><input type="number" data-wf="hold" data-i="${i}" value="${p.hold}" min="0" max="120"></div>
+    <div class="row"><label>Gimbal</label><input type="number" data-wf="gim" data-i="${i}" value="${p.gim}" min="-90" max="20"></div></div>
+    <div class="row"><label>Acción</label><select data-wf="action" data-i="${i}">${[['none','Ninguna'],['photo','Hacer foto'],['rec_start','Iniciar grabación'],['rec_stop','Parar grabación']].map(o=>`<option value="${o[0]}"${p.action===o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></div></div>`).join('');
+  $$('[data-wf]').forEach(e=>e.onchange=()=>{const i=+e.dataset.i,k=e.dataset.wf;MISSION.wps[i][k]=(k==='action')?e.value:+e.value;saveWps();wpInfo();});
+  $$('[data-wdel]').forEach(b=>b.onclick=()=>{MISSION.wps.splice(+b.dataset.wdel,1);selWp=-1;saveWps();renderWps();});
+  wpInfo();
+}
+function addWp(x,y){MISSION.wps.push({x:Math.round(x),y:Math.round(y),alt:Math.max(10,Math.round(T.alt)||30),speed:5,hold:0,gim:Math.round(T.gim)||-20,action:'none'});saveWps();renderWps();}
+$('#mpAddHere').onclick=()=>addWp(T.x,T.y);
+$('#mpCenter').onclick=()=>{MV.follow=true;};
+$('#mpPlan').onclick=e=>{planMode=!planMode;e.currentTarget.classList.toggle('on',planMode);};
+$('#mpClear').onclick=()=>{if(confirm('¿Borrar todos los puntos?')){MISSION.wps=[];selWp=-1;saveWps();renderWps();}};
+$('#mpFinish').onchange=e=>MISSION.finish=e.target.value;
+$('#mpStart').onclick=()=>{
+  const W=MISSION.wps;if(W.length<2){toast('Añade al menos 2 puntos');return;}
+  for(const p of W){if(p.alt>SET.maxAlt){log('Un punto supera la altura máxima ('+SET.maxAlt+' m)','warn');return;}if(Math.hypot(p.x-T.homeX,p.y-T.homeY)>SET.maxDist){log('Un punto supera la distancia máxima','warn');return;}}
+  const out=W.map(p=>Object.assign({},p,xy2ll(p.x,p.y)));
+  cmd('mission_upload',{wps:out,finish:MISSION.finish});cmd('mission_start',{wps:out,finish:MISSION.finish});};
+$('#mpPause').onclick=e=>{const b=e.currentTarget;if(b.dataset.p==='1'){cmd('mission_resume');b.dataset.p='0';b.textContent='⏸ Pausar';}else{cmd('mission_pause');b.dataset.p='1';b.textContent='▶ Reanudar';}};
+$('#mpStop').onclick=()=>cmd('mission_stop');
+$('#mpExport').onclick=()=>download('mision.json',JSON.stringify(MISSION,null,1),'application/json');
+$('#mpImport').onclick=()=>pickFile(txt=>{try{const m=JSON.parse(txt);MISSION.wps=m.wps||[];MISSION.finish=m.finish||'hover';saveWps();renderWps();$('#mpFinish').value=MISSION.finish;}catch(e){toast('Archivo no válido');}});
+// interacción mapa grande
+(()=>{const c=$('#mapBig');let drag=null,moved=false;
+  const pos=e=>{const r=c.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+  const w2={x:px=>MV.cx+(px-c.getBoundingClientRect().width/2)/MV.s,y:py=>MV.cy-(py-c.getBoundingClientRect().height/2)/MV.s};
+  c.addEventListener('pointerdown',e=>{const [px,py]=pos(e),r=c.getBoundingClientRect();c.setPointerCapture(e.pointerId);moved=false;
+    let hit=-1;MISSION.wps.forEach((p,i)=>{const sx=r.width/2+(p.x-MV.cx)*MV.s,sy=r.height/2-(p.y-MV.cy)*MV.s;if(Math.hypot(sx-px,sy-py)<14)hit=i;});
+    if(hit>=0){selWp=hit;drag={wp:hit};renderWps();}else drag={px,py,cx:MV.cx,cy:MV.cy};});
+  c.addEventListener('pointermove',e=>{if(!drag)return;const [px,py]=pos(e);
+    if(drag.wp!=null){const p=MISSION.wps[drag.wp];p.x=Math.round(w2.x(px));p.y=Math.round(w2.y(py));moved=true;}
+    else{if(Math.hypot(px-drag.px,py-drag.py)>4){moved=true;MV.follow=false;}MV.cx=drag.cx-(px-drag.px)/MV.s;MV.cy=drag.cy+(py-drag.py)/MV.s;}});
+  c.addEventListener('pointerup',e=>{if(drag&&drag.wp!=null){saveWps();renderWps();}else if(drag&&!moved&&planMode){const [px,py]=pos(e);addWp(w2.x(px),w2.y(py));}drag=null;});
+  c.addEventListener('wheel',e=>{e.preventDefault();MV.s=clamp(MV.s*(e.deltaY<0?1.2:1/1.2),.05,40);},{passive:false});
+})();
+
+/* =====================================================================
+   Lista de verificación
+===================================================================== */
+const CHECKS=['Hélices en buen estado y bien fijadas; brazos desplegados','Batería del dron y del mando cargadas (≥ 60 %)','Tarjeta microSD insertada con espacio libre','Protector del gimbal retirado','Sin avisos de brújula/IMU; sensores limpios','GPS ≥ 10 satélites y punto de origen registrado','Zona despejada: sin personas, vehículos ni obstáculos','Viento por debajo de 8 m/s, sin lluvia ni niebla','Línea de vista, altura ≤ 120 m y zona permitida (normativa local)','Altura de RTH superior a los obstáculos cercanos'];
+function renderChecks(){const c=store.get('chk',{});$('#chkList').innerHTML=CHECKS.map((t,i)=>`<label class="chk"><input type="checkbox" data-ci="${i}"${c[i]?' checked':''}><span>${t}</span></label>`).join('')+'<button class="btn sm" id="chkClr" style="margin-top:6px">Reiniciar lista</button>';
+  $$('[data-ci]').forEach(e=>e.onchange=()=>{const c=store.get('chk',{});c[e.dataset.ci]=e.checked;store.set('chk',c);});
+  $('#chkClr').onclick=()=>{store.set('chk',{});renderChecks();};}
+
+/* =====================================================================
+   Exportaciones y utilidades de archivos
+===================================================================== */
+function download(name,text,type='text/plain'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+function pickFile(cb){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=()=>{const f=i.files[0];if(f)f.text().then(cb);};i.click();}
+$('#exTxt').onclick=()=>download('registro-vuelo.txt',LOG.map(e=>new Date(e.t).toISOString()+' ['+e.lvl+'] '+e.msg).join('\n'));
+$('#exCsv').onclick=()=>{const k=['t','lat','lon','x','y','alt','hs','vz','yaw','gim','bat','volt','sats','rc','state'];download('telemetria.csv',k.join(',')+'\n'+FLIGHT.samples.map(s=>k.map(c=>c==='t'?new Date(s.t).toISOString():typeof s[c]==='number'?+s[c].toFixed(c==='lat'||c==='lon'?7:2):s[c]).join(',')).join('\n'),'text/csv');};
+$('#exGpx').onclick=()=>{if(!FLIGHT.samples.length){toast('Sin datos de vuelo');return;}download('vuelo.gpx','<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Mini2Control" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>Vuelo</name><trkseg>\n'+FLIGHT.samples.map(s=>`<trkpt lat="${s.lat.toFixed(7)}" lon="${s.lon.toFixed(7)}"><ele>${s.alt.toFixed(1)}</ele><time>${new Date(s.t).toISOString()}</time></trkpt>`).join('\n')+'\n</trkseg></trk></gpx>','application/gpx+xml');};
+$('#exClr').onclick=()=>{LOG.length=0;$('#log').innerHTML='';FLIGHT.samples.length=0;TRAIL.length=0;Object.assign(FLIGHT,{maxAlt:0,maxDist:0,maxSpd:0,dist:0});};
+$('#pfExport').onclick=()=>download('perfiles-mandos.json',JSON.stringify({profiles:PROFILES,kb:KB},null,1),'application/json');
+$('#pfImport').onclick=()=>pickFile(txt=>{try{const o=JSON.parse(txt);if(o.profiles)PROFILES=o.profiles;if(o.kb)KB=Object.assign(clone(KB_DEFAULT),o.kb);saveProfiles();saveKb();renderPads();toast('Perfiles importados');}catch(e){toast('Archivo no válido');}});
+$('#pfReset').onclick=()=>{if(!confirm('¿Restablecer todos los perfiles de mandos y el teclado?'))return;PROFILES={};KB=clone(KB_DEFAULT);saveProfiles();saveKb();renderPads();};
+
+/* =====================================================================
+   Cableado general de la interfaz
+===================================================================== */
+// pestañas
+$$('#tabs button').forEach(b=>b.onclick=()=>{$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));$$('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.tab));store.set('tab',b.dataset.tab);if(b.dataset.tab==='pad')renderPads();if(b.dataset.tab==='mis')renderWps();resize();});
+(()=>{const t=store.get('tab','fly');const b=$(`#tabs button[data-tab=${t}]`);if(b)b.click();})();
+// ajustes genéricos
+const SENT=new Set(['rthAlt','maxAlt','maxDist','beginner','vision','smartRth','lowBat','critBat','failsafe']);
+$$('[data-set]').forEach(e=>{const k=e.dataset.set;
+  if(e.type==='checkbox')e.checked=!!SET[k];else e.value=SET[k];
+  e.addEventListener('change',()=>{SET[k]=e.type==='checkbox'?e.checked:(e.type==='number'||e.type==='range')?+e.value:e.value;saveSet();
+    if(e.hasAttribute('data-send')||SENT.has(k))cmd('settings_set',{key:k,value:SET[k]});
+    if(k==='touch')refreshTouch();if(k==='holdMul')$('#vHold').textContent=SET.holdMul.toFixed(1)+'x';if(k==='gimbalSpeed')$('#vGs').textContent=SET.gimbalSpeed;if(k==='vidKind'){applyVideo();}});
+  if(e.type==='range')e.addEventListener('input',()=>{SET[k]=+e.value;if(k==='holdMul')$('#vHold').textContent=SET.holdMul.toFixed(1)+'x';if(k==='gimbalSpeed')$('#vGs').textContent=SET.gimbalSpeed;saveSet();});
+});
+$('#vHold').textContent=SET.holdMul.toFixed(1)+'x';
+$$('#segMode button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+$('#bHome').onclick=()=>cmd('set_home');
+$('#bConfLand').onclick=()=>cmd('confirm_landing');
+$$('[data-cal]').forEach(b=>b.onclick=()=>cmd('calibrate',{what:b.dataset.cal}));
+$('#qsStop').title='Detiene QuickShot, Hyperlapse o panorama en curso';
+// enlace
+$$('#segLink button').forEach(b=>b.onclick=()=>setLink(b.dataset.l,b.dataset.l==='sim'));
+$('#lkConnect').onclick=async()=>{if(SET.linkKind==='ws'){SET.wsUrl=$('[data-set=wsUrl]').value.trim();saveSet();await setLink('ws',true);}else await setLink('sim',true);};
+$('#lkDisc').onclick=()=>{if(link)link.disconnect();log('Desconectado');};
+// vídeo
+$('#vidApply').onclick=()=>{SET.vidUrl=$('[data-set=vidUrl]').value;saveSet();applyVideo();};
+$('#vidRefresh').onclick=listDevices;
+// simulador
+$('#sLoss').onclick=()=>{if(link&&link.kind==='sim'){link.sigLoss=8;log('Simulando pérdida de señal (8 s)','warn');}};
+$('#sBat').onclick=()=>{if(link&&link.kind==='sim'){T.bat=22;link.lowWarned=link.critWarned=false;}};
+$('#sReset').onclick=()=>{if(link&&link.kind==='sim'){link.connect();TRAIL.length=0;}};
+$('#sGps').onclick=()=>{if(link&&link.kind==='sim'){link.noGps=!link.noGps;log(link.noGps?'GPS desactivado (simulado)':'GPS recuperado','warn');}};
+// bloqueo y pantalla completa
+$('#btnLock').onclick=e=>{controlsLocked=!controlsLocked;e.currentTarget.classList.toggle('on',controlsLocked);e.currentTarget.textContent=controlsLocked?'🔒 Mandos':'🔓 Mandos';};
+$('#btnFs').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();};
+
+/* =====================================================================
+   Arranque
+===================================================================== */
+refreshTouch();refreshCamUI();renderChecks();renderWps();renderPads();$('#mpFinish').value=MISSION.finish;
+$$('#segLink button').forEach(b=>b.classList.toggle('on',b.dataset.l===SET.linkKind));
+setLink(BRIDGE?'ws':'sim',true);
+applyVideo();
+requestAnimationFrame(frame);
+setInterval(()=>{if(navigator.getGamepads){const n=[...navigator.getGamepads()].filter(Boolean).length;if(n!==+$('#chPad').textContent.replace(/\D/g,''))renderPads();}},1000);
+log('App lista. Modo simulador: mantén pulsado «Despegar» (o botón Start del mando / tecla T).');
+</script>
+</body>
+</html>

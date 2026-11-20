@@ -123,6 +123,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px 4px;b
     <button class="btn" data-act="brake">✋ Freno / Pausa<small>detiene y mantiene posición</small></button>
   </div>
   <button class="btn hold danger wide" data-act="emergency">⛔ Parada de emergencia (corta motores)<small>mantén 1,5 s · el dron caerá</small></button>
+  <button class="btn sm wide" id="bConfLand">✅ Confirmar aterrizaje (si el dron lo pide)</button>
   <h4>Modo de vuelo</h4>
   <div class="seg" id="segMode"><button data-m="C">Cine · 6 m/s</button><button data-m="N">Normal · 10 m/s</button><button data-m="S">Sport · 16 m/s</button></div>
   <h4>Telemetría</h4>
@@ -274,6 +275,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:4px 4px;b
     <tr><td>camera_set</td><td>Camera.setISO / setShutterSpeed / setExposureCompensation / setWhiteBalance / setVideoResolutionAndFrameRate / setDigitalZoomFactor…</td></tr>
     <tr><td>mission_*</td><td>WaypointMissionOperator (upload, start, pause, resume, stop)</td></tr>
     <tr><td>emergency</td><td>turnOffMotors() (solo en emergencia real)</td></tr></table>
+    <p class="note">En la carpeta <code>android-bridge/</code> del proyecto hay un puente base listo para compilar (DJI Mobile SDK V4): abre esta misma interfaz dentro del celular y reenvía vídeo, telemetría y comandos.</p>
     <p class="note">Las funciones de QuickShot, Hyperlapse y Panorama no tienen API pública en el SDK: el puente debe emularlas con sticks/waypoints o devolver <code>ack ok:false</code>. <b>El puente es responsabilidad tuya</b>: debe aplicar un failsafe si deja de recibir <code>sticks</code> durante ~500 ms.</p>
   </details>
   <details><summary>Protocolo WebSocket (JSON)</summary>
@@ -360,6 +362,9 @@ const SET=Object.assign({units:'m',spd:'ms',rthAlt:50,maxAlt:120,maxDist:500,beg
   autoReconnect:true,wsUrl:'ws://192.168.1.50:8765',linkKind:'sim',vidKind:'sim',vidUrl:''},store.get('set',{}));
 const saveSet=()=>store.set('set',SET);
 if(['capture','screen'].includes(SET.vidKind))SET.vidKind='sim';SET.linkKind='sim'; // requieren gesto del usuario
+// Modo puente: la app Android del puente sirve este HTML en http://127.0.0.1:8080/?bridge=1
+const BRIDGE=/[?&]bridge\b/.test(location.search)&&/^https?:$/.test(location.protocol);
+if(BRIDGE){SET.wsUrl='ws://'+location.hostname+':8765';SET.vidKind='ws';}
 
 const CAM=Object.assign({mode:'photo',photoMode:'single',burstN:3,aebN:3,timerS:5,fmt:'JPG',res:'4K',fps:30,exp:'auto',iso:'100',shutter:'1/100',
   ev:0,wb:'auto',wbK:5600,color:'normal',flicker:'auto',grid:'off'},store.get('cam',{}));
@@ -1255,6 +1260,7 @@ $$('[data-set]').forEach(e=>{const k=e.dataset.set;
 $('#vHold').textContent=SET.holdMul.toFixed(1)+'x';
 $$('#segMode button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
 $('#bHome').onclick=()=>cmd('set_home');
+$('#bConfLand').onclick=()=>cmd('confirm_landing');
 $$('[data-cal]').forEach(b=>b.onclick=()=>cmd('calibrate',{what:b.dataset.cal}));
 $('#qsStop').title='Detiene QuickShot, Hyperlapse o panorama en curso';
 // enlace
@@ -1278,7 +1284,7 @@ $('#btnFs').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen()
 ===================================================================== */
 refreshTouch();refreshCamUI();renderChecks();renderWps();renderPads();$('#mpFinish').value=MISSION.finish;
 $$('#segLink button').forEach(b=>b.classList.toggle('on',b.dataset.l===SET.linkKind));
-setLink('sim',true);
+setLink(BRIDGE?'ws':'sim',true);
 applyVideo();
 requestAnimationFrame(frame);
 setInterval(()=>{if(navigator.getGamepads){const n=[...navigator.getGamepads()].filter(Boolean).length;if(n!==+$('#chPad').textContent.replace(/\D/g,''))renderPads();}},1000);

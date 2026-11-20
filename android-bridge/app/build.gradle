@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.mini2.bridge'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.mini2.bridge"   // debe coincidir con el package name registrado en developer.dji.com
+        minSdk 24
+        targetSdk 30                       // el SDK V4 no está pensado para targets recientes
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions { jvmTarget = '1.8' }
+
+    packagingOptions {
+        // El SDK de DJI incluye librerías nativas duplicadas
+        jniLibs { useLegacyPackaging = true }
+        resources.excludes += ['META-INF/rxjava.properties', 'META-INF/DEPENDENCIES', 'META-INF/LICENSE*', 'META-INF/NOTICE*']
+    }
+}
+
+dependencies {
+    implementation('com.dji:dji-sdk:4.16.4', {
+        exclude module: 'library-anti-distortion'
+        exclude module: 'fly-safe-database'
+    })
+    compileOnly 'com.dji:dji-sdk-provided:4.16.4'
+
+    implementation 'org.java-websocket:Java-WebSocket:1.5.3'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+}
+
+// Copia la interfaz web (../../dji-mini2-control.html) a los assets de la app en cada compilación.
+tasks.register('copyWebUi', Copy) {
+    def src = file("$rootDir/../dji-mini2-control.html")
+    onlyIf { src.exists() }
+    from(src) { rename { 'index.html' } }
+    into "$projectDir/src/main/assets"
+}
+preBuild.dependsOn copyWebUi
