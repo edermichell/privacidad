@@ -1,0 +1,50 @@
+# Genera Mini2Bridge.xcodeproj con:  xcodegen generate   (https://github.com/yonaskolb/XcodeGen)
+name: Mini2Bridge
+options:
+  bundleIdPrefix: com.mini2
+  deploymentTarget:
+    iOS: "13.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    ENABLE_BITCODE: NO
+    TARGETED_DEVICE_FAMILY: "1,2"
+    SWIFT_OBJC_BRIDGING_HEADER: Mini2Bridge/Mini2Bridge-Bridging-Header.h
+targets:
+  Mini2Bridge:
+    type: application
+    platform: iOS
+    sources:
+      - path: Mini2Bridge
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mini2.bridge   # debe coincidir con el registrado en developer.dji.com
+        INFOPLIST_FILE: Mini2Bridge/Info.plist
+    info:
+      path: Mini2Bridge/Info.plist
+      properties:
+        CFBundleDisplayName: Mini 2 Bridge
+        DJISDKAppKey: PON_AQUI_TU_APP_KEY
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIBackgroundModes: [external-accessory]
+        UISupportedExternalAccessoryProtocols:
+          - com.dji.video
+          - com.dji.protocol
+          - com.dji.common
+          - com.dji.logiclink
+          - com.dji.logiclink.protocol
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSAllowsArbitraryLoadsInWebContent: true
+        NSLocationWhenInUseUsageDescription: Necesario para el GPS del dron y el punto de origen
+        NSBluetoothAlwaysUsageDescription: Necesario para conectar con el dron
+        NSBluetoothPeripheralUsageDescription: Necesario para conectar con el dron
+    preBuildScripts:
+      - name: Copiar interfaz web
+        script: |
+          SRC="${SRCROOT}/../dji-mini2-control.html"
+          if [ -f "$SRC" ]; then cp "$SRC" "${SRCROOT}/Mini2Bridge/index.html"; fi

@@ -363,8 +363,8 @@ const SET=Object.assign({units:'m',spd:'ms',rthAlt:50,maxAlt:120,maxDist:500,beg
 const saveSet=()=>store.set('set',SET);
 if(['capture','screen'].includes(SET.vidKind))SET.vidKind='sim';SET.linkKind='sim'; // requieren gesto del usuario
 // Modo puente: la app Android del puente sirve este HTML en http://127.0.0.1:8080/?bridge=1
-const BRIDGE=/[?&]bridge\b/.test(location.search)&&/^https?:$/.test(location.protocol);
-if(BRIDGE){SET.wsUrl='ws://'+location.hostname+':8765';SET.vidKind='ws';}
+const BRIDGE=!!window.__BRIDGE__||(/[?&]bridge\b/.test(location.search)&&/^https?:$/.test(location.protocol));
+if(BRIDGE){SET.wsUrl='ws://'+(location.hostname||'127.0.0.1')+':8765';SET.vidKind='ws';}
 
 const CAM=Object.assign({mode:'photo',photoMode:'single',burstN:3,aebN:3,timerS:5,fmt:'JPG',res:'4K',fps:30,exp:'auto',iso:'100',shutter:'1/100',
   ev:0,wb:'auto',wbK:5600,color:'normal',flicker:'auto',grid:'off'},store.get('cam',{}));

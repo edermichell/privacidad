@@ -1,0 +1,7 @@
+platform :ios, '13.0'
+use_frameworks!
+
+target 'Mini2Bridge' do
+  pod 'DJI-SDK-iOS', '~> 4.16'   # Mobile SDK V4
+  pod 'DJIWidget', '~> 1.6.4'    # decodificador de vídeo (DJIVideoPreviewer)
+end
