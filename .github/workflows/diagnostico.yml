@@ -1,5 +1,8 @@
 name: Diagnóstico runners
-on: workflow_dispatch
+on:
+  push:
+    paths: [".github/workflows/diagnostico.yml"]
+  workflow_dispatch:
 jobs:
   linux:
     runs-on: ubuntu-latest
