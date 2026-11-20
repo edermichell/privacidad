@@ -244,7 +244,10 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
         case "emergency": fc?.turnOffMotors(completion: done)
         case "brake": sendStick(0, 0, 0, 0); ack(c, id, nil)
         case "set_mode": q.async { self.mode = a["mode"] as? String ?? "N" }; ack(c, id, nil)
-        case "set_home": fail(c, id, "TODO set_home (revisar firma en las cabeceras)")
+        case "set_home":
+            // Usa la posición actual del dron como nuevo punto de origen
+            if let loc = q.sync(execute: { self.fcs?.aircraftLocation }) { fc?.setHomeLocation(loc, withCompletion: done) }
+            else { fail(c, id, "Sin posición GPS para fijar el origen") }
         case "calibrate":
             if (a["what"] as? String) == "compass" { fc?.compass?.startCalibration(completion: done) }
             else { fail(c, id, "Solo se implementa la calibración de brújula (hazla desde DJI Fly)") }
@@ -280,7 +283,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
             case "failsafe":
                 let b: DJIConnectionFailSafeBehavior = (v as? String) == "land" ? .landing : (v as? String) == "hover" ? .hover : .goHome
                 fc?.setConnectionFailSafeBehavior(b, withCompletion: done)
-            case "vision": fail(c, id, "TODO vision (revisar firma en las cabeceras)")
+            case "vision": fc?.setVisionAssistedPositioningEnabled((v as? Bool) ?? true, withCompletion: done)
             default: ack(c, id, nil)    // ajustes solo de la interfaz (avisos de batería, etc.)
             }
 
