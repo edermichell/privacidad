@@ -60,14 +60,15 @@ jobs:
             build 2>&1 | tee xcodebuild.log
 
       - name: Resumen de errores y cabeceras del SDK
-        if: failure()
+        if: always()
         run: |
           echo "=== ERRORES ==="
           grep -E "error:" xcodebuild.log | sed 's#/Users/runner/work/privacidad/privacidad/##' | sort -u || true
           H=Pods/DJI-SDK-iOS/iOS_Mobile_SDK/DJISDK.framework/Headers
           echo "=== CABECERAS ==="
           grep -rn -B1 -A2 "setHomeLocationUsingAircraftCurrentLocation" $H | head -20 || true
-          grep -rn "PositioningEnabled" $H | head -10 || true
+          grep -rn "PositioningEnabled\|VisionAssisted" $H | head -10 || true
+          grep -n "getHome\|HomeLocation" $H/DJIFlightController.h | head -10 || true
           grep -rn "addVideoFeedListener\|add:(id<DJIVideoFeedListener>\|- (void)add" $H/DJIVideoFeed.h | head -5 || true
 
       - name: Empaquetar IPA sin firmar
