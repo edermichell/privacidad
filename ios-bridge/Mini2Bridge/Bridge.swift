@@ -133,7 +133,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
     // MARK: - Delegados del SDK
     func flightController(_ fc: DJIFlightController, didUpdate state: DJIFlightControllerState) { q.async { self.fcs = state } }
     func battery(_ battery: DJIBattery, didUpdate state: DJIBatteryState) {
-        q.async { self.bat = state.chargeRemainingInPercent; self.volt = Double(state.voltage) / 1000.0; self.temp = Int(state.temperature) }
+        q.async { self.bat = Int(state.chargeRemainingInPercent); self.volt = Double(state.voltage) / 1000.0; self.temp = Int(state.temperature) }
     }
     func gimbal(_ gimbal: DJIGimbal, didUpdate state: DJIGimbalState) { q.async { self.gimPitch = state.attitudeInDegrees.pitch } }
     func camera(_ camera: DJICamera, didUpdate systemState: DJICameraSystemState) {
@@ -215,7 +215,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
 
     private func rotateGimbal(_ angle: Float) {
         DispatchQueue.main.async {
-            let r = DJIGimbalRotation(pitchValue: NSNumber(value: angle), rollValue: nil, yawValue: nil, time: 0.4, mode: .absoluteAngle)
+            let r = DJIGimbalRotation(pitchValue: NSNumber(value: angle), rollValue: nil, yawValue: nil, time: 0.4, mode: .absoluteAngle, ignore: false)
             self.aircraft?.gimbal?.rotate(with: r, completion: nil)
         }
     }
@@ -244,7 +244,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
         case "emergency": fc?.turnOffMotors(completion: done)
         case "brake": sendStick(0, 0, 0, 0); ack(c, id, nil)
         case "set_mode": q.async { self.mode = a["mode"] as? String ?? "N" }; ack(c, id, nil)
-        case "set_home": fc?.setHomeLocationUsingAircraftCurrentLocation(completion: done)
+        case "set_home": fail(c, id, "TODO set_home (revisar firma en las cabeceras)")
         case "calibrate":
             if (a["what"] as? String) == "compass" { fc?.compass?.startCalibration(completion: done) }
             else { fail(c, id, "Solo se implementa la calibración de brújula (hazla desde DJI Fly)") }
@@ -280,7 +280,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
             case "failsafe":
                 let b: DJIConnectionFailSafeBehavior = (v as? String) == "land" ? .landing : (v as? String) == "hover" ? .hover : .goHome
                 fc?.setConnectionFailSafeBehavior(b, withCompletion: done)
-            case "vision": fc?.flightAssistant?.setVisionAssistedPositioningEnabled((v as? Bool) ?? true, withCompletion: done)
+            case "vision": fail(c, id, "TODO vision (revisar firma en las cabeceras)")
             default: ack(c, id, nil)    // ajustes solo de la interfaz (avisos de batería, etc.)
             }
 
@@ -311,8 +311,9 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
            loc.coordinate.latitude != 0 || loc.coordinate.longitude != 0 {
             let lat = loc.coordinate.latitude, lon = loc.coordinate.longitude
             if firstLat.isNaN { firstLat = lat; firstLon = lon }
-            let hl = s.isHomeLocationSet ? s.homeLocation.latitude : firstLat
-            let ho = s.isHomeLocationSet ? s.homeLocation.longitude : firstLon
+            let home = s.isHomeLocationSet ? s.homeLocation?.coordinate : nil
+            let hl = home?.latitude ?? firstLat
+            let ho = home?.longitude ?? firstLon
             o["lat"] = lat; o["lon"] = lon; o["homeLat"] = hl; o["homeLon"] = ho
             o["x"] = (lon - ho) * 111_320.0 * cos(hl * .pi / 180)
             o["y"] = (lat - hl) * 111_320.0
@@ -341,7 +342,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
     // MARK: - Vídeo (H.264 -> DJIVideoPreviewer -> snapshot JPEG)
     private func startVideo() {
         if feedStarted { return }
-        guard let feed = DJIVideoFeeder.sharedInstance()?.primaryVideoFeed else { return }
+        guard let feed = DJISDKManager.videoFeeder()?.primaryVideoFeed else { return }
         // Si no aparece imagen, copia del ejemplo FPVDemo de DJI la llamada
         // DJIVideoPreviewer.instance()?.setDecoderWithProduct(...) adecuada a tu versión.
         DJIVideoPreviewer.instance()?.setView(previewView)
@@ -353,7 +354,7 @@ final class Bridge: NSObject, DJIFlightControllerDelegate, DJIBatteryDelegate, D
 
     private func stopVideo() {
         snapTimer?.invalidate(); snapTimer = nil
-        DJIVideoFeeder.sharedInstance()?.primaryVideoFeed.remove(self)
+        DJISDKManager.videoFeeder()?.primaryVideoFeed.remove(self)
         DJIVideoPreviewer.instance()?.unSetView()
         DJIVideoPreviewer.instance()?.close()
         feedStarted = false
