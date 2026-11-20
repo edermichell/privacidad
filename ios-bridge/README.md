@@ -8,10 +8,25 @@ Mini 2 ⇄ RC-N1 ⇄(cable Lightning/USB-C)⇄ iPhone ── app Mini 2 Bridge �
                                                      └─ WebSocket 127.0.0.1:8765 (comandos, telemetría, vídeo JPEG)
 ```
 
-> ⚠️ **Estado: sin compilar ni probar con un dron real** (necesita un Mac con Xcode). Está escrito contra
-> DJI Mobile SDK V4 para iOS (4.16.x) a partir de su API pública; es normal ajustar algún nombre/tipo al
-> compilar. La parte del vídeo (`DJIVideoPreviewer` + `snapshotPreview`) es la más delicada. Prueba
-> **sin hélices** primero y luego en espacio abierto con el RC-N1 en la mano.
+> ✅ **Estado:** el código **compila** con Xcode 16.4 contra DJI-SDK-iOS 4.16 en un servidor macOS de GitHub
+> (ver «Compilar en la nube»). ⚠️ **Nunca se ha probado con un dron real.** La parte del vídeo
+> (`DJIVideoPreviewer` + `snapshotPreview`) es la más delicada. Prueba **sin hélices** primero y luego en
+> espacio abierto con el RC-N1 en la mano.
+
+## Compilar en la nube (sin Mac)
+El flujo `.github/workflows/ios-build.yml` compila el proyecto en un servidor macOS de GitHub Actions
+(`macos-15`; las etiquetas `macos-13/14` ya no existen) y deja un **IPA sin firmar**:
+
+1. Sube cambios a la rama o lanza el flujo a mano (*Actions → Compilar iOS → Run workflow*).
+2. Cuando termine, abre la ejecución y descarga el artefacto **`Mini2Bridge-unsigned-ipa`** (zip con el `.ipa`).
+   Si falla, el artefacto `xcodebuild-log` trae el registro completo.
+3. **Instálalo en tu iPhone** firmándolo con tu Apple ID: [Sideloadly](https://sideloadly.io) o AltStore
+   (Windows/macOS). Con cuenta gratuita caduca a los 7 días (hay que reinstalar).
+4. **App Key de DJI:** guarda tu clave como secreto del repositorio `DJI_APP_KEY`
+   (*Settings → Secrets and variables → Actions*). El flujo la inyecta en `project.yml`.
+   ⚠️ Queda dentro del IPA, y en un repositorio **público** cualquier usuario con sesión de GitHub puede
+   descargar los artefactos: si eso te importa, usa un repositorio privado. Sin secreto, la app compila pero
+   **no podrá registrar el SDK**.
 
 ## Requisitos
 - Mac con **Xcode 14+**, **CocoaPods** y **XcodeGen** (`brew install cocoapods xcodegen`).
