@@ -1,0 +1,83 @@
+name: Compilar iOS (Mini 2 Bridge)
+
+on:
+  push:
+    paths:
+      - 'ios-bridge/**'
+      - 'dji-mini2-control.html'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: ios-bridge
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versiones
+        run: |
+          xcodebuild -version
+          swift --version
+          pod --version || true
+
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+
+      - name: App Key de DJI (opcional, desde el secreto DJI_APP_KEY)
+        env:
+          DJI_APP_KEY: ${{ secrets.DJI_APP_KEY }}
+        run: |
+          if [ -n "$DJI_APP_KEY" ]; then
+            sed -i '' "s/PON_AQUI_TU_APP_KEY/${DJI_APP_KEY}/" project.yml
+            echo "App Key inyectada desde el secreto"
+          else
+            echo "Sin secreto DJI_APP_KEY: se compila con la clave de ejemplo (la app no registrará el SDK)"
+          fi
+
+      - name: Copiar interfaz web
+        run: cp ../dji-mini2-control.html Mini2Bridge/index.html
+
+      - name: Generar proyecto
+        run: xcodegen generate
+
+      - name: Instalar pods
+        run: pod install --repo-update
+
+      - name: Compilar (dispositivo, sin firmar)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace Mini2Bridge.xcworkspace \
+            -scheme Mini2Bridge \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee xcodebuild.log
+
+      - name: Empaquetar IPA sin firmar
+        run: |
+          APP="build/Build/Products/Release-iphoneos/Mini2Bridge.app"
+          rm -rf Payload Mini2Bridge-unsigned.ipa
+          mkdir Payload
+          cp -R "$APP" Payload/
+          zip -qry Mini2Bridge-unsigned.ipa Payload
+          ls -lh Mini2Bridge-unsigned.ipa
+
+      - name: Subir IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mini2Bridge-unsigned-ipa
+          path: ios-bridge/Mini2Bridge-unsigned.ipa
+
+      - name: Subir registro de compilación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: ios-bridge/xcodebuild.log
+          if-no-files-found: ignore
