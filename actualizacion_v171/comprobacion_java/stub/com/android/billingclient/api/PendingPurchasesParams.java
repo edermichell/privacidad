@@ -1,0 +1,1 @@
+package com.android.billingclient.api; public final class PendingPurchasesParams { public static Builder newBuilder() { return null; } public static final class Builder { public Builder enableOneTimeProducts() { return this; } public Builder enablePrepaidPlans() { return this; } public PendingPurchasesParams build() { return null; } } }

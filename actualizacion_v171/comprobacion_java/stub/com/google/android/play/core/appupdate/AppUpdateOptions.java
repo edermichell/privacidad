@@ -1,0 +1,1 @@
+package com.google.android.play.core.appupdate; public abstract class AppUpdateOptions { public static Builder newBuilder(int t) { return null; } public abstract static class Builder { public abstract AppUpdateOptions build(); } }

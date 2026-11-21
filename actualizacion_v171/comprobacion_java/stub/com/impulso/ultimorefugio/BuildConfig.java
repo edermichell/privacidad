@@ -1,0 +1,1 @@
+package com.impulso.ultimorefugio; public final class BuildConfig { public static final boolean DEBUG = false; public static final int VERSION_CODE = 162; public static final String VERSION_NAME = "17.1"; }

@@ -1,0 +1,1 @@
+package com.impulso.ultimorefugio; public final class R { public static final class string { public static final int ads_provider=1, play_license_key=2, privacy_url=3, unity_game_id=4, unity_interstitial=5, unity_rewarded=6, unity_test_mode=7, app_name=8; } }

@@ -21301,7 +21301,7 @@ netSendWorld = async function () {
         const n = NET.peers.filter(p => p.st === 'playing').length;
         if (chip && NET.on) { chip.textContent = n ? 'COOP ● ' + (n + 1) + ' jugadores' : (NET.peers.length ? 'SALA … conectando' : 'SALA ○ esperando · ' + NET.code); chip.className = n ? 'ok' : ''; }
         const hs = $('mpHostSt'); if (hs && (STATE === 'play' || STATE === 'dead') && n) hs.textContent = 'Conectados: ' + n + ' de ' + NET.max + ' compañeros.' + (n < NET.max ? ' Pueden entrar más con el mismo código.' : ' Sala llena.');
-      } else if (NET.role === 'guest' && NET.st === 'playing' && chip) chip.textContent = (NET.srv ? (NET.pvp ? 'SALA PVP' : 'SALA') : 'COOP') + ' ● ' + ((NET.srv ? 1 : 2) + NET.oth.size) + ' jugadores' + (NET.pvp && NET.ali && NET.ali.tr > 0 ? ' · TRAIDOR' : NET.pvp && NET.ali && NET.ali.n ? ' · ALIANZA ' + NET.ali.n : NET.pvp ? ' · ALIANZA (Y)' : '');
+      } else if (NET.role === 'guest' && NET.st === 'playing' && chip) chip.textContent = (NET.srv ? (NET.pvp ? 'SALA PVP' : 'SALA') : 'COOP') + ' ● ' + ((NET.srv ? 1 : 2) + NET.oth.size) + (((NET.srv ? 1 : 2) + NET.oth.size) === 1 ? ' jugador' : ' jugadores') + (NET.pvp && NET.ali && NET.ali.tr > 0 ? ' · TRAIDOR' : NET.pvp && NET.ali && NET.ali.n ? ' · ALIANZA ' + NET.ali.n : NET.pvp ? ' · ALIANZA (Y)' : '');
     } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   };
   /* invitado: los demás invitados llegan en la instantánea */
@@ -25114,6 +25114,10 @@ body #tut button,body #quest button{border-radius:999px}
 #spPanel .spn{font-size:16px;color:var(--dim);margin-top:8px;line-height:1.1}#spPanel .spn b{color:var(--bone);font-weight:normal}
 #spPanel .spa{margin-top:8px}#spPanel .spa[hidden]{display:none}#spPanel .spa .mbp small{display:block;font-family:var(--font);font-size:15px;letter-spacing:0;margin-top:2px;color:#2a1a04}
 @media (max-height:520px){#spPanel{padding:6px 8px}#spPanel .spl{max-height:30vh;gap:4px}#spPanel .spb{padding:5px 9px}#spPanel .sps{margin:1px 0 4px;font-size:15px}}
+</style>
+<style id="pr171">
+/* v17.1: la etiqueta de la sala no se pinta encima de la pantalla de muerte */
+body:has(#death:not([hidden])) #netchip{display:none}
 </style>
 <style id="pz170">
 /* v17.0: el menú de pausa cabe en cualquier pantalla: cabecera fija y botones deslizables */

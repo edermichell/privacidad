@@ -1,0 +1,1 @@
+package com.android.billingclient.api; public final class ProductDetails { public String getProductId() { return ""; } public OneTimePurchaseOfferDetails getOneTimePurchaseOfferDetails() { return null; } public static final class OneTimePurchaseOfferDetails { public String getFormattedPrice() { return ""; } } }

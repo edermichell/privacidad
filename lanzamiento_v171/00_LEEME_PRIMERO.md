@@ -1,5 +1,7 @@
 # Lanzamiento v17.1 «Zona Roja» — qué hay en esta carpeta
-1. `GUIA_SUBIR_v17.1.md` ← **empieza aquí: los 8 pasos para lanzar la 17.1** (compilar, probar, subir a Play, servidor).
+1. **`PASAR_A_PRODUCCION.md` ← empieza aquí si vas a publicar en producción** (decisiones antes de compilar, Play Console, lanzamiento por etapas, servidor).
+1b. `GUIA_SUBIR_v17.1.md` — los 8 pasos de siempre (compilar, probar, subir a Play, servidor).
+1c. `ficha_play/` — gráfico destacado, 7 capturas y textos de la ficha (español e inglés) para producción.
 2. `UltimoRefugio_AndroidStudio_v17.1.zip` — proyecto de la app (versionCode 162, «17.1»).
 3. `privacy.html` — política de privacidad (la de la 16.3; la 17.0 no la cambia: súbela solo si no subiste la de la 16.3).
 4. `NOVEDADES_PLAY_v17.1.txt` — texto de «novedades» (es + en).
@@ -28,3 +30,5 @@
 **v17.0 «Zona Roja»:** lo construido tiene **vida** y se **repara** con el martillo; **armario de herramientas** (nadie construye junto a tu base mientras tenga mantenimiento); **saco de dormir y camas** para **elegir dónde reaparecer**, con espera que crece con las muertes y **anuncio para volver ya** (monetización); **Zonas Rojas** (hospital, comisaría y depósito en cuarentena: gas, saqueadores armados, cajas militares); en la **sala PvP** las bases ya **no se protegen** al desconectarse. No cambia Java ni la política. Ver `actualizacion_v170/CAMBIOS_v17.0.md`. **Si todavía no subiste la 16.3, sube directamente la 17.0: incluye todo.**
 
 **v17.1:** pulido de la 17.0. **Nube de gas** visible en las Zonas Rojas (también desde fuera), el **filtro de la máscara antigás se gasta** dentro, **grietas** en lo construido dañado, polvo cuando atacan tu base, martillazos al reparar, **guardado un 34 % más pequeño** y menú de pausa deslizable. Sin cambios en Java, la política ni el servidor (solo `juego\index.html`). Ver `actualizacion_v171/CAMBIOS_v17.1.md`. **Sube directamente la 17.1.**
+
+**Preparación para producción (17.1, mismo versionCode 162):** la app se declara juego (Android 16 respeta la orientación horizontal en tabletas y plegables), la política de privacidad real queda por defecto, el Java compila contra Android 16, ficha nueva de Play (`ficha_play/`) y guía `PASAR_A_PRODUCCION.md`.
