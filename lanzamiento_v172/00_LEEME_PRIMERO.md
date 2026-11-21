@@ -1,5 +1,6 @@
 # Lanzamiento v17.2 «Zona Roja» — qué hay en esta carpeta
 1. **`PASAR_A_PRODUCCION.md` ← empieza aquí si vas a publicar en producción** (decisiones antes de compilar, Play Console, lanzamiento por etapas, servidor).
+1a. `RECUPERAR_LLAVE_FIRMA.md` — si olvidaste la contraseña de la llave `.jks` (se puede restablecer: no pierdes la app).
 1b. `GUIA_SUBIR_v17.2.md` — los 8 pasos de siempre (compilar, probar, subir a Play, servidor).
 1c. `ficha_play/` — gráfico destacado, 7 capturas y textos de la ficha (español e inglés) para producción.
 2. `UltimoRefugio_AndroidStudio_v17.2.zip` — proyecto de la app (versionCode 163, «17.2»).
