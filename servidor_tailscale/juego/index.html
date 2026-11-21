@@ -6902,13 +6902,14 @@ function npcMarkCamp(c) {
   if (c.disc) return; c.disc = 1; if (typeof musSting === 'function') musSting('discover'); LMCOL.camp = '#7dd36a'; LMCOL.bandit = '#e0503c';
   LANDMARKS.push({ x: c.x, y: c.y, n: c.kind === 'friend' ? 'Campamento' : 'Guarida bandida', k: c.kind === 'friend' ? 'camp' : 'bandit' }); if (typeof rebuildMap === 'function') { try { cityOK = false; } catch (e) { typeof dbgc === 'function' && dbgc(e); } }
 }
+var NPCLOD = { on: true };   /* v17.2: simulación por niveles de los civiles lejanos (las pruebas de igualdad entre versiones la apagan) */
 function updNpcs(dt) {
   if (!P || P.dead) return;
   NPCZ161.dirty = 1;   /* v16.1: se construye al primer uso */
   NFT -= dt; if (NEED_F && NFT <= 0) { if (!NFB || NFB.length !== W * H) NFB = new Uint16Array(W * H); NF = bfs(Math.floor(P.x), Math.floor(P.y), 40, NFB); if (NET.role === 'host' && NET.peers.length) netBuildNpcFields(); NFT = .4; } NEED_F = false;
   for (const n of NPCS) { if (n.st === 'dead') continue; const ax_ = Math.abs(n.x - P.x), ay_ = Math.abs(n.y - P.y); if (!n.follow && (ax_ > 64 || ay_ > 64) && !netNear(n.x, n.y, 64)) continue;
     /* v17.2: los civiles lejanos (fuera de pantalla) y tranquilos se simulan 1 de cada 3 fotogramas con el tiempo acumulado */
-    if (!n.follow && !n.talk && !n.thr && !(n.hitT > 0) && (n.st === 'idle' || n.st === 'wander') && (ax_ > 24 || ay_ > 24) && !netNear(n.x, n.y, 24)) { n.lodA = (n.lodA || 0) + dt; n.lodK = ((n.lodK | 0) + 1) % 3; if (n.lodK) continue; const a_ = Math.min(.15, n.lodA); n.lodA = 0; updNpc(n, a_); continue; }
+    if (NPCLOD.on && !n.follow && !n.talk && !n.thr && !(n.hitT > 0) && (n.st === 'idle' || n.st === 'wander') && (ax_ > 24 || ay_ > 24) && !netNear(n.x, n.y, 24)) { n.lodA = (n.lodA || 0) + dt; n.lodK = ((n.lodK | 0) + 1) % 3; if (n.lodK) continue; const a_ = Math.min(.15, n.lodA); n.lodA = 0; updNpc(n, a_); continue; }
     if (n.lodA) { const a_ = Math.min(.15, n.lodA + dt); n.lodA = 0; updNpc(n, a_); continue; }
     updNpc(n, dt); }
   for (let i = NPCS.length - 1; i >= 0; i--) { const n = NPCS[i]; if (n.wander && !n.follow && n.st !== 'dead' && (Math.abs(n.x - P.x) > 85 || Math.abs(n.y - P.y) > 85) && !netNear(n.x, n.y, 85)) NPCS.splice(i, 1); }
