@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v17.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v17.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2328,8 +2328,13 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 161, UR_VERSION = '17.0', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 162, UR_VERSION = '17.1', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '17.1', t: 'Gas, grietas y guardado ligero', it: [
+    'La <b>nube de gas</b> de las Zonas Rojas se ve en el mundo, también desde fuera: sabes dónde empieza la cuarentena.',
+    'El <b>filtro de la máscara antigás se gasta</b> dentro de la zona (unos 3 minutos en el centro). Debajo del rótulo ves cuánto le queda; las cajas militares traen más máscaras.',
+    'Lo construido muestra <b>grietas</b> cuando está dañado, y ves y oyes cuando alguien golpea tu base. Al reparar se oyen los martillazos.',
+    'Las partidas largas <b>ocupan un tercio menos</b> en el teléfono (los zombis se guardan de forma más compacta; las partidas antiguas se cargan igual).' ] },
   { v: '17.0', t: 'Zona Roja', it: [
     'Lo que construyes tiene <b>vida</b>: al golpearlo se ve una barra. Con el <b>martillo en la mano</b>, USAR lo repara (1 tablón + 2 clavos), pero no en pleno asalto.',
     '<b>Armario de herramientas</b> (V ▸ Almacenaje): marca tu zona. Nadie más puede construir ni desmontar cerca mientras tenga <b>mantenimiento</b>: tablones y clavos dentro. Quien lo abre (o sabe su candado) queda autorizado.',
@@ -5542,6 +5547,7 @@ function floorTrim() {
   for (const f of floorItems) { if (over > 0 && !(f.it && typeof NOTEIDX !== 'undefined' && NOTEIDX[f.it.id] !== undefined)) { over--; continue; } keep.push(f); }
   const n = floorItems.length - keep.length; floorItems.length = 0; for (const f of keep) floorItems.push(f); return n;   /* en el mismo arreglo: nada que lo referencie se queda con una copia vieja */
 }
+let ZSD = [];   /* v17.1: diccionario de colores y tipos de zombi del último guardado */
 function buildSave() {
   try { floorTrim(); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   {
@@ -5551,7 +5557,7 @@ function buildSave() {
     const s = {
       v: 3, jl: jlSave(), wp: wpSave(), tr: trSave(), sos: sosSave(), dl: delSave(), seed: SEED, wg: WG, diff: DIFFK, min: GT.min, kills: GT.kills, heliT: GT.heliT,
       P: { x: P.x, y: P.y, dir: P.dir, hp: P.hp, hun: P.hun, thi: P.thi, fat: P.fat, end: P.end, inf: P.inf, wounds: P.wounds, inv: P.inv, eq: P.inv.indexOf(P.eq), cloth: Object.fromEntries(Object.entries(P.cloth).map(([k, v]) => [k, P.inv.indexOf(v)])), light: P.light, sk: P.sk, kills: P.kills, painkill: P.painkill, sick: P.sick, wet: P.wet, shirt: P.shirt, cold: P.cold, prof: P.prof, rep: P.rep || 0 },
-      Z: (() => { const o = [], r2 = v => Math.round(v * 100) / 100; for (const z of Z) if (z.st !== 'dead') o.push([r2(z.x), r2(z.y), Math.round(z.hp), r2(z.spd), r2(z.hear), z.skin, z.shirt, z.pants, z.hair, z.type, z.blood ? 1 : 0, z.torn ? 1 : 0]); return o; })(), /* v104: sin toFixed (era el 30 % del coste del guardado con miles de zombis) */
+      Z: (() => { const o = [], r2 = v => Math.round(v * 100) / 100, D = new Map(), d = c => { let q = D.get(c); if (q === undefined) { q = D.size; D.set(c, q); } return q; }; for (const z of Z) if (z.st !== 'dead') o.push([r2(z.x), r2(z.y), Math.round(z.hp), r2(z.spd), r2(z.hear), d(z.skin), d(z.shirt), d(z.pants), d(z.hair), d(z.type), (z.blood ? 1 : 0) | (z.torn ? 2 : 0)]); ZSD = [...D.keys()]; return o; })(), zd: ZSD, /* v104: sin toFixed (era el 30 % del coste del guardado con miles de zombis) */
       bld: bldSaveData(), doors, bars, lk: lockSave(), mech: mechSave(), cont: cont.filter(a => a[0] < TRUNK_BASE), cars: cars.map(c => [+c.x.toFixed(2), +c.y.toFixed(2), +c.a.toFixed(3), +c.fuel.toFixed(1), Math.round(c.hp), c.col, c.dead ? 1 : 0, (containers.get(TRUNK_BASE + c.id) || {}).items || null]), drv: P.drive ? cars.indexOf(P.drive) : -1, pumps: [...pumps], fl: floorItems, fires: fires.map(f => [+f.x.toFixed(2), +f.y.toFixed(2), Math.round(f.t), f.kind]), barrels: barrels.map(b => [+b.x.toFixed(2), +b.y.toFixed(2), +b.w.toFixed(2)]), plots: plots.map(q => [+q.x.toFixed(2), +q.y.toFixed(2), Math.round(q.g), q.c || '', Math.round(q.w == null ? 60 : q.w), q.pest ? 1 : 0, q.bad ? 1 : 0, Math.round(q.pt || 0)]), bs: baseSave(), hordeDay: GT.hordeDay,
       cut: (() => { const a = []; for (let i = 0; i < W * H; i++) if (to[i] === O_NONE && tvTree[i]) a.push(i); return a; })(),
       ex: exRle78(), dog: dogSave(), mk: mkSave(), lt: ltSave(), npc: npcSave(), ob: obSave(), mil: milSave(), dy: DAILY ? DAILY.key : 0, cs: { m: GMODE, w: P.wind }, qs: QI
@@ -5577,7 +5583,8 @@ function applySave(s, guest) {
     if (!guest) { P.eq = s.P.eq >= 0 ? P.inv[s.P.eq] : null; P.cloth = {}; for (const k in s.P.cloth) if (s.P.cloth[k] >= 0) P.cloth[k] = P.inv[s.P.cloth[k]]; } else P.startMin = s.min;
     resetWorldState();
     GT = { min: s.min, rain: 0, rainTarget: 0, rainT: 100, kills: s.kills, spawnT: 90 * DIFF.spawn, night: 0, nightF: 0, flash: 0, thunderT: -1, heliT: s.heliT || 900 };
-    Z = (guest ? [] : s.Z).map(a => { const z = mkZombie(a[0], a[1], ZK[a[9]] ? a[9] : 'walker'); z.hp = a[2]; z.spd = a[3]; z.hear = a[4]; z.skin = a[5]; z.shirt = a[6]; z.pants = a[7]; z.hair = a[8]; z.blood = !!a[10]; z.torn = !!a[11]; return z; });
+    { const zd = Array.isArray(s.zd) && s.Z && s.Z.length && s.Z[0] && s.Z[0].length === 11 ? s.zd : null, cz = v => (zd && typeof v === 'number') ? zd[v] : v;   /* v17.1: formato con diccionario; los guardados antiguos siguen igual */
+    Z = (guest ? [] : s.Z).map(a => { const ty = cz(a[9]), z = mkZombie(a[0], a[1], ZK[ty] ? ty : 'walker'); z.hp = a[2]; z.spd = a[3]; z.hear = a[4]; for (const [k, j] of [['skin', 5], ['shirt', 6], ['pants', 7], ['hair', 8]]) { const v = cz(a[j]); if (v != null) z[k] = v; } if (zd) { z.blood = !!(a[10] & 1); z.torn = !!(a[10] & 2); } else { z.blood = !!a[10]; z.torn = !!a[11]; } return z; }); }
     for (const a of (s.cars || [])) { const c = mkCar(a[0], a[1], 0, a[5]); c.a = a[2]; c.fuel = a[3]; c.hp = a[4]; c.dead = !!a[6]; if (a[7]) { const k = carTrunk(c); containers.get(k).items = a[7]; } }
     for (const [k, v] of (s.pumps || [])) pumps.set(k, v);
     if (s.drv >= 0 && cars[s.drv]) { P.drive = cars[s.drv]; cars[s.drv].eng = true; }
@@ -23093,7 +23100,7 @@ const VOZ = {
    4) Zonas Rojas: hospital, comisaría y depósito en cuarentena: gas (máscara antigás), saqueadores armados y cajas militares. */
 const ZR17 = { tcz: [], tcm: new Map(), tcR: 12, tcMax: 3, zr: [], seen: new Set(), inZ: null, gasT: 0, msgT: 0, spl: null, spI: 0, wq: 0, wp: new Map(), lkT: new Map(), going: 0 };
 const zr17On = () => !!(NET.srv && NET.role === 'guest');
-LOOT.zr = { def: { n: [2, 4], t: [['rifle', .8], ['smg', .7], ['shotgun', .9], ['pistol', 1.3], ['revolver', .8], ['ammo9', 3], ['shells', 2.2], ['ammo762', 1.6], ['ammo38', 1.4], ['vest', 1], ['helmet', 1.1], ['riothelm', .6], ['medkit', 1.4], ['gasmask', 1.5], ['adrenaline', .6], ['pills', 1.2], ['bandage', 2], ['sbandage', 1]].filter(q => ITEMS[q[0]]) } };
+LOOT.zr = { def: { n: [2, 4], t: [['rifle', .8], ['smg', .7], ['shotgun', .9], ['pistol', 1.3], ['revolver', .8], ['ammo9', 3], ['shells', 2.2], ['ammo762', 1.6], ['ammo38', 1.4], ['vest', 1], ['helmet', 1.1], ['riothelm', .6], ['medkit', 1.4], ['gasmask', 2.4], ['adrenaline', .6], ['pills', 1.2], ['bandage', 2], ['sbandage', 1]].filter(q => ITEMS[q[0]]) } };
 LMCOL.zr = '#ff3b30';
 const ZR17LORE = {
   hospital: 'ZONA ROJA · Al empezar el brote el ejército selló este hospital con los enfermos dentro y lo llenó de gas. Sin máscara antigás te quema los pulmones. Los saqueadores vigilan las cajas militares.',
@@ -23112,6 +23119,7 @@ function zr17RepT() {
 function zr17Call(o) { return new Promise(res => { const q = ++ZR17.wq; ZR17.wp.set(q, res); netSend(Object.assign({ q }, o)); setTimeout(() => { if (ZR17.wp.has(q)) { ZR17.wp.delete(q); res({ ok: false, m: 'Sin respuesta del servidor.' }); } }, 9000); }); }
 function zr17Repair(t) {
   if (countItem('plank') < 1 || countItem('nails') < 2) { say('Para reparar necesitas 1 tablón y 2 clavos', 'bad'); return; }
+  sfx('hammer', 0); setTimeout(() => { try { if (P.act) { sfx('hammer', 0); spawnPart('chip', t.x, t.y, 1, 3); } } catch (e) { } }, 1100);   /* v17.1 */
   startAct('Reparando…', 2.4 * (1 - .05 * sl('carp')), async () => {
     const r = await zr17Call({ t: 'WRP', i: t.i });
     if (r.ok) { useCount('plank', 1); useCount('nails', 2); if (r.h >= r.mx) LK.rh.delete(t.i); else LK.rh.set(t.i, r.h); ZR17.lkT.set(t.i, performance.now()); addXP('carp', 3); sfx('door', 0); spawnText(t.x, t.y, 'Reparado ' + Math.round(r.h / r.mx * 100) + '%', '#8dbb6e'); }
@@ -23262,6 +23270,72 @@ function zr17Tick(dt) {
   new MutationObserver(() => { if (!pz.hidden) { b.scrollTop = 0; setTimeout(upd, 30); setTimeout(upd, 400); } else m.classList.remove('on'); }).observe(pz, { attributes: true, attributeFilter: ['hidden'] });
   new MutationObserver(() => setTimeout(upd, 30)).observe(b, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
 })();
+/* ===================== v17.1 · PULIDO DE LA ZONA ROJA =====================
+   1) Nube de gas visible en el mundo (también desde fuera de la zona): la cuarentena se ve venir.
+   2) Grietas en lo construido dañado y polvo cuando lo golpean (también lo ve el dueño); martillazos al reparar.
+   3) El filtro de la máscara antigás se gasta dentro de la Zona Roja (las cajas militares traen máscaras). */
+const ZR171 = { blob: null, warn: 0 };
+function zr171Blob() {
+  if (ZR171.blob) return ZR171.blob; const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const gr = g.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(170,200,70,.9)'); gr.addColorStop(.45, 'rgba(140,170,55,.45)'); gr.addColorStop(1, 'rgba(110,140,40,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return (ZR171.blob = c);
+}
+const zr171Mask = () => { const m = P && P.cloth && P.cloth.head; return m && m.id === 'gasmask' ? m : null; };
+{ const _rd = render; render = function (dt) {
+    _rd.apply(this, arguments);
+    if (!zr17On() || STATE !== 'play' || !P) return;
+    try {
+      ctx.save();
+      /* grietas: siempre que la pieza esté a la vista y por debajo de 2/3 de su vida */
+      let n = 0;
+      for (const [i, h] of LK.rh) {
+        const x = i % W, y = (i / W) | 0; if (Math.abs(x - P.x) > 14 || Math.abs(y - P.y) > 14) continue; const t = to[i], m = lkHpOf(t); if (!m || h >= m * .67) continue;
+        const tall = t === O_WALL || t === O_DOOR || t === O_WIN, [sx, sy] = w2sRender(x + .5, y + .5), X = RP(sx), Y = RP(sy) - (tall ? 20 : 8), k = h / m, cr = k < .34 ? 3 : 2;
+        let s = (i * 2654435761) >>> 0; const R = () => { s = (s * 1103515245 + 12345) >>> 0; return (s >>> 8) / 16777216; };
+        ctx.strokeStyle = 'rgba(22,14,10,' + (k < .34 ? .95 : .8) + ')'; ctx.lineWidth = k < .34 ? 1 : .8; ctx.beginPath();
+        for (let c = 0; c < cr; c++) { let px = X + (R() - .5) * (tall ? 20 : 12), py = Y + (R() - .5) * (tall ? 10 : 5); ctx.moveTo(px, py); for (let q = 0; q < 3; q++) { px += (R() - .5) * 4; py += 1.5 + R() * 2.5; ctx.lineTo(px, py); if (q === 1 && R() < .6) { ctx.lineTo(px + (R() < .5 ? -3 : 3), py + 2); ctx.moveTo(px, py); } } }
+        ctx.stroke(); if (++n > 40) break;
+      }
+      /* nube de gas anclada al mundo dentro de cada Zona Roja cercana */
+      const B = zr171Blob(), mask = zr171Mask(); let drawn = 0;
+      for (const z of ZR17.zr) {
+        const dz = Math.hypot(z.x - P.x, z.y - P.y); if (dz > z.r + 34) continue;
+        const st = 3.2;
+        for (let gy = -z.r; gy <= z.r; gy += st) for (let gx = -z.r; gx <= z.r; gx += st) {
+          const d = Math.hypot(gx, gy); if (d > z.r) continue; const hsh = Math.sin(gx * 12.9898 + gy * 78.233 + z.id * 7) * 43758.5453, f = hsh - Math.floor(hsh);
+          const wx = z.x + gx + Math.sin(TIME * .17 + f * 6.28) * 1.3, wy = z.y + gy + Math.cos(TIME * .13 + f * 9) * .9, [sx, sy] = w2sRender(wx, wy);
+          if (sx < -80 || sx > CW + 80 || sy < -80 || sy > CH + 80) continue;
+          const edge = Math.min(1, (1 - d / z.r) * 3), sz = 80 + f * 60 + Math.sin(TIME * .5 + f * 20) * 10, a = (.16 + f * .12) * (.6 + .4 * edge) * (ZR17.inZ === z ? .75 : 1);
+          ctx.globalAlpha = a; ctx.drawImage(B, sx - sz / 2, sy - sz * .32 - 10, sz, sz * .64); if (++drawn > 140) break;
+        }
+      }
+      ctx.globalAlpha = 1;
+      if (ZR17.inZ && mask) {   /* estado del filtro bajo el rótulo de la zona */
+        const c = Math.max(0, Math.round(mask.c === undefined ? 100 : mask.c)); ctx.font = '11px VT323, "Courier New", monospace'; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = '#000'; const t = 'FILTRO ' + c + '%', Y = RP(CH * .78) + 13;
+        ctx.strokeText(t, RP(CW / 2), Y); ctx.fillStyle = c > 50 ? '#bfe08a' : c > 20 ? '#eab244' : '#ff6a5a'; ctx.fillText(t, RP(CW / 2), Y);
+      }
+      ctx.restore();
+    } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+  }; }
+/* el filtro se gasta: ~3 min en el centro de la zona, más fuera */
+{ const _ug = updateGame; updateGame = function (dt) {
+    const r = _ug.apply(this, arguments);
+    try {
+      if (STATE === 'play' && !PAUSED && zr17On() && ZR17.inZ && P && !P.dead && !P.sleep) {
+        const m = zr171Mask(); if (m) { const z = ZR17.inZ, k = 1 - .5 * Math.hypot(P.x - z.x, P.y - z.y) / z.r; m.c = (m.c === undefined ? 100 : m.c) - .55 * k * Math.min(.25, +dt || 0);
+          if (m.c < 25 && !ZR171.warn) { ZR171.warn = 1; say('El filtro de tu máscara antigás se está agotando: sal de la zona o busca otra máscara en las cajas militares.', 'bad'); }
+          if (m.c <= 0) { removeItem(m, 1); delete P.cloth.head; ZR171.warn = 0; say('El filtro se agotó: tiras la máscara antigás. El gas vuelve a quemarte.', 'bad'); sfx('cloth', 0); }
+        }
+      }
+    } catch (e) { typeof dbgc === 'function' && dbgc(e); }
+    return r;
+  }; }
+/* polvo y golpe cuando se daña algo construido cerca (el dueño y los demás también lo ven) */
+{ const _nm = netMsg; netMsg = function (o) {
+    try { if (o && o.t === 'LKH' && NET.role === 'guest' && o.m) { const i = o.i | 0, prev = LK.rh.has(i) ? LK.rh.get(i) : o.m, x = (i % W) + .5, y = ((i / W) | 0) + .5, d = Math.hypot(x - P.x, y - P.y); if (o.h < prev && d < 16) { spawnPart('chip', x, y, 1, 5); sfx('bash', d, { x, y }); if (d < 6) shake = Math.max(shake, 1.5); } } } catch (e) { }
+    return _nm.apply(this, arguments);
+  }; }
+
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
   key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
@@ -24639,7 +24713,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24680,7 +24754,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24703,7 +24777,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24732,7 +24806,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24766,7 +24840,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24797,7 +24871,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -24830,7 +24904,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -24859,12 +24933,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.0') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.1') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.0';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.1';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

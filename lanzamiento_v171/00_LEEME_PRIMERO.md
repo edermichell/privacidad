@@ -1,11 +1,11 @@
-# Lanzamiento v17.0 «Zona Roja» — qué hay en esta carpeta
-1. `GUIA_SUBIR_v17.0.md` ← **empieza aquí: los 8 pasos para lanzar la 17.0** (compilar, probar, subir a Play, servidor).
-2. `UltimoRefugio_AndroidStudio_v17.0.zip` — proyecto de la app (versionCode 161, «17.0»).
+# Lanzamiento v17.1 «Zona Roja» — qué hay en esta carpeta
+1. `GUIA_SUBIR_v17.1.md` ← **empieza aquí: los 8 pasos para lanzar la 17.1** (compilar, probar, subir a Play, servidor).
+2. `UltimoRefugio_AndroidStudio_v17.1.zip` — proyecto de la app (versionCode 162, «17.1»).
 3. `privacy.html` — política de privacidad (la de la 16.3; la 17.0 no la cambia: súbela solo si no subiste la de la 16.3).
-4. `NOVEDADES_PLAY_v17.0.txt` — texto de «novedades» (es + en).
-5. `correo_testers_v170/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
+4. `NOVEDADES_PLAY_v17.1.txt` — texto de «novedades» (es + en).
+5. `correo_testers_v171/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
-7. `CAMBIOS_v14.0_a_v17.0.md` — todo lo que cambió desde la versión que está en revisión.
+7. `CAMBIOS_v14.0_a_v17.1.md` — todo lo que cambió desde la versión que está en revisión.
 
 **IMPORTANTE (v15.5):** corrige el fallo por el que en las salas no se veía a los demás jugadores (solo un «Anfitrión»). Lee `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md` (en la raíz): explica la causa, por qué hay que actualizar la app y la opción mínima **14.0.1**.
 
@@ -26,3 +26,5 @@
 **v16.3:** **chat de voz de proximidad** (botón VOZ; los zombis también oyen) y **sala PvP oficial** («Frontera PvP», con `AGREGAR_SALA_PVP.bat`). Cambia la parte Java (permiso de micrófono): compílala y pruébala en un teléfono. **Hay que volver a subir la política y actualizar Seguridad de los datos y la clasificación.** Ver `actualizacion_v163/CAMBIOS_v16.3.md`. **Si todavía no subiste ninguna de las 15.8–16.2, sube directamente la 16.3: incluye todo.**
 
 **v17.0 «Zona Roja»:** lo construido tiene **vida** y se **repara** con el martillo; **armario de herramientas** (nadie construye junto a tu base mientras tenga mantenimiento); **saco de dormir y camas** para **elegir dónde reaparecer**, con espera que crece con las muertes y **anuncio para volver ya** (monetización); **Zonas Rojas** (hospital, comisaría y depósito en cuarentena: gas, saqueadores armados, cajas militares); en la **sala PvP** las bases ya **no se protegen** al desconectarse. No cambia Java ni la política. Ver `actualizacion_v170/CAMBIOS_v17.0.md`. **Si todavía no subiste la 16.3, sube directamente la 17.0: incluye todo.**
+
+**v17.1:** pulido de la 17.0. **Nube de gas** visible en las Zonas Rojas (también desde fuera), el **filtro de la máscara antigás se gasta** dentro, **grietas** en lo construido dañado, polvo cuando atacan tu base, martillazos al reparar, **guardado un 34 % más pequeño** y menú de pausa deslizable. Sin cambios en Java, la política ni el servidor (solo `juego\index.html`). Ver `actualizacion_v171/CAMBIOS_v17.1.md`. **Sube directamente la 17.1.**

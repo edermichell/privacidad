@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v17.0 (versionCode 137 → 161)
+# Último Refugio — cambios de la v14.0 a la v17.1 (versionCode 137 → 162)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -100,3 +100,10 @@
 - Saco de dormir y camas propias: al morir en una sala eliges dónde reaparecer; la espera crece con las muertes de la última hora; un anuncio permite volver al instante.
 - Zonas Rojas: hospital, comisaría y depósito en cuarentena con gas, saqueadores armados y cajas militares; se ven en el mapa.
 - Sala PvP: las bases ya no se protegen cuando sus dueños se desconectan.
+
+## Gas, grietas y guardado ligero (v17.1) — ver `actualizacion_v171/CAMBIOS_v17.1.md`
+- La nube de gas de las Zonas Rojas se ve en el mundo, también desde fuera.
+- El filtro de la máscara antigás se gasta dentro de la zona (≈3 min en el centro), con su porcentaje en pantalla.
+- Grietas en lo construido dañado; polvo y golpe cuando atacan tu base; martillazos al reparar.
+- Guardado de partidas largas un 34 % más pequeño, compatible con los guardados anteriores.
+- Menú de pausa deslizable en pantallas bajas.

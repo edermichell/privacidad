@@ -1,17 +1,18 @@
-Asunto: Último Refugio v17.0 «Zona Roja» — prueba de 25 minutos
+Asunto: Último Refugio v17.1 «Zona Roja» — prueba de 25 minutos
 
 Hola equipo:
 
-Ya está lista la v17.0 «Zona Roja» de Último Refugio. Las salas cambian de verdad: ahora hay que defender la base, elegir dónde volver al morir y hay lugares a los que da miedo entrar. Necesito que lo prueben en teléfonos reales.
+Ya está lista la v17.1 «Zona Roja» de Último Refugio. Las salas cambian de verdad: ahora hay que defender la base, elegir dónde volver al morir y hay lugares a los que da miedo entrar. Necesito que lo prueben en teléfonos reales.
 
-LO NUEVO DE LA 17.0
+LO NUEVO DE LA 17.0 Y LA 17.1
 - ZONAS ROJAS: al principio del brote el ejército puso en cuarentena un hospital, una comisaría y un depósito, y los llenó de gas. Salen en el mapa con un círculo rojo. Dentro hay gas (sin máscara antigás pierden vida), saqueadores armados (y un jefe) y cajas militares con el mejor botín de la ciudad.
 - SACO DE DORMIR (V > Muebles, 3 trapos + 1 sábana) y camas: si mueren en una sala, eligen dónde reaparecer. Cuantas más veces mueran en una hora, más esperan (10 s, 25 s, 40 s...). Con un anuncio vuelven al instante.
 - ARMARIO DE HERRAMIENTAS (V > Almacenaje): marca su zona. Nadie más puede construir ni desmontar cerca mientras tenga tablones y clavos dentro (se gastan con el tiempo). Quien lo abre queda autorizado: pónganle candado.
 - SUS PAREDES TIENEN VIDA: al golpearlas sale una barra. Con el martillo en la mano, USAR las repara (1 tablón + 2 clavos), pero no mientras las están rompiendo.
 - SALA PVP: las bases ya no están protegidas cuando sus dueños se desconectan.
+- 17.1: la nube de gas se ve desde fuera de la zona; el filtro de la máscara antigás se gasta (unos 3 min en el centro, con su porcentaje en pantalla); las paredes dañadas muestran grietas y ven el polvo cuando atacan su base; las partidas largas ocupan menos; el menú de pausa se desliza en pantallas bajas.
 
-(Adjuntar: zona_roja.jpg, reaparecer.jpg, mapa_zonas_rojas.jpg)
+(Adjuntar: nube_gas.jpg, zona_roja.jpg, reaparecer.jpg, mapa_zonas_rojas.jpg)
 
 LO QUE YA TRAÍAN LAS VERSIONES ANTERIORES
 - 3 salas oficiales con el mapa nuevo (etiqueta MAPA 960), hasta 10 jugadores por sala.
@@ -38,12 +39,12 @@ LO QUE YA TRAÍAN LAS VERSIONES ANTERIORES
 
 CÓMO PROBARLO (≈ 25 minutos)
 1. ANTES de jugar, abran en el teléfono [PEGAR AQUÍ LA DIRECCIÓN]/prueba (por ejemplo https://server.tail12bbaa.ts.net/prueba), pulsen EMPEZAR LA PRUEBA y mándenme el resultado (botón COPIAR RESULTADO). Gasta ~8 MB. Si pueden, háganlo con Wi-Fi y con datos móviles.
-2. Instalen la v17.0 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
+2. Instalen la v17.1 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
 3. Caminen por el centro, la zona industrial, el puerto (muelles al final del camino), un parque con estanque y entren a un callejón.
 4. Peleen contra zombis, construyan un muro, abran cajas y salgan y vuelvan a entrar: lo construido debe seguir ahí.
 5. Abran NOVEDADES: debe mostrar la lista de cambios y decir «Tienes la última versión». (Cuando salga una versión posterior, debe aparecer un aviso abajo en el menú con el botón ACTUALIZAR: avísenme si lo ven.)
 6. Salgan de la sala y vuelvan a entrar: deben conservar su mochila tal como la dejaron.
-7. ZONA ROJA (17.0): abran el mapa, vayan a una Zona Roja (mejor en grupo) y entren: ¿se nota el gas?, ¿cuánto aguantan sin máscara?, ¿los saqueadores son demasiado duros o demasiado fáciles?, ¿el botín vale la pena?
+7. ZONA ROJA (17.0): abran el mapa, vayan a una Zona Roja (mejor en grupo) y entren: ¿se ve la nube desde fuera?, ¿cuánto aguantan sin máscara?, ¿y cuánto dura el filtro de la máscara?, ¿los saqueadores son demasiado duros o demasiado fáciles?, ¿el botín vale la pena?
 8. SACO Y REAPARECER (17.0): pongan un saco de dormir, aléjense y mueran (en la sala PVP pueden matarse entre ustedes). Debe salir ELIGE DÓNDE REAPARECER. Prueben el saco, «Lugar al azar» y el botón del anuncio. ¿La espera les parece justa?
 9. ARMARIO Y REPARAR (17.0): uno pone un armario de herramientas y otro intenta construir al lado (no debe dejarle; luego que lo abra y vuelva a probar). Golpeen una pared, esperen 15 s y repárenla con el martillo en la mano.
 10. A los 5 minutos: Ajustes → «Diagnóstico avanzado» → ABRIR → COPIAR y péguenlo en el mensaje.
@@ -58,7 +59,7 @@ CÓMO REPORTAR
 Modelo de teléfono y versión de Android, qué hacían y dónde (centro, puerto…), hora aproximada, Wi-Fi o datos, y captura o video corto. Para jugadores tramposos o tóxicos usen el botón de reportar y avísenme también.
 
 DESCARGA Y HORARIO
-Descarga de la v17.0: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
+Descarga de la v17.1: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
 El servidor estará encendido: [PONER FECHA Y HORARIO]
 (Si instalan encima conservan su partida individual. Las partidas de las salas oficiales anteriores no se conservan con el mapa nuevo.)
 
