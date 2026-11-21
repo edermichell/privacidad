@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v17.1 (versionCode 137 → 162)
+# Último Refugio — cambios de la v14.0 a la v17.2 (versionCode 137 → 163)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -107,3 +107,8 @@
 - Grietas en lo construido dañado; polvo y golpe cuando atacan tu base; martillazos al reparar.
 - Guardado de partidas largas un 34 % más pequeño, compatible con los guardados anteriores.
 - Menú de pausa deslizable en pantallas bajas.
+
+## Cuarentena y lluvia (v17.2) — ver `actualizacion_v172/CAMBIOS_v17.2.md`
+- Perímetro de cuarentena (postes, cinta amarilla y negra, carteles) en las Zonas Rojas; nube de gas dentro del mundo.
+- Salpicaduras de lluvia en el suelo.
+- Civiles lejanos y tranquilos simulados 1 de cada 3 fotogramas (menos procesador en la ciudad).

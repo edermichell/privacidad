@@ -1,8 +1,9 @@
-# Pasar Último Refugio a PRODUCCIÓN (Google Play) · v17.1 (versionCode 162)
+# Pasar Último Refugio a PRODUCCIÓN (Google Play) · v17.2 (versionCode 163)
 
-Tienes el acceso a producción autorizado. Esta guía es lo que cambia respecto a la prueba cerrada. Para compilar y subir sigue `GUIA_SUBIR_v17.1.md` (pasos 3–5) y vuelve aquí.
+Tienes el acceso a producción autorizado. Esta guía es lo que cambia respecto a la prueba cerrada. Para compilar y subir sigue `GUIA_SUBIR_v17.2.md` (pasos 3–5) y vuelve aquí.
 
 ## 0. Lo que ya está preparado en esta versión
+- **Anuncios reales de Unity** (`UNITY_TEST_MODE=false` por defecto), como decidiste.
 - **API objetivo 36 (Android 16)**, Billing 8, UMP 3, Unity Ads 4.16.1.
 - **Tabletas y plegables (Android 16):** con API 36, Android ignora la orientación horizontal en pantallas grandes **salvo en juegos**. La app ahora se declara juego (`android:appCategory="game"`) y lleva además la exclusión temporal oficial (`PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY`). Sin esto, en una tableta con Android 16 el juego podía abrirse en vertical o estirado.
 - **Política de privacidad por defecto:** si compilas sin la variable `PRIVACY_URL`, la app ya usa `https://edermichell.github.io/privacidad/` (antes era una dirección de relleno).
@@ -31,8 +32,8 @@ Tienes el acceso a producción autorizado. Esta guía es lo que cambia respecto 
 4. **Precios de los productos:** Monetización → Productos integrados: revisa que estén **activos** y con precio en cada país.
 
 ## 3. Publicar en producción (con lanzamiento por etapas)
-1. **Producción → Crear nueva versión** (o, en Prueba cerrada, **Promocionar versión → Producción** sobre la 17.1 si ya la subiste ahí).
-2. Sube o elige el AAB **17.1 (162)** y pega las novedades de `NOVEDADES_PLAY_v17.1.txt`.
+1. **Producción → Crear nueva versión** (o, en Prueba cerrada, **Promocionar versión → Producción** sobre la 17.2 si ya la subiste ahí).
+2. Sube o elige el AAB **17.2 (163)** y pega las novedades de `NOVEDADES_PLAY_v17.2.txt`.
 3. **Lanzamiento por etapas: 20 %** (Play lo ofrece al revisar la versión). Así, si aparece un fallo grave solo lo ve una parte y puedes **detener el lanzamiento** desde la misma pantalla.
 4. **Enviar a revisión.** Una app nueva en producción puede tardar de horas a varios días.
 5. Cuando se apruebe, durante 2–3 días mira **Calidad → Android vitals** (cierres y ANR). Si va bien: **50 %**, y 2–3 días después **100 %**.
@@ -42,7 +43,7 @@ Tienes el acceso a producción autorizado. Esta guía es lo que cambia respecto 
 - Con producción llegará gente que no conoces. Las **3 salas oficiales + la sala PvP** aguantan 10 jugadores cada una (la prueba dura dio 29,8–30 pasos/s con 30 jugadores a la vez). Cuando una sala está llena, el teléfono avisa «La sala está llena» y el jugador elige otra. Si tu PC va sobrado (mira la memoria y los pasos/s en `/admin`), puedes subir `salasActivasMax` o `maxJugadores` en `config.json`.
 - **Si el PC se apaga, el multijugador no está disponible** (la partida individual sí). La app lo dice («No se encontró el servidor»). Si quieres el multijugador 24 h, deja el PC encendido con `AUTOARRANQUE_WINDOWS.bat` y `EVITAR_SUSPENSION_WINDOWS.bat` o, más adelante, pásalo a un servidor en la nube.
 - **Moderación:** el panel `/admin` tiene reportes, expulsar, banear y «Quitar nombre». Con producción conviene mirarlo a diario las primeras semanas.
-- Actualiza el kit del servidor (paso 7 de la guía) **justo cuando la 17.1 salga en producción**.
+- Actualiza el kit del servidor (paso 7 de la guía) **justo cuando la 17.2 salga en producción**.
 
 ## 5. Si algo sale mal
 | Problema | Qué hacer |
@@ -50,5 +51,5 @@ Tienes el acceso a producción autorizado. Esta guía es lo que cambia respecto 
 | Android Studio no compila | Mándame el error exacto (el Java está comprobado contra Android 16, pero las librerías de Google se resuelven en tu PC) |
 | Rechazo por la política de privacidad | Comprueba que `https://edermichell.github.io/privacidad/` abre la política con «noviembre de 2026 (v16.3)» (el archivo de la rama `main` debe llamarse `index.html`) |
 | Muchos cierres en Android vitals | **Detén el lanzamiento por etapas** y mándame el informe del cierre (Android vitals → el cierre → detalles) |
-| En tabletas se ve mal | Mándame captura y modelo; con la 17.1 debería verse en horizontal |
+| En tabletas se ve mal | Mándame captura y modelo; con la 17.2 debería verse en horizontal |
 | Sin anuncios en Europa | Es lo esperado sin `UMP_APP_ID` (ver punto 1) |
