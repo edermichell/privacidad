@@ -1,0 +1,26 @@
+Asunto: Último Refugio v17.4 «Rueda y esquiva» — prueba de 15 minutos
+
+Hola equipo:
+
+Ya está la v17.4. Trae una mecánica nueva de combate y necesito que la prueben en teléfonos reales.
+
+LO NUEVO DE LA 17.4
+- RODAR: hay un botón azul nuevo, RODAR, encima de USAR (en el PC, tecla Z). Es una voltereta rápida en la dirección en la que se mueven; si no se mueven, ruedan hacia atrás, alejándose de lo que tienen enfrente.
+- Durante la voltereta los golpes de los zombis NO los alcanzan un instante (tampoco el salto del saltador ni los golpes de los bandidos). Las balas y los golpes de otros jugadores sí.
+- Gasta aguante (la barra azul) y hay que esperar un momento entre una y otra: el botón se oscurece cuando no se puede.
+- Si pulsan ATACAR mientras ruedan, el golpe sale justo al levantarse.
+- En las salas, los demás deben VER su voltereta.
+- Teléfonos justos: si su teléfono tenía que bajar la calidad, a partir de la segunda partida ya empieza así y la cámara no se acerca de golpe a los pocos segundos de jugar.
+
+(Adjuntar: voltereta.jpg, boton_rodar.jpg)
+
+QUÉ NECESITO QUE PRUEBEN
+1. ¿El botón RODAR se ve bien y no tapa nada en su teléfono? (Ajustes → Personalizar permite moverlo y cambiar su tamaño.)
+2. Rodar en medio de 3 o 4 zombis: ¿esquiva? ¿Se siente bien o es demasiado larga/corta, rápida/lenta?
+3. Rodar contra una pared o un auto: ¿se atora o atraviesa algo?
+4. En una sala con otro teléfono: ¿el compañero ve la voltereta?
+5. Si su teléfono es modesto: jueguen 2 o 3 minutos, salgan, vuelvan a entrar y díganme si la cámara cambia de zoom de golpe al empezar.
+
+Cualquier cosa rara, con captura y modelo de teléfono, por favor.
+
+¡Gracias!

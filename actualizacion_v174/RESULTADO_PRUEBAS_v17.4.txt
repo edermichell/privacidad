@@ -1,0 +1,101 @@
+Último Refugio 17.4 · resultado de las pruebas (2026-11-22)
+
+=== Pruebas nuevas de la 17.4 (prueba_v174.js): 25 comprobaciones
+fallos: 0  (voltereta: distancia 2,34 casillas, esquiva 12/12 golpes, bala sí hiere, no atraviesa paredes, tecla Z, botón táctil, sin solapes en 1280x720 y 800x400, red, contraataque, calidad recordada)
+
+=== Regresión completa (all174.sh)
+######## 17.4 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+== 4 jugadores
+fallos: 0
+== soak
+d4 16s {"Z":1757,"NPCS":40,"parts":13,"texts":0,"cars":317,"chunks":33,"HC2":1434,"SPR":35,"EVS":6,"JL":16,"buildings":268,"TRAPS":0,"day":5,"ls":165209,"mem":null,"alive
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (39 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (35 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+FAIL Android: consulta a Play al abrir y detecta la versión 165 ["none",0,"check"]
+FAIL aviso visible en el menú 
+FAIL punto rojo en NOVEDADES 
+== suelo
+fallos: 0
+FIN2
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+######## 17.0 zona roja
+FAIL B3: el teléfono no le deja construir en zona ajena [false,"Hay un auto ahí"]
+fallos: 1
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+FAIL B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[1,"car"],"guardadas":1}
+fallos: 1
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+== prueba dura
+SALA1: 29.8 pasos/s (objetivo 30) · zombis vivos 186 · bajas 263 · errores del juego 0
+SALA2: 29.9 pasos/s (objetivo 30) · zombis vivos 216 · bajas 248 · errores del juego 0
+SALA3: 30.0 pasos/s (objetivo 30) · zombis vivos 166 · bajas 293 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3931
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN
+
+=== Repeticiones de los 3 fallos de arriba
+novedades: la prueba fijaba 165 como «la versión siguiente» y ahora 165 es la actual. Con 166/167: fallos: 0.
+B3 y B5 dependen de dónde haya autos en el mundo vivo (B3: «Hay un auto ahí» en la casilla; B5: USAR elige el auto cercano en vez del cadáver; en la 17.3 B5 ya falló así una vez).
+Repetidas por separado con cada cliente (2 veces con la 17.4 y 2 con la 17.3):
+== cliente 174 · B3 (zona roja)
+TODO OK
+== cliente 174 · B5 (fase 6)
+OK   B5: el invitado ve el uniforme del zombi (antes no le llegaba) ["dead","police"]
+OK   B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[2,"npc"],"guardadas":2}
+fallos: 0
+== cliente 173 · B3 (zona roja)
+TODO OK
+== cliente 173 · B5 (fase 6)
+OK   B5: el invitado ve el uniforme del zombi (antes no le llegaba) ["dead","police"]
+OK   B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[2,"npc"],"guardadas":2}
+fallos: 0
+== cliente 174 · B3 (zona roja)
+TODO OK
+== cliente 174 · B5 (fase 6)
+OK   B5: el invitado ve el uniforme del zombi (antes no le llegaba) ["dead","police"]
+OK   B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[2,null],"guardadas":2}
+fallos: 0
+== cliente 173 · B3 (zona roja)
+TODO OK
+== cliente 173 · B5 (fase 6)
+OK   B5: el invitado ve el uniforme del zombi (antes no le llegaba) ["dead","police"]
+OK   B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[2,"npc"],"guardadas":2}
+fallos: 0
+
+Conclusión: 8 de 8 repeticiones correctas en ambas versiones; los fallos eran casuales (posición de los autos), no de la 17.4.

@@ -859,7 +859,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
 <div id="touch" hidden>
   <div id="joyzone"></div><div id="joybase"><div id="joyknob"></div></div>
   <button class="tb" id="bAtk">ATACAR</button><button class="tb" id="bUse">USAR</button><button class="tb" id="bThr" hidden>LANZAR</button>
-  <button class="tb" id="bRun">CORRER</button><button class="tb" id="bMore">MÁS</button>
+  <button class="tb" id="bRun">CORRER</button><button class="tb" id="bRoll">RODAR</button><button class="tb" id="bMore">MÁS</button>
   <button class="tb sec" id="bSnk">SIGILO</button>
   <button class="tb sec" id="bBar">BARRI-<br>CADA</button><button class="tb sec" id="bRel">RECAR-<br>GAR</button><button class="tb sec" id="bLgt">LUZ</button><button class="tb sec" id="bWpn">ARMA</button><button class="tb sec" id="bShv">EMPU-<br>JAR</button>
 </div>
@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v17.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v17.4 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -944,7 +944,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
       <div class="hbody" id="how">
         <div class="hp" data-t="0">
           <p><b>Mover:</b> WASD o flechas. En el celular, un joystick aparece donde pongas el pulgar.</p>
-          <p><b>Correr:</b> Shift / CORRER (cansa y hace ruido). <b>Sigilo:</b> C / SIGILO.</p>
+          <p><b>Correr:</b> Shift / CORRER (cansa y hace ruido). <b>Sigilo:</b> C / SIGILO. <b>Rodar:</b> Z / RODAR (esquiva golpes de zombis un instante; gasta aguante).</p>
           <p><b>Atacar:</b> clic o Espacio. En el celular apunta solo al zombi más cercano. <b>Usar:</b> E / USAR (puertas, buscar, recoger, dormir, talar, cocinar).</p>
           <p><b>Mochila:</b> I · <b>Estado:</b> H · <b>Fabricar:</b> K · <b>Construir:</b> V (R gira) · <b>Mapa:</b> M · <b>Linterna:</b> Q · <b>Recargar:</b> R · <b>Barricada:</b> B · <b>Lanzar (molotov, petardos, bengala, bomba):</b> G · <b>Armas:</b> 1-9 · <b>Cambiar arma:</b> X · <b>Empujar:</b> F · <b>Pausa:</b> Esc / P.</p>
         </div>
@@ -1163,7 +1163,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
           <p><b>Mover</b> WASD / flechas <b>Correr</b> Shift <b>Sigilo</b> C</p>
           <p><b>Atacar</b> clic / Espacio <b>Usar</b> E <b>Linterna</b> Q <b>Recargar</b> R</p>
           <p><b>Mochila</b> I <b>Estado</b> H <b>Fabricar</b> K <b>Construir</b> V <b>Mapa</b> M</p>
-          <p><b>Barricada</b> B <b>Lanzar</b> G <b>Empujar</b> F <b>Armas</b> 1-9 <b>Pausa</b> Esc</p>
+          <p><b>Barricada</b> B <b>Lanzar</b> G <b>Empujar</b> F <b>Rodar</b> Z <b>Armas</b> 1-9 <b>Pausa</b> Esc</p>
         </div>
       </div>
       <div class="stp" data-t="4" hidden>
@@ -2328,8 +2328,13 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 164, UR_VERSION = '17.3', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 165, UR_VERSION = '17.4', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '17.4', t: 'Rueda y esquiva', it: [
+    'Nuevo: <b>RODAR</b> (botón RODAR o tecla Z). Una voltereta rápida que esquiva los golpes de los zombis y el salto del saltador. Gasta aguante.',
+    'Sin dirección ruedas hacia atrás, alejándote de lo que tienes enfrente. Los demás jugadores también ven tu voltereta.',
+    'Calidad automática: si tu teléfono necesitó bajar la calidad, la siguiente partida ya empieza así y la cámara no se acerca de golpe a mitad del juego.',
+    'Nuevo logro: «Acróbata» (esquiva 10 golpes rodando).' ] },
   { v: '17.3', t: 'Sangre con forma', it: [
     'La sangre ahora son <b>salpicaduras</b> de verdad (con gotas y núcleo oscuro), no manchas planas.',
     'En partidas largas las manchas ya no se acumulan sin fin: el juego va más fino tras muchas horas.' ] },
@@ -6611,6 +6616,7 @@ function npcGoto(n, tx, ty, spd, dt, fld) {
 function npcHitPlayer(n, base, kind, tp) {
   if (tp && tp !== P) { netSendToRp(tp, { t: 'NHP', b: base, k: kind, nm: n.name, w: n.wid || '', x: r2(n.x), y: r2(n.y) }); return; }
   if (P.dead || P.ghost > 0) return;
+  if (kind === 'melee' && ur174Inv()) { ur174Dodged(); return; }   /* v17.4: rodando */
   const part = wpick(Math.random, PARTS), slot = PSLOT[part];
   if (clothBlock(part, kind)) { sfx('swing', 1); return; }
   const mult = DIFF.dmg * (part === 'cabeza' ? 1.35 : 1), dmg = base * mult;
@@ -9726,7 +9732,7 @@ function spHit(z, T) { if (T === P) zombieHit(z); else netZombieHit(z); }
     if (z.type === 'leaper' && z.leap && !z.climb) {
       z.leap = 0; z.stun = .7; z.lunge = .3; makeNoise(z.x, z.y, 8);
       const d = Math.hypot(T.x - z.x, T.y - z.y);
-      if (d < 1.6 && !T.dead && !T.drive && !(T === P && P.ghost > 0)) { const h0 = P.hp; spHit(z, T); if (T === P && P.hp >= h0) spHit(z, T); if (T === P) { P.stag = .9; shake = 6; const a = Math.atan2(P.y - z.y, P.x - z.x); moveEnt(P, Math.cos(a) * .6, Math.sin(a) * .6); say('¡Un saltador se te echa encima!', 'bad'); } }
+      if (d < 1.6 && !T.dead && !T.drive && !(T === P && (P.ghost > 0 || ur174Inv()))) { const h0 = P.hp; spHit(z, T); if (T === P && P.hp >= h0) spHit(z, T); if (T === P) { P.stag = .9; shake = 6; const a = Math.atan2(P.y - z.y, P.x - z.x); moveEnt(P, Math.cos(a) * .6, Math.sin(a) * .6); say('¡Un saltador se te echa encima!', 'bad'); } }
       else { MX.dodge = (MX.dodge | 0) + 1; if (T === P && !MX.dodgeTip) { MX.dodgeTip = 1; say('¡Esquivaste el salto! Ahora está aturdido', 'good'); } }
     }
   };
@@ -11733,7 +11739,7 @@ function updateHUD(dt) {
   const tgt = (P.dead || P.sleep || P.act || BLD.on) ? null : findInteract(); if (BLD.on) bldUpdate(); const hint = BLD.on ? bldHint() : hintFor(tgt);
   $('hint').textContent = hint ? (BLD.on ? '' : IN.touch ? 'USAR · ' : 'E · ') + hint : ''; $('hint').hidden = !hint; $('hint').classList.toggle('bad', BLD.on && !BLD.ok); $('bpl').hidden = !BLD.on || P.dead; $('bplOk').classList.toggle('off', !BLD.ok); $('bplRot').hidden = !(BLD.on && BLD.sel && BLD.sel.house);
   const dv = P.drive; $('carhud').hidden = !dv; if (dv) { $('cFuel').style.width = clamp(dv.fuel, 0, 100) + '%'; $('cFuel').style.background = dv.fuel < 15 ? '#d6402f' : '#eab244'; $('cHp').style.width = clamp(dv.hp, 0, 100) + '%'; $('cHp').style.background = dv.hp < 30 ? '#d6402f' : '#8dbb6e'; $('cSpd').textContent = Math.round(Math.abs(dv.spd) * 14) + ' km/h'; }
-  checkTips(); metaTick(); $('bSnk').classList.toggle('on', P.sneak); $('bRun').classList.toggle('on', IN.touchRun);
+  checkTips(); metaTick(); $('bSnk').classList.toggle('on', P.sneak); { const br = $('bRoll'); if (br) br.classList.toggle('cd', (P.rollCd || 0) > 0 || P.end < ROLL.cost); } $('bRun').classList.toggle('on', IN.touchRun);
   $('bThr').hidden = !LAYEDIT && !P.inv.some(i => ITEMS[i.id].t === 'throw');
 }
 
@@ -11766,6 +11772,7 @@ window.addEventListener('keydown', e => {
     case 'KeyI': case 'Tab': UI.toggleInv(); break; case 'KeyH': UI.toggleHealth(); break; case 'KeyK': UI.toggleCraft(); break; case 'KeyM': UI.toggleMap(); break; case 'KeyY': aliToggle(); break;
     case 'KeyC': P.sneak = !P.sneak; break; case 'KeyN': audioInit(); toggleMute(); break; case 'KeyG': throwMolotov(); break; case 'KeyX': cycleWeapon(); break; case 'KeyF': shove(); break;
     case 'Space': IN.atk = true; IN.atkQ = .3; break;
+    case 'KeyZ': urRoll(); break;
     default: if (/^Digit[1-9]$/.test(e.code)) equipSlot(+e.code.slice(5) - 1);
   }
 });
@@ -11804,7 +11811,7 @@ function bindBtn(id, down, up) {
   el.addEventListener('mousedown', e => { if (IN.touch) return; e.preventDefault(); if (STATE === 'play' && !PAUSED) down(); }); el.addEventListener('mouseup', () => { if (up) up(); });
 }
 bindBtn('bAtk', () => { IN.atk = true; IN.atkQ = .3; }, () => { IN.atk = false; });
-bindBtn('bUse', () => doInteract()); bindBtn('bRun', () => { IN.touchRun = !IN.touchRun; });
+bindBtn('bUse', () => doInteract()); bindBtn('bRoll', () => urRoll()); bindBtn('bRun', () => { IN.touchRun = !IN.touchRun; });
 bindBtn('bMore', () => { $('touch').classList.toggle('more'); $('bMore').classList.toggle('on', $('touch').classList.contains('more')); }); bindBtn('bSnk', () => { P.sneak = !P.sneak; }); bindBtn('bBar', () => startBarricade()); bindBtn('bRel', () => startReload()); bindBtn('bLgt', () => toggleLight()); bindBtn('bThr', () => throwMolotov()); bindBtn('bWpn', () => cycleWeapon()); bindBtn('bShv', () => shove());
 const tap = (id, f) => $(id).addEventListener('click', () => { audioInit(); if (STATE === 'play') f(); });
 tap('bInv', () => { if (!PAUSED) UI.toggleInv(); }); tap('bHealth', () => { if (!PAUSED) UI.toggleHealth(); });
@@ -12352,7 +12359,7 @@ UI.renderInv = function () {
 const LAYKEY = 'ultimo_refugio_lay';
 const LAYEL = {
   bAtk: ['Atacar', 'c'], bUse: ['Usar', 'c'], bThr: ['Lanzar', 'c'], bRun: ['Correr', 'c'], bMore: ['Más', 'c'], bSnk: ['Sigilo', 'c'], bBar: ['Barricada', 'c'], bRel: ['Recargar', 'c'],
-  bLgt: ['Luz', 'c'], bWpn: ['Arma', 'c'], bShv: ['Empujar', 'c'], joybase: ['Joystick', 'c'], topbtns: ['Barra superior', 'tr'], hud: ['Barras de vida', 'tl'], mini: ['Minimapa', 'tr']
+  bLgt: ['Luz', 'c'], bWpn: ['Arma', 'c'], bShv: ['Empujar', 'c'], bRoll: ['Rodar', 'c'], joybase: ['Joystick', 'c'], topbtns: ['Barra superior', 'tr'], hud: ['Barras de vida', 'tl'], mini: ['Minimapa', 'tr']
 };
 const LAYORG = { c: '50% 50%', tr: '100% 0', tl: '0 0' };
 const LAYD = () => ({ s: 1, o: 1, lefty: false, pos: {}, sc: {} });
@@ -22030,7 +22037,7 @@ function updAmbience(dt) {
 const cvs = $('c'), ctx = hiCtx(cvs.getContext('2d', { alpha: false }));
 const dark = document.createElement('canvas'), dg = dark.getContext('2d');
 const vigC = document.createElement('canvas');
-let CW = 300, CH = 200, SC = 3, DS = .5, LOWQ = OPT.q === 'low';
+let CW = 300, CH = 200, SC = 3, DS = .5, LOWQ = OPT.q === 'low' || (OPT.q === 'auto' && ur174AutoLowGet());
 const cam = { x: 0, y: 0, lx: 0, ly: 0 }; let camX = 0, camY = 0;
 const MP = { x: 14, y: 11.5, dir: 0, light: false, sleep: false, hurt: 0, hp: 100, dead: false, sneak: false, cloth: {}, anim: 0, moving: false, atk: 0, eq: null };
 const curQ = () => STATE === 'menu' ? MP : P;
@@ -22955,8 +22962,9 @@ function frame(ts) {
       if (overloaded) { lowT += sample; if (lowT >= 3) { LOWQ = true; lowT = 0; resize(); say('Gráficos ajustados para mayor fluidez'); } }
       else lowT = Math.max(0, lowT - sample * 1.5);
     } else {
-      if (recovered) { highT += sample; if (highT >= 15) { LOWQ = false; highT = 0; lowT = 0; resize(); say('Calidad gráfica recuperada'); } }
+      if (recovered) { highT += sample; if (highT >= 15) { LOWQ = false; highT = 0; lowT = 0; resize(); say('Calidad gráfica recuperada'); ur174AutoLowClear(); } }
       else highT = Math.max(0, highT - sample * 2);
+      if (LOWQ) ur174AutoLowHold(sample);
     }
     /* v11.5: escala suave para FX decorativos. No altera la simulación ni la IA. */
     const fxTarget = LOWQ ? .58 : (overloaded ? .76 : recovered ? 1 : PERF.fxScale);
@@ -22985,7 +22993,7 @@ function frame(ts) {
   perfFps(raw, work);
   requestAnimationFrame(frame);
 }
-function setQuality(q) { OPT.q = q; LOWQ = q === 'low'; saveOpt(); resize(); emaMs = 16; emaFrameMs = 16.7; lowT = 0; highT = 0; }
+function setQuality(q) { ur174AutoLowClear(); OPT.q = q; LOWQ = q === 'low'; saveOpt(); resize(); emaMs = 16; emaFrameMs = 16.7; lowT = 0; highT = 0; }
 function toMenu() {
   saveGame(); if (NET.on || NET.role) netLeave(); $('inv').hidden = true; $('health').hidden = true; $('craft').hidden = true; $('pause').hidden = true; $('map').hidden = true; PAUSED = false;
   initMenuWorld(); $('menu').hidden = false; $('bCont').hidden = !hasSave(); $('death').hidden = true; document.body.classList.remove('ingame'); if (typeof renderBest === 'function') renderBest(); if (typeof metaMenuInfo === 'function') metaMenuInfo();
@@ -23434,6 +23442,109 @@ function bloodSprites() {
   }
   BLOOD.spr = out; return out;
 }
+
+/* ===================== v17.4: CALIDAD AUTOMÁTICA RECORDADA + RODAR PARA ESQUIVAR =====================
+   1) Calidad «Automática»: si el teléfono necesitó la calidad baja durante más de un minuto, se recuerda y la
+      siguiente partida ya arranca así. Antes el cambio llegaba a los ~3 s de juego y la cámara se acercaba de golpe
+      en CADA partida. Si el equipo vuelve a ir sobrado, el juego sube la calidad y olvida la marca.
+   2) RODAR (tecla Z / botón RODAR): voltereta corta en la dirección del joystick (sin dirección: hacia atrás).
+      Los primeros 0,26 s esquiva golpes de zombis, el salto del saltador y los golpes cuerpo a cuerpo de bandidos
+      (no balas ni golpes de otros jugadores, que valida el servidor). Gasta aguante y tiene un breve enfriamiento.
+      Velocidad media muy por debajo del límite que vigila el servidor PvP (9 casillas/s). */
+const UR174 = { lowH: 0, saved: false };
+function ur174AutoLowGet() { try { return localStorage.getItem('ur_autolow') === '1'; } catch (e) { return false; } }
+function ur174AutoLowHold(s) { UR174.lowH += s; if (!UR174.saved && UR174.lowH > 60) { UR174.saved = true; try { localStorage.setItem('ur_autolow', '1'); } catch (e) { } } }
+function ur174AutoLowClear() { UR174.lowH = 0; UR174.saved = false; try { localStorage.removeItem('ur_autolow'); } catch (e) { } }
+
+const ROLL = { dur: .32, inv: .26, cd: .55, cost: 16, spd: 7.2 };
+function ur174RollCan() {
+  return STATE === 'play' && !PAUSED && P && !P.dead && !P.drive && !P.sleep && !P.tw && !(P.act && P.act.climb) && !BLD.on && !P.roll && !((P.rollCd || 0) > 0) && !(P.stag > .3);
+}
+function urRoll() {
+  if (!P || !ur174RollCan()) return false;
+  if (P.end < ROLL.cost) { if (!(P.rollMsgT > TIME)) { P.rollMsgT = TIME + 2; say('Estás sin aliento para rodar'); } return false; }
+  let a; const mx = IN.jx || 0, my = IN.jy || 0;
+  if (Math.hypot(mx, my) > .2) a = Math.atan2(my - mx, mx + my);      /* mismo paso pantalla→mundo que el movimiento normal */
+  else a = (P.dir || 0) + Math.PI;                                     /* sin dirección: hacia atrás, alejándose */
+  if (P.act && !P.act.climb) P.act = null;
+  P.sneak = false;
+  P.roll = { t: 0, a, s: (Math.cos(a) - Math.sin(a)) >= 0 ? 1 : -1, tr: [] };
+  let fit = 0; try { fit = sl('fit') || 0; } catch (e) { }
+  P.end = Math.max(0, P.end - ROLL.cost * (1 - .03 * fit));
+  P.rollCd = ROLL.dur + ROLL.cd;
+  try { spawnPart('dust', P.x, P.y, .3, 6); } catch (e) { }
+  try { sfx('swing', 0); } catch (e) { }
+  try { makeNoise(P.x, P.y, 7); } catch (e) { }
+  try { addXP('sprint', .6); } catch (e) { }
+  MX.rolls = (MX.rolls | 0) + 1;
+  return true;
+}
+function ur174RollStep(dt) {
+  if (P.rollCd > 0) P.rollCd -= dt;
+  const R = P.roll; if (!R) return;
+  if (P.dead || P.drive || P.sleep) { P.roll = null; return; }
+  R.t += dt; const k = Math.min(1, R.t / ROLL.dur);
+  const sp = ROLL.spd * (1.3 - .6 * k) * (P.fat > 80 ? .85 : 1);   /* sale fuerte y frena al final */
+  moveEnt(P, Math.cos(R.a) * sp * dt, Math.sin(R.a) * sp * dt);
+  P.anim += dt * 6;
+  R.tr.push([P.x, P.y, k]); if (R.tr.length > 4) R.tr.shift();
+  if (R.t >= ROLL.dur) { P.roll = null; try { spawnPart('dust', P.x, P.y, .2, 3); } catch (e) { }
+    if (R.atk) { try { tryAttack(); } catch (e) { } }   /* contraataque: el golpe pedido durante la voltereta sale al levantarse */ }
+}
+function ur174Dodged() {
+  MX.rollDodge = (MX.rollDodge | 0) + 1; try { sfx('swing', 1); } catch (e) { }
+  if (!MX.rollTip) { MX.rollTip = 1; say('¡Esquivado! Al rodar los golpes no te alcanzan un instante', 'good'); }
+}
+function ur174Inv() { return !!(P && P.roll && P.roll.t < ROLL.inv); }
+
+/* --- lógica: la voltereta sustituye al movimiento normal mientras dura --- */
+{
+  const _up = updPlayer;
+  updPlayer = function (dt) {
+    if (P && (P.roll || P.rollCd > 0)) ur174RollStep(dt);
+    if (P && !P.roll && !tipSeen.has('roll174')) { UR174.tipT = (UR174.tipT || 0) - dt; if (UR174.tipT <= 0) { UR174.tipT = 1; if (Z.some(z => z.st === 'chase' && Math.abs(z.x - P.x) < 3.5 && Math.abs(z.y - P.y) < 3.5)) tip('roll174', 'Nuevo: RODAR (tecla Z) te aparta y esquiva los golpes un instante. Gasta aguante.'); } }
+    if (P && P.roll) { const jx = IN.jx, jy = IN.jy; IN.jx = 0; IN.jy = 0; const r = _up.apply(this, arguments); IN.jx = jx; IN.jy = jy; P.moving = true; return r; }
+    return _up.apply(this, arguments);
+  };
+  const _ta = tryAttack;
+  tryAttack = function () { if (P && P.roll) { P.roll.atk = true; return false; } return _ta.apply(this, arguments); };
+  const _zh = zombieHit;
+  zombieHit = function (z) { if (ur174Inv()) { ur174Dodged(); return; } return _zh.apply(this, arguments); };
+  /* en red: los demás ven la voltereta (los campos pose/ph ya se reenvían tal cual; las apps antiguas la ven caminando) */
+  const _ps = pSpec;
+  pSpec = function () { const s = _ps.apply(this, arguments); if (P && P.roll) { s.pose = 'roll'; s.ph = (P.roll.s < 0 ? 8 : 0) + Math.min(7, (P.roll.t / ROLL.dur * 8) | 0); } return s; };
+}
+
+/* --- dibujo: giro completo con estela --- */
+function ur174Rot(spr, X, Y, k, s, al) {
+  const lift = 11, sink = Math.round(Math.sin(k * Math.PI) * 3);
+  ctx.save(); ctx.globalAlpha = al; ctx.translate(X, Y - lift + sink); ctx.rotate(s * k * Math.PI * 2); ctx.scale(1, .9);
+  ctx.drawImage(spr, -spr.ox, -spr.oy + lift); ctx.restore(); ctx.globalAlpha = 1;
+}
+function ur174RollSprite(base) { const sp = Object.assign({}, base); sp.pose = 'walk'; sp.ph = 0; sp.frame = 4; sp.moving = true; return humanSprite(sp); }
+{
+  const _dp = drawPlayer;
+  drawPlayer = function () {
+    if (!(P && P.roll && !P.sleep && !P.drive)) return _dp.apply(this, arguments);
+    const R = P.roll, k = Math.min(1, R.t / ROLL.dur), spr = ur174RollSprite(pSpec());
+    const [sx, sy] = w2sRender(P.x, P.y), X = RP(sx), Y = RP(sy);
+    ctx.drawImage(SPR.blob, X - 13, Y - 4);
+    for (let i = 0; i < R.tr.length - 1; i++) { const q = R.tr[i], w = w2sRender(q[0], q[1]); ur174Rot(spr, RP(w[0]), RP(w[1]), q[2], R.s, .1 + i * .07); }
+    ur174Rot(spr, X, Y, k, R.s, 1);
+  };
+  const _dr = drawRemote;
+  drawRemote = function (Rm) {
+    if (!Rm || Rm.pose !== 'roll' || !Rm.sp || !Rm.sp.skin || Rm.drive) { if (Rm) Rm.rl0 = 0; return _dr.apply(this, arguments); }
+    const now = performance.now(); if (!Rm.rl0) Rm.rl0 = now; const k = Math.min(1, (now - Rm.rl0) / (ROLL.dur * 1000)), s = (Rm.ph | 0) >= 8 ? -1 : 1;
+    const f = faceOf(Rm.dir || 0), spr = ur174RollSprite(Object.assign({ type: 'p', zomb: false, nf: 16, front: f.front, fx: f.fx, hurt: 0 }, Rm.sp));
+    const [sx, sy] = w2sRender(Rm.x, Rm.y), X = RP(sx), Y = RP(sy);
+    ctx.drawImage(SPR.blob, X - 13, Y - 4); ur174Rot(spr, X, Y, k, s, 1);
+    const top = Y - spr.oy; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.font = '11px VT323, "Courier New", monospace'; ctx.strokeStyle = 'rgba(0,0,0,.85)';
+    ctx.fillStyle = NET.pvp ? (Rm.tr ? '#ff5a4a' : Rm.bd ? '#ffa040' : Rm.al ? '#7dff6b' : '#ffffff') : '#7dff6b';
+    const nm = (Rm.name || 'Compañero') + (NET.pvp && Rm.tr ? ' · TRAIDOR' : NET.pvp && Rm.bd ? ' · BANDIDO' : ''); ctx.strokeText(nm, X, top - 8); ctx.fillText(nm, X, top - 8); ctx.textAlign = 'left';
+  };
+}
+ACH.push({ id: 'roll10', n: 'Acróbata', d: 'Esquiva 10 golpes rodando', t: () => (MX.rollDodge | 0) >= 10 });
 
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
@@ -24812,7 +24923,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24853,7 +24964,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24876,7 +24987,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24905,7 +25016,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24939,7 +25050,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24970,7 +25081,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -25003,7 +25114,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -25032,12 +25143,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.3') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.4') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25227,6 +25338,11 @@ body #pause .pz-b::-webkit-scrollbar{width:6px}body #pause .pz-b::-webkit-scroll
 #pzMore{position:absolute;left:0;right:0;bottom:0;height:34px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;pointer-events:none;background:linear-gradient(transparent,#0c130eee 70%);font-family:var(--disp);font-size:8px;letter-spacing:.18em;color:var(--amber);text-shadow:1px 1px 0 #000;transition:opacity .2s;opacity:0}
 #pzMore.on{opacity:1}#pzMore i{font-style:normal;display:inline-block;margin-right:6px;animation:pzm 1.1s ease-in-out infinite}@keyframes pzm{50%{transform:translateY(3px)}}
 @media (max-height:420px){body #pause .pz-h small{display:none}body #pause .pz-h{padding:5px 12px 4px}body #pause .pz-s b{font-size:17px}}
+</style>
+<style>/* v17.4: botón RODAR */
+#bRoll{right:calc(146px + env(safe-area-inset-right,0px));bottom:calc(108px + env(safe-area-inset-bottom,0px));width:56px;height:56px;font-size:13px;background:#123048cc;border-color:#6fc3ff;--g:#6fc3ff}
+@media (max-height:520px){#bRoll{right:calc(116px + env(safe-area-inset-right,0px));bottom:calc(128px + env(safe-area-inset-bottom,0px));width:46px;height:46px;font-size:10px}}
+#touch .tb.cd{filter:saturate(.25) brightness(.62)}
 </style>
 </body>
 </html>

@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v17.4:
+• ¡Rueda para esquivar! Botón RODAR: una voltereta que te salva de los golpes de los zombis.
+• Si pulsas ATACAR mientras ruedas, contraatacas al levantarte.
+• Teléfonos modestos: la calidad se ajusta desde el inicio, sin saltos de cámara.
+• Sangre con forma, Zonas Rojas con gas, saco de dormir y camas para elegir dónde volver.
+
+--- English (optional) ---
+What's new in v17.4:
+• Dodge roll! New ROLL button: a quick roll that saves you from zombie hits.
+• Press ATTACK while rolling to counterattack as you get up.
+• Modest phones: quality adjusts from the start, no camera jumps.
+• Shaped blood, Red Zones with gas, sleeping bags and beds to choose where to respawn.
