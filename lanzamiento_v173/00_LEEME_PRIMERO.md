@@ -1,14 +1,14 @@
-# Lanzamiento v17.2 «Zona Roja» — qué hay en esta carpeta
+# Lanzamiento v17.3 «Zona Roja» — qué hay en esta carpeta
 1. **`PASAR_A_PRODUCCION.md` ← empieza aquí si vas a publicar en producción** (decisiones antes de compilar, Play Console, lanzamiento por etapas, servidor).
 1a. `RECUPERAR_LLAVE_FIRMA.md` — si olvidaste la contraseña de la llave `.jks` (se puede restablecer: no pierdes la app).
-1b. `GUIA_SUBIR_v17.2.md` — los 8 pasos de siempre (compilar, probar, subir a Play, servidor).
+1b. `GUIA_SUBIR_v17.3.md` — los 8 pasos de siempre (compilar, probar, subir a Play, servidor).
 1c. `ficha_play/` — gráfico destacado, 7 capturas y textos de la ficha (español e inglés) para producción.
-2. `UltimoRefugio_AndroidStudio_v17.2.zip` — proyecto de la app (versionCode 163, «17.2»).
+2. `UltimoRefugio_AndroidStudio_v17.3.zip` — proyecto de la app (versionCode 164, «17.3»).
 3. `privacy.html` — política de privacidad (la de la 16.3; la 17.0 no la cambia: súbela solo si no subiste la de la 16.3).
-4. `NOVEDADES_PLAY_v17.2.txt` — texto de «novedades» (es + en).
-5. `correo_testers_v172/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
+4. `NOVEDADES_PLAY_v17.3.txt` — texto de «novedades» (es + en).
+5. `correo_testers_v173/` — correo para testers (HTML con imágenes + texto + jpg sueltos).
 6. `UltimoRefugio_Servidor_Tailscale.zip` — kit del servidor (migración al mapa nuevo, `PRUEBA_DURA.bat`, página `/prueba`, guion de pruebas).
-7. `CAMBIOS_v14.0_a_v17.2.md` — todo lo que cambió desde la versión que está en revisión.
+7. `CAMBIOS_v14.0_a_v17.3.md` — todo lo que cambió desde la versión que está en revisión.
 
 **IMPORTANTE (v15.5):** corrige el fallo por el que en las salas no se veía a los demás jugadores (solo un «Anfitrión»). Lee `arreglo_jugadores_invisibles/ANALISIS_Y_ARREGLO.md` (en la raíz): explica la causa, por qué hay que actualizar la app y la opción mínima **14.0.1**.
 
@@ -35,3 +35,5 @@
 **Preparación para producción (17.1, mismo versionCode 162):** la app se declara juego (Android 16 respeta la orientación horizontal en tabletas y plegables), la política de privacidad real queda por defecto, el Java compila contra Android 16, ficha nueva de Play (`ficha_play/`) y guía `PASAR_A_PRODUCCION.md`.
 
 **v17.2:** perímetro de cuarentena y nube de gas dentro del mundo en las Zonas Rojas, salpicaduras de lluvia y civiles lejanos más ligeros. Anuncios reales de Unity. **Sube directamente la 17.2.** Ver `actualizacion_v172/CAMBIOS_v17.2.md`.
+
+**v17.3:** la sangre pasa de rectángulos planos a salpicaduras de verdad (con gotas), y las manchas ya no se acumulan sin fin en partidas largas. Solo cambia el aspecto. Sube directamente la 17.3. Ver `actualizacion_v173/CAMBIOS_v17.3.md`.

@@ -1,17 +1,17 @@
 PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
 
 --- Español (Latinoamérica / España) ---
-Novedades de la v17.2:
-• Zonas Rojas: hospital, comisaría y depósito en cuarentena, con cinta y nube de gas. El filtro de tu máscara se gasta.
+Novedades de la v17.3:
+• Sangre con forma: salpicaduras reales (con gotas), ya no manchas planas.
+• Zonas Rojas con cinta y nube de gas; el filtro de tu máscara se gasta.
 • Saco de dormir y camas: al morir eliges dónde volver.
 • Armario de herramientas: nadie construye junto a tu base.
 • Paredes con vida y grietas: repáralas con el martillo.
-• La lluvia salpica el suelo y la ciudad va más fluida.
 
 --- English (optional) ---
-What's new in v17.2:
-• Red Zones: a quarantined hospital, police station and depot, with tape and a gas cloud. Your mask filter wears out.
+What's new in v17.3:
+• Shaped blood: real splatter (with droplets), no more flat stains.
+• Red Zones with tape and a gas cloud; your mask filter wears out.
 • Sleeping bags and beds: choose where to respawn.
 • Tool cupboard: nobody can build next to your base.
 • Walls with health and cracks: repair them with a hammer.
-• Rain splashes on the ground and the city runs smoother.

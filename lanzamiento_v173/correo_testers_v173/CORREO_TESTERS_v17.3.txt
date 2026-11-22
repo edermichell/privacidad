@@ -1,8 +1,8 @@
-Asunto: Último Refugio v17.2 «Zona Roja» — prueba de 25 minutos
+Asunto: Último Refugio v17.3 «Zona Roja» — prueba de 25 minutos
 
 Hola equipo:
 
-Ya está lista la v17.2 «Zona Roja» de Último Refugio. Las salas cambian de verdad: ahora hay que defender la base, elegir dónde volver al morir y hay lugares a los que da miedo entrar. Necesito que lo prueben en teléfonos reales.
+Ya está lista la v17.3 «Zona Roja» de Último Refugio. Las salas cambian de verdad: ahora hay que defender la base, elegir dónde volver al morir y hay lugares a los que da miedo entrar. Necesito que lo prueben en teléfonos reales.
 
 LO NUEVO DE LA 17.0 Y LA 17.1
 - ZONAS ROJAS: al principio del brote el ejército puso en cuarentena un hospital, una comisaría y un depósito, y los llenó de gas. Salen en el mapa con un círculo rojo. Dentro hay gas (sin máscara antigás pierden vida), saqueadores armados (y un jefe) y cajas militares con el mejor botín de la ciudad.
@@ -39,7 +39,7 @@ LO QUE YA TRAÍAN LAS VERSIONES ANTERIORES
 
 CÓMO PROBARLO (≈ 25 minutos)
 1. ANTES de jugar, abran en el teléfono [PEGAR AQUÍ LA DIRECCIÓN]/prueba (por ejemplo https://server.tail12bbaa.ts.net/prueba), pulsen EMPEZAR LA PRUEBA y mándenme el resultado (botón COPIAR RESULTADO). Gasta ~8 MB. Si pueden, háganlo con Wi-Fi y con datos móviles.
-2. Instalen la v17.2 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
+2. Instalen la v17.3 (misma versión para todos) y abran MULTIJUGADOR: deben ver Refugio 1, 2 y 3 con «OFICIAL» y «MAPA 960». Pulsen UNIRSE (la primera persona de cada sala espera ~10 s mientras se genera el mundo).
 3. Caminen por el centro, la zona industrial, el puerto (muelles al final del camino), un parque con estanque y entren a un callejón.
 4. Peleen contra zombis, construyan un muro, abran cajas y salgan y vuelvan a entrar: lo construido debe seguir ahí.
 5. Abran NOVEDADES: debe mostrar la lista de cambios y decir «Tienes la última versión». (Cuando salga una versión posterior, debe aparecer un aviso abajo en el menú con el botón ACTUALIZAR: avísenme si lo ven.)
@@ -59,7 +59,7 @@ CÓMO REPORTAR
 Modelo de teléfono y versión de Android, qué hacían y dónde (centro, puerto…), hora aproximada, Wi-Fi o datos, y captura o video corto. Para jugadores tramposos o tóxicos usen el botón de reportar y avísenme también.
 
 DESCARGA Y HORARIO
-Descarga de la v17.2: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
+Descarga de la v17.3: [PEGAR AQUÍ EL ENLACE DE LA PRUEBA CERRADA]
 El servidor estará encendido: [PONER FECHA Y HORARIO]
 (Si instalan encima conservan su partida individual. Las partidas de las salas oficiales anteriores no se conservan con el mapa nuevo.)
 

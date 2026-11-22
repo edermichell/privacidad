@@ -1,4 +1,4 @@
-# Último Refugio — cambios de la v14.0 a la v17.2 (versionCode 137 → 163)
+# Último Refugio — cambios de la v14.0 a la v17.3 (versionCode 137 → 164)
 
 ## En la app (lo que ven los jugadores)
 - **Mapa nuevo de 960×960** para las salas oficiales (solo lo activa el servidor; el juego individual y el COOP no cambian):
@@ -112,3 +112,7 @@
 - Perímetro de cuarentena (postes, cinta amarilla y negra, carteles) en las Zonas Rojas; nube de gas dentro del mundo.
 - Salpicaduras de lluvia en el suelo.
 - Civiles lejanos y tranquilos simulados 1 de cada 3 fotogramas (menos procesador en la ciudad).
+
+## Sangre con forma (v17.3) — ver `actualizacion_v173/CAMBIOS_v17.3.md`
+- La sangre pasa de rectángulos planos a salpicaduras pre-dibujadas (gotas y núcleo oscuro), baratas de dibujar.
+- Las manchas dejan de acumularse sin fin en partidas largas (se limitan).

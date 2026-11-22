@@ -1,18 +1,18 @@
-# Lanzar la v17.2 «Zona Roja» en Google Play · paso a paso
+# Lanzar la v17.3 «Zona Roja» en Google Play · paso a paso
 
-**Qué subes:** la app **17.2** (versionCode **163**) a la misma pista de **prueba cerrada (alpha)**. Después actualizas el servidor de tu PC.
+**Qué subes:** la app **17.3** (versionCode **164**) a la misma pista de **prueba cerrada (alpha)**. Después actualizas el servidor de tu PC.
 **Tiempo:** ~1 h de trabajo tuyo + la revisión de Google (de horas a varios días).
-**Sube directamente la 17.2:** incluye todo lo de la 17.1 y la 17.0 (y de la 16.3, con el chat de voz y su permiso de micrófono). Si ya hubieras subido la 17.0 o la 17.1, la 17.2 la sustituye sin problema.
+**Sube directamente la 17.3:** incluye todo lo de la 17.2, 17.1 y 17.0 (y de la 16.3, con el chat de voz y su permiso de micrófono). Si ya hubieras subido una 17.x anterior, la 17.3 la sustituye sin problema.
 
 ## Archivos de esta carpeta
 | Archivo | Para qué |
 |---|---|
-| `UltimoRefugio_AndroidStudio_v17.2.zip` | Proyecto de Android Studio (versionCode 163, versionName «17.2») |
+| `UltimoRefugio_AndroidStudio_v17.3.zip` | Proyecto de Android Studio (versionCode 164, versionName «17.3») |
 | `privacy.html` | Política de privacidad («noviembre de 2026 (v16.3)»; la 17.x no la cambia) |
-| `NOVEDADES_PLAY_v17.2.txt` | Texto de «Novedades» para Play (español e inglés, por debajo de 500 caracteres) |
+| `NOVEDADES_PLAY_v17.3.txt` | Texto de «Novedades» para Play (español e inglés, por debajo de 500 caracteres) |
 | `UltimoRefugio_Servidor_Tailscale.zip` | Kit del servidor nuevo (se instala **después**, paso 7) |
-| `correo_testers_v172/` | Correo para testers (HTML con imágenes y texto) |
-| `CAMBIOS_v14.0_a_v17.2.md` | Todo lo que cambió desde la 14.0 aprobada |
+| `correo_testers_v173/` | Correo para testers (HTML con imágenes y texto) |
+| `CAMBIOS_v14.0_a_v17.3.md` | Todo lo que cambió desde la 14.0 aprobada |
 | `PROBAR_SERVIDOR.html` | Página para comprobar tu servidor desde el navegador |
 
 ---
@@ -28,8 +28,8 @@ La 17.x **no recoge datos nuevos**: el anuncio para reaparecer usa el mismo Unit
 - **Anuncios:** la app ya declara que contiene anuncios. El anuncio recompensado nuevo (reaparecer ya) es **opcional** para el jugador.
 
 ## Paso 3 · Compilar el AAB firmado (15–30 min)
-1. Descomprime `UltimoRefugio_AndroidStudio_v17.2.zip` y abre `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle.
-2. Revisa `app/build.gradle`: `versionCode 163` y `versionName "17.2"`.
+1. Descomprime `UltimoRefugio_AndroidStudio_v17.3.zip` y abre `UltimoRefugio_Android` en **Android Studio**. Deja que sincronice Gradle.
+2. Revisa `app/build.gradle`: `versionCode 164` y `versionName "17.3"`.
 3. Tus valores de siempre: `UNITY_TEST_MODE=false`, `PRIVACY_URL`, `UNITY_GAME_ID` y la firma.
 4. **Build ▸ Generate Signed Bundle / APK… ▸ Android App Bundle**, con **la misma llave `.jks`** ▸ **release**.
 5. La 17.x **no cambia el código Java** respecto a la 16.3. Si nunca compilaste la 16.3, el permiso del micrófono es lo nuevo en Java: si Gradle da error, mándame el texto exacto.
@@ -37,7 +37,7 @@ La 17.x **no recoge datos nuevos**: el anuncio para reaparecer usa el mismo Unit
 ## Paso 4 · Probar en tu teléfono antes de subir (20 min)
 Con el **servidor ya actualizado en tu PC** (paso 7; puedes hacerlo antes en una copia, o probar justo después de actualizarlo):
 1. El juego abre y la partida individual va como siempre.
-2. **NOVEDADES:** la primera entrada es la 17.2, «Cuarentena y lluvia» (debajo, la 17.1 y la 17.0).
+2. **NOVEDADES:** la primera entrada es la 17.3, «Sangre con forma» (debajo, la 17.2, 17.1 y 17.0).
 3. **Saco de dormir:** en una sala, V ▸ Muebles ▸ «Saco de dormir» (3 trapos + 1 sábana). Aléjate y muere (o pide a otro que te mate en la sala PvP): debe salir **ELIGE DÓNDE REAPARECER** con tu saco, «Lugar al azar», la cuenta atrás y el botón del anuncio.
 4. **Anuncio para reaparecer:** pulsa «VER ANUNCIO · REAPARECER YA»: con `UNITY_TEST_MODE=false` debe salir un anuncio real; al terminar vuelves a la sala junto a tu saco.
 5. **Armario de herramientas:** V ▸ Almacenaje (6 tablones, 8 clavos, 4 chatarra). Ábrelo: dice «mantenimiento 6 h». Mete tablones y clavos: las horas suben. Con otro teléfono, intenta construir cerca: no debe dejar.
@@ -47,26 +47,26 @@ Con el **servidor ya actualizado en tu PC** (paso 7; puedes hacerlo antes en una
 
 ## Paso 5 · Subir a Play Console (10 min)
 1. Play Console → **Pruebas → Prueba cerrada (alpha)** → **Crear nueva versión**.
-2. Sube `app-release.aab`. Nombre: **17.2 (163)**.
-3. Pega los dos bloques de `NOVEDADES_PLAY_v17.2.txt`.
+2. Sube `app-release.aab`. Nombre: **17.3 (164)**.
+3. Pega los dos bloques de `NOVEDADES_PLAY_v17.3.txt`.
 4. **Revisar versión** (los avisos rojos, mándamelos) → **Guardar → Enviar cambios a revisión**.
 5. Mientras dure la revisión, no cambies la ficha ni los formularios.
 
 ## Paso 6 · Cuando Google la apruebe
-1. Comprueba en un teléfono de tester que Play ofrece la 17.2 (la app avisa sola en el menú).
-2. Manda el correo de `correo_testers_v172/` rellenando los `[PEGAR AQUÍ…]`.
+1. Comprueba en un teléfono de tester que Play ofrece la 17.3 (la app avisa sola en el menú).
+2. Manda el correo de `correo_testers_v173/` rellenando los `[PEGAR AQUÍ…]`.
 
 ## Paso 7 · Actualizar el servidor de tu PC (10 min)
-**Qué cambia para todos al actualizar:** en la **sala PvP las bases ya no se protegen** con los dueños desconectados (en las salas normales sí, como antes), y las **Zonas Rojas** aparecen en todas las salas. Las apps antiguas siguen entrando, pero sin ver barras, armario, zonas ni la pantalla de reaparición: conviene actualizar el servidor **cuando la 17.2 ya esté en Play**.
+**Qué cambia para todos al actualizar:** en la **sala PvP las bases ya no se protegen** con los dueños desconectados (en las salas normales sí, como antes), y las **Zonas Rojas** aparecen en todas las salas. Las apps antiguas siguen entrando, pero sin ver barras, armario, zonas ni la pantalla de reaparición: conviene actualizar el servidor **cuando la 17.3 ya esté en Play**.
 1. Cierra el servidor (ventana de `INICIAR_SERVIDOR.bat` → Ctrl+C) y haz una copia de la carpeta.
 2. Del zip `UltimoRefugio_Servidor_Tailscale.zip`, copia **encima** solo: `servidor.js`, `srv_layer.js`, `LEEME_SERVIDOR.md` y `juego\index.html`. **No pises tu `config.json`** ni la carpeta `datos` (las opciones nuevas traen buenos valores por defecto).
 3. Si aún no tienes la sala PvP oficial: `AGREGAR_SALA_PVP.bat` (ver la guía de la 16.3 en el anexo).
 4. Arranca. En el registro verás `Zonas Rojas: Hospital en cuarentena (x,y), …` al despertar cada sala.
-5. Opcional, para que Play avise a todos: en `config.json`, `"appUltima": { "codigo": 163, "version": "17.2", "notas": ["Zonas Rojas", "Saco de dormir y elegir dónde reaparecer", "Armario de herramientas"] }`.
+5. Opcional, para que Play avise a todos: en `config.json`, `"appUltima": { "codigo": 164, "version": "17.3", "notas": ["Zonas Rojas", "Saco de dormir y elegir dónde reaparecer", "Armario de herramientas"] }`.
 6. **Ajustes opcionales** en `config.json` (detalle en `LEEME_SERVIDOR.md`): `"zonasRojas": false` las quita; `"armarioRadio": 12`, `"mantenimientoHoras": 6`, `"armarioMax": 3`; espera al reaparecer `"reaparicionSeg": 10`, `"reaparicionExtraSeg": 15`, `"reaparicionMaxSeg": 90`; para volver a proteger las bases en la sala PvP, pon `"proteccionBases": true` dentro de esa sala.
 
 ## Paso 8 · Vigilar 2–3 días
-- **Play Console → Android vitals:** cierres y ANR de la 17.2.
+- **Play Console → Android vitals:** cierres y ANR de la 17.3.
 - **Registro del servidor:** `construcción rechazada a jugador N` (alguien intentó construir en zona ajena), `N muertes en la última hora, reaparece en X s`, `vio un anuncio para reaparecer ya`, `armario de herramientas sin mantenimiento`.
 - **Unity Ads:** mira cuántos anuncios recompensados de «reaparecer» se ven al día.
 - Pregunta a los testers si la espera al reaparecer (10 s, +15 por muerte, máx. 90) y el gas (unos 90 s sin máscara) les parecen bien; se ajustan desde `config.json` sin actualizar la app (el gas no: ese está en la app).
@@ -76,7 +76,7 @@ Con el **servidor ya actualizado en tu PC** (paso 7; puedes hacerlo antes en una
 |---|---|
 | Play rechaza la versión | Copia el motivo y mándamelo |
 | «Clave de firma incorrecta» | Compila con la `.jks` de siempre |
-| «Version code 163 ya usado» | Dime y lo paso a 164 |
+| «Version code 164 ya usado» | Dime y lo paso a 165 |
 | No sale la pantalla de reaparecer | Ese teléfono no tiene la 17.x o el servidor no se actualizó |
 | «Aún no puedes reaparecer: espera N s» | Es lo esperado si alguien vuelve a la sala antes de su espera |
 | Un tester no puede construir en su propia base | Otro puso un armario cerca: que abra ese armario (si no tiene candado) o lo rompa; o que pongas `"armarioHerramientas": false` |
@@ -226,3 +226,6 @@ Con el **servidor ya actualizado en tu PC** (paso 7; puedes hacerlo antes en una
 ## Cuarentena y lluvia (nuevo en la 17.2)
 - Perímetro de cuarentena en las Zonas Rojas (postes con cinta amarilla y negra y carteles); la nube de gas forma parte del mundo (de noche se oscurece); la lluvia salpica el suelo; los civiles lejanos y tranquilos gastan menos procesador.
 - **Servidor:** basta copiar `juego\\index.html` del kit nuevo. Detalle: `actualizacion_v172/CAMBIOS_v17.2.md`.
+
+## Sangre con forma (nuevo en la 17.3)
+- La sangre ahora son salpicaduras pre-dibujadas (gotas y núcleo oscuro) en vez de rectángulos planos, y las manchas se limitan para que no se acumulen en partidas largas. Solo cambia el aspecto. **Servidor:** copia `juego\\index.html`. Detalle: `actualizacion_v173/CAMBIOS_v17.3.md`.
