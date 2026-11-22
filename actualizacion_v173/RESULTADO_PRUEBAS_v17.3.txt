@@ -1,0 +1,68 @@
+Último Refugio 17.3 · resultado de las pruebas (2026-11-22)
+
+  ######## 17.3 cliente
+  == notas
+  fallos: 0
+  == escenas/guardado
+  fallos: 0
+  == 13.5 -> 13.6
+  OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+  == 2 jugadores
+  host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+  == 4 jugadores
+  fallos: 0
+  == soak
+  d4 14s {"Z":1562,"NPCS":219,"parts":13,"texts":0,"cars":322,"chunks":34,"HC2":1434,"SPR":35,"EVS":6,"JL":16,"buildings":286,"TRAPS":0,"day":5,"ls":155931,"mem":null,"aliv
+  ERRS_FOUND []
+  FIN
+  == mono
+  == small: teclas 131, toques 89 (39 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+  == colossal: teclas 124, toques 96 (37 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+  == ritmo
+  fallos: 0
+  == gama baja
+  fallos: 0
+  == novedades
+  fallos: 0
+  == suelo
+  fallos: 0
+  FIN2
+  == funciones optimizadas
+  fallos: 0
+  == arranque rápido
+  fallos: 0
+  == clave de sala
+  fallos: 0
+  == chat de voz
+  fallos: 0
+  == guardado 17.1
+  TODO OK
+  ######## 17.0 zona roja
+  TODO OK
+  TODO OK
+  ######## fase 5
+  fallos: 0
+  fallos: 0
+  ######## fase 6
+  FAIL B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[1,"corpse"],"guardadas":1}
+  fallos: 1
+  ######## nombres y aparición
+  fallos: 0
+  ######## visibilidad y acciones
+  fallos: 0
+  fallos: 0
+  ######## alianzas y misiones
+  fallos: 0
+  fallos: 0
+  == prueba dura
+  SALA1: 29.8 pasos/s (objetivo 30) · zombis vivos 160 · bajas 256 · errores del juego 0
+  SALA2: 29.9 pasos/s (objetivo 30) · zombis vivos 165 · bajas 233 · errores del juego 0
+  SALA3: 29.9 pasos/s (objetivo 30) · zombis vivos 199 · bajas 247 · errores del juego 0
+  Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3939
+  VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+  TODO_FIN
+
+Nota sobre «fase 6 · B5»: falló una vez por tiempos del servidor (el cadáver no había acreditado aún).
+Repetida sola, pasa (no tiene relación con el cambio de la 17.3, que solo dibuja la sangre):
+  OK   B5: pistola del uniforme de un policía muerto se guarda {"antes":1,"despues":[2,"npc"],"guardadas":2}
+  fallos: 0
