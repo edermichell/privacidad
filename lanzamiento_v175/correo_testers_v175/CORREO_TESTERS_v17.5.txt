@@ -1,0 +1,20 @@
+Asunto: Último Refugio v17.5 «Se ven venir» — prueba de 15 minutos
+
+Hola equipo:
+
+La v17.5 cambia cómo se pelea cuerpo a cuerpo. Necesito su opinión en teléfonos reales.
+
+LO NUEVO
+- Los zombis ya no hieren al instante: antes de golpear se ECHAN HACIA ATRÁS con un destello rojo y un gruñido corto (un tercio de segundo; los corredores, menos; los brutos, más).
+- Al verlo venir pueden: retroceder (si ya no están a su alcance, falla), RODAR (botón RODAR de la 17.4) o pegarles primero (el golpe los aturde y cancela su ataque).
+- Arreglado: cuando un zombi moría junto a un auto, USAR los subía siempre al auto y no podían registrar el cadáver. Ahora gana lo que tienen enfrente.
+
+(Adjuntar: preparacion_golpe.jpg)
+
+QUÉ NECESITO QUE PRUEBEN
+1. ¿Se ve bien el destello rojo de día, de noche y con lluvia? ¿Es demasiado o muy poco?
+2. Peleen contra 3 o 4 zombis a la vez: ¿da tiempo a reaccionar? ¿Se siente más justo, o el juego quedó demasiado fácil/difícil?
+3. Maten un zombi junto a un auto y regístrenlo (mirándolo) y luego súbanse al auto (mirándolo).
+4. En una sala con otro teléfono: ¿ven el destello de los zombis que les atacan a ustedes?
+
+Cualquier cosa rara, con captura y modelo de teléfono. ¡Gracias!

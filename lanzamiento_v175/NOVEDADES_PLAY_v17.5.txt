@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v17.5:
+• Los zombis avisan antes de golpear: se echan hacia atrás con un destello rojo. ¡Retrocede, rueda o pégales primero!
+• Arreglado: junto a un cadáver al lado de un auto, USAR ya no te sube siempre al auto.
+• 17.4: botón RODAR para esquivar y contraatacar.
+• Zonas Rojas, saco de dormir y camas para elegir dónde volver.
+
+--- English (optional) ---
+What's new in v17.5:
+• Zombies telegraph their attacks: they lean back with a red flash. Step back, roll or hit them first!
+• Fixed: next to a corpse beside a car, USE no longer always gets you in the car.
+• 17.4: ROLL button to dodge and counterattack.
+• Red Zones, sleeping bags and beds to choose where to respawn.

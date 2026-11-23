@@ -1,0 +1,97 @@
+Último Refugio 17.5 · resultado de las pruebas (2026-11-23)
+
+=== Pruebas nuevas (prueba_v175.js): 10 comprobaciones -> fallos: 0
+  golpes 0,37 s tras la preparación (modo casual), 8 intentos en 10 s (como antes), fallar al alejarse, cancelar golpeando, voltereta, tipos, dibujo, red, USAR
+=== Cooperativo real con 2 navegadores (prueba_cooperativo_v175.js) -> fallos: 0
+  8 preparaciones contra el invitado, el invitado ve el destello, recibe el golpe, sin errores
+
+=== Regresión completa (all175.sh)
+######## 17.5 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+FAIL partida de la v105 cargada en la v106: imagen DISTINTA | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+== 4 jugadores
+FAIL invitado 2 entra a la partida 
+FAIL el anfitrión tiene 3 invitados jugando {"peers":3,"estados":["playing/true/1/2/Jugador 2","linked/false/null/3/null","playing/true/1/4/Jugador 4"],"chip":"COOP ● 
+FAIL g1 ve al anfitrión y a los otros 2 invitados {"st":"playing","oth":1,"host":true,"chip":"COOP ● 3 jugadores"}
+FAIL g2 ve al anfitrión y a los otros 2 invitados {"st":"linked","oth":0,"host":false,"chip":"COOP … conectando"}
+FAIL g3 ve al anfitrión y a los otros 2 invitados {"st":"playing","oth":1,"host":true,"chip":"COOP ● 3 jugadores"}
+== soak
+d4 12s {"Z":1588,"NPCS":44,"parts":58,"texts":0,"cars":342,"chunks":40,"HC2":1434,"SPR":35,"EVS":6,"JL":10,"buildings":268,"TRAPS":0,"day":5,"ls":154082,"mem":null,"alive
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (32 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+fallos: 0
+== suelo
+fallos: 0
+FIN2
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+######## 17.0 zona roja
+TODO OK
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+== prueba dura
+SALA1: 30.0 pasos/s (objetivo 30) · zombis vivos 191 · bajas 224 · errores del juego 0
+SALA2: 30.0 pasos/s (objetivo 30) · zombis vivos 213 · bajas 270 · errores del juego 0
+SALA3: 29.9 pasos/s (objetivo 30) · zombis vivos 164 · bajas 254 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3961
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN
+
+=== Seguimiento de los fallos de arriba
+== igualdad 17.4 -> 17.5
+OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== pruebas 17.5
+OK   alejarse durante la preparación hace que falle {"had":true,"w0":0,"golpes":0,"fallos":1,"hp":100}
+fallos: 0
+== cooperativo 17.5
+OK   invitado conectado y jugando
+== 4 jugadores v175
+fallos: 0
+== 4 jugadores v174
+FAIL invitado 2 entra a la partida 
+FAIL el anfitrión tiene 3 invitados jugando {"peers":3,"estados":["playing/true/1/2/Jugador 2","linked/false/null/3/null","playing/true/1/4/Jugador 4"],"chip":"COOP ● 3 jugadores","agg":"playing"}
+FAIL g1 ve al anfitrión y a los otros 2 invitados {"st":"playing","oth":1,"host":true,"chip":"COOP ● 3 jugadores"}
+FAIL g2 ve al anfitrión y a los otros 2 invitados {"st":"linked","oth":0,"host":false,"chip":"COOP … conectando"}
+FAIL g3 ve al anfitrión y a los otros 2 invitados {"st":"playing","oth":1,"host":true,"chip":"COOP ● 3 jugadores"}
+== 4 jugadores v175
+fallos: 0
+== 4 jugadores v174
+fallos: 0
+
+Conclusiones:
+- «13.5 -> 13.6»: compara píxel a píxel la versión anterior con la nueva; la preparación (inclinación y destello) cambia la imagen a propósito. Con ZWIND.off (ataque instantáneo, solo para esta prueba) la imagen es idéntica.
+- 4 jugadores: el invitado 2 se quedó «conectando». Repetida: 17.5 bien 2 de 2; la 17.4 falló 1 de 2 con el mismo síntoma -> fallo de conexión que ya existía, no de la 17.5.

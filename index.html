@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v17.4 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v17.5 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2328,8 +2328,12 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 165, UR_VERSION = '17.4', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 166, UR_VERSION = '17.5', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '17.5', t: 'Se ven venir', it: [
+    'Los zombis ya no hieren al instante: se <b>echan hacia atrás</b> con un destello rojo y un gruñido corto antes de golpear.',
+    'Retrocede, rueda o pégale primero: un golpe durante su preparación lo aturde y cancela su ataque.',
+    'USAR junto a un cadáver que está al lado de un auto ya no te sube al auto: gana lo que tienes enfrente.' ] },
   { v: '17.4', t: 'Rueda y esquiva', it: [
     'Nuevo: <b>RODAR</b> (botón RODAR o tecla Z). Una voltereta rápida que esquiva los golpes de los zombis y el salto del saltador. Gasta aguante.',
     'Sin dirección ruedas hacia atrás, alejándote de lo que tienes enfrente. Los demás jugadores también ven tu voltereta.',
@@ -4692,7 +4696,8 @@ function updZombie(z, dt) {
     }
     if (z.st === 'wander' && z.bump >= 0) z.dir = Math.random() * TAU;
   }
-  if (z.st === 'chase' && dp < .95 && losClear(z.x, z.y, T.x, T.y) && !T.dead && !T.drive && z.stun <= 0 && z.atkCd <= 0) { z.atkCd = 1.05 + Math.random() * .4; z.lunge = .3; (T === P ? zombieHit(z) : netZombieHit(z)); }
+  if (z.wind > 0) ur175WindTick(z, dt);   /* v17.5: el golpe llega tras la preparación */
+  else if (z.st === 'chase' && dp < .95 && losClear(z.x, z.y, T.x, T.y) && !T.dead && !T.drive && z.stun <= 0 && z.atkCd <= 0) { if (ZWIND.off) { z.atkCd = 1.05 + Math.random() * .4; z.lunge = .3; (T === P ? zombieHit(z) : netZombieHit(z)); } else ur175WindStart(z, T); }
   if (z.lunge > 0) z.lunge -= dt;
 }
 const PARTS = [['cabeza', .08], ['cuello', .04], ['torso', .26], ['brazo', .28], ['mano', .07], ['pierna', .27]];
@@ -4774,9 +4779,9 @@ function findInteract() {
     const dx_ = c.x - px; if (dx_ > 2.4 || dx_ < -2.4) continue; const dy_ = c.y - py; if (dy_ > 2.4 || dy_ < -2.4) continue; const d = Math.hypot(dx_, dy_); if (d > 2.4) continue;   /* v106: descarte barato */
     const ca = Math.cos(c.a), sa = Math.sin(c.a), rx = c.x - ca * 1.0, ry = c.y - sa * 1.0, dr = Math.hypot(rx - px, ry - py);
     if (dr < 1.25 && dr < d + .2) { if (dr < bs) { bs = dr; best = { type: 'trunk', c, x: rx, y: ry }; } }
-    else { const dd = d - .5; if (dd < bs) { bs = dd; best = { type: 'car', c, x: c.x, y: c.y }; } }
+    else { const dd = d - .5 + ur175Face(c.x, c.y); if (dd < bs) { bs = dd; best = { type: 'car', c, x: c.x, y: c.y }; } }
   }
-  for (const z of Z) { if (z.st !== 'dead' || z.looted) continue; const d = Math.hypot(z.x - px, z.y - py); if (d < 1.25 && d < bs) { bs = d; best = { type: 'corpse', z, x: z.x, y: z.y }; } }
+  for (const z of Z) { if (z.st !== 'dead' || z.looted) continue; const d = Math.hypot(z.x - px, z.y - py), dc = best && best.type === 'car' ? d - .5 + ur175Face(z.x, z.y) : d; if (d < 1.25 && dc < bs) { bs = d; best = { type: 'corpse', z, x: z.x, y: z.y }; } }
   for (const f of floorItems) { const d = Math.hypot(f.x - px, f.y - py); if (d < 1.4 && d < bs) { bs = d; best = { type: 'item', f, x: f.x, y: f.y }; } }
   for (const b of barrels) { const d = Math.hypot(b.x - px, b.y - py); if (d < 1.7 && d < bs) { bs = d; best = { type: 'barrel', b, x: b.x, y: b.y }; } }
   for (const g of gens) { const d = Math.hypot(g.x - px, g.y - py); if (d < 1.8 && d < bs) { bs = d; best = { type: 'gen', g, x: g.x, y: g.y }; } }
@@ -13115,7 +13120,7 @@ function netSnap() {
   const g = NET.rp; if (!g || !g.ok) return; const gx = g.x, gy = g.y, RR = 50, zs = [], ns = [], cs = [], zr = [], nr = [], zl = NET.zlast, nl = NET.nlast, zin = new Set(), nin = new Set();
   for (const q of Z) {
     const dx = q.x - gx, dy = q.y - gy; if (dx > RR || dx < -RR || dy > RR || dy < -RR) continue; if (q.st === 'dead' && (dx > 28 || dx < -28 || dy > 28 || dy < -28)) continue;
-    zin.add(q.id); const a = [q.id, r2(q.x), r2(q.y), r2(q.dir), ZSTI[q.st] || 0, Math.round(q.hp), (q.moving ? 1 : 0) | (q.lunge > 0 ? 2 : 0) | (q.burn > 0 ? 4 : 0) | (q.stun > 0 ? 8 : 0) | (q.brace > 0 ? 16 : 0)];
+    zin.add(q.id); const a = [q.id, r2(q.x), r2(q.y), r2(q.dir), ZSTI[q.st] || 0, Math.round(q.hp), (q.moving ? 1 : 0) | (q.lunge > 0 ? 2 : 0) | (q.burn > 0 ? 4 : 0) | (q.stun > 0 ? 8 : 0) | (q.brace > 0 ? 16 : 0) | (q.wind > 0 ? 32 : 0)];
     const sg = a.join(','), old = zl.get(q.id); if (old === sg) continue;
     if (old === undefined) a.push(q.type, q.skin, q.shirt, q.pants, q.hair, q.blood ? 1 : 0, q.torn ? 1 : 0, r2(q.spd), q.job || 0);   /* v15.8: uniforme */
     zl.set(q.id, sg); zs.push(a);
@@ -13150,7 +13155,7 @@ function netApplySnap(o) {
     if (!z) { if (a.length < 15) continue; z = { id: a[0], type: a[7], skin: a[8], shirt: a[9], pants: a[10], hair: a[11], blood: !!a[12], torn: !!a[13], spd: a[14] || 1, x: a[1], y: a[2], tx: a[1], ty: a[2], dir: a[3], st: 'idle', hp: a[5], anim: Math.random() * 10, moving: false, lunge: 0, stun: 0, burn: 0, kx: 0, ky: 0, hop: 0, hitT: 0, vis: false, fast: a[7] === 'runner', big: a[7] === 'brute', los: false, hear: 1, atkCd: 0, senseT: 0, bump: -1 }; if (a[15] && typeof S88_JOB !== 'undefined' && S88_JOB[a[15]]) z.job = a[15]; NET.zm.set(a[0], z); }
     z.tx = a[1]; z.ty = a[2]; z.dir = a[3]; const st = ZST[a[4]] || 'idle';
     if (st !== z.st) { if (st === 'dead') z.dieAt = z.born ? now : 0; else if (st === 'down') z.downAt = now; }
-    z.born = 1; z.st = st; z.hp = a[5]; const f = a[6]; z.moving = !!(f & 1); if (f & 2) z.lunge = .3; z.burn = f & 4 ? 1 : 0; if (f & 8) z.stun = Math.max(z.stun, .2); z.braceVisual = !!(f & 16);
+    z.born = 1; z.st = st; z.hp = a[5]; const f = a[6]; z.moving = !!(f & 1); if (f & 2) z.lunge = .3; z.burn = f & 4 ? 1 : 0; if (f & 8) z.stun = Math.max(z.stun, .2); z.braceVisual = !!(f & 16); ur175WindVis(z, !!(f & 32));
   }
   if (o.zr) for (const id of o.zr) NET.zm.delete(id);
   if (o.zr || o.z.length) { Z.length = 0; for (const z of NET.zm.values()) Z.push(z); }
@@ -22466,10 +22471,12 @@ function drawZombie(z, viewQ) {
     if (z.stun > 0) { swx += (TIME * 40 | 0) & 1 ? 1 : -1; const rk = clamp(z.stun / .35, 0, 1); tilt += Math.round(-3 * rk * (z.hitDir !== undefined ? z.hitDir : 1)); }
     if (z.hop) bob -= Math.round(z.hop * 8);
     if (z.lunge > 0) { bob -= 1; const lk = z.lunge / .3; tilt += fxs * (lk > .5 ? 3 : -1); }
+    if (ur175Winding(z)) { bob -= 1; tilt -= fxs * 2; swx -= fxs; }   /* v17.5: se echa hacia atrás antes de golpear */
   }
   const zdx132 = viewQ ? z.x - viewQ.x : Infinity, zdy132 = viewQ ? z.y - viewQ.y : Infinity, rimNear132 = !!viewQ && zdx132 * zdx132 + zdy132 * zdy132 < 144;
   if (z.st !== 'dead' && z.st !== 'down' && !tilt && !far && rimNear132) ur132DrawPixelRim(spr, X - spr.ox + swx, Y - spr.oy + bob);
   if (!crawl && z.st !== 'dead' && z.st !== 'down' && tilt && !far) drawSplit(spr, X + swx, Y + bob, tilt);   /* v91: sin inclinación por mitades a distancia */ else ctx.drawImage(spr, X - spr.ox + swx, Y - spr.oy + bob);
+  if (ur175Winding(z)) { const rf = ur175Red(spr), ra = .17 + .12 * Math.sin(now / 45); if (!crawl && tilt && !far) drawSplit(rf, X + swx, Y + bob, tilt, ra); else { ctx.globalAlpha = ra; ctx.drawImage(rf, X - spr.ox + swx, Y - spr.oy + bob); } ctx.globalAlpha = 1; }
   if (z.hitT && now - z.hitT < 90 && z.st !== 'dead') { const fl = flashOf(spr); ctx.globalAlpha = .55; ctx.drawImage(fl, X - spr.ox + swx, Y - spr.oy + bob); ctx.globalAlpha = 1; }
   if (z.hitT && z.st !== 'dead' && now - z.hitT < 2600) { const k = clamp(z.hp / ((ZK[z.type] || ZK.walker).hp), 0, 1), bx = X - 8, by = Y - spr.oy + bob - 4; ctx.globalAlpha = Math.min(1, (2600 - (now - z.hitT)) / 600); ctx.fillStyle = '#000'; ctx.fillRect(bx - 1, by - 1, 18, 4); ctx.fillStyle = k > .5 ? '#8dbb6e' : k > .25 ? '#eab244' : '#d6402f'; ctx.fillRect(bx, by, Math.max(1, Math.round(16 * k)), 2); ctx.globalAlpha = 1; }
   /* v11.6: polvo pixelado bajo pasos fuertes; se dibuja directamente, sin crear partículas ni objetos. */
@@ -23545,6 +23552,62 @@ function ur174RollSprite(base) { const sp = Object.assign({}, base); sp.pose = '
   };
 }
 ACH.push({ id: 'roll10', n: 'Acróbata', d: 'Esquiva 10 golpes rodando', t: () => (MX.rollDodge | 0) >= 10 });
+
+/* ===================== v17.5: ATAQUES DE ZOMBI QUE SE VEN VENIR + USAR SEGÚN HACIA DÓNDE MIRAS =====================
+   1) Antes el zombi hería en el MISMO instante en que decidía atacar: no había forma de reaccionar (ni de usar la voltereta).
+      Ahora se echa hacia atrás un momento (0,3 s; corredor 0,22 s; bruto 0,39 s) con un destello rojo y un gruñido corto,
+      y entonces golpea. Si en ese momento ya no estás a su alcance (1,2 casillas), falla; si le pegas durante la preparación,
+      lo aturdes y su ataque se cancela. El ritmo de ataques no cambia: quien se queda quieto recibe los mismos golpes.
+      En red, los invitados ven la preparación (bit 32 del estado del zombi; las apps antiguas lo ignoran).
+   2) USAR junto a un cadáver al lado de un auto elegía casi siempre el auto. Ahora el cadáver tiene la misma ventaja
+      que el auto y, en caso de duda, gana lo que tienes enfrente. */
+const ZWIND = { t: .3, reach: 1.2, off: false };   /* off: ataque instantáneo como antes (solo para la prueba de igualdad entre versiones) */
+const UR175 = { gT: -9 };
+function ur175WindTime(z) {
+  let t = ZWIND.t * (z.type === 'runner' ? .75 : z.type === 'brute' ? 1.3 : 1);
+  try { if (DIFFK === 'hard') t *= .8; else if (CASUAL) t *= 1.2; } catch (e) { }
+  return t;
+}
+function ur175Cue(z) {
+  if (!P || TIME - UR175.gT < .3) return; const d = Math.hypot(z.x - P.x, z.y - P.y); if (d > 6) return;
+  UR175.gT = TIME; try { sfx('snarl', d, z); } catch (e) { }
+}
+/* el zombi empieza a atacar: se prepara, todavía no hiere */
+function ur175WindStart(z, T) { z.atkCd = 1.05 + Math.random() * .4; z.wind = ur175WindTime(z); z.windT = T; ur175Cue(z); }
+/* durante la preparación; al terminar, golpe (si sigues a su alcance) */
+function ur175WindTick(z, dt) {
+  const W = z.windT; z.wind -= dt;
+  if (!W || z.stun > 0 || z.st !== 'chase' || W.dead || W.drive) { z.wind = 0; z.windT = null; return; }
+  if (z.wind > 0) { z.dir = Math.atan2(W.y - z.y, W.x - z.x); return; }
+  z.wind = 0; z.windT = null; z.lunge = .3;
+  const dw = Math.hypot(W.x - z.x, W.y - z.y);
+  if (dw < ZWIND.reach && losClear(z.x, z.y, W.x, W.y)) {
+    if (W === P) zombieHit(z);
+    else { let sent = false; try { sent = typeof netSendToRp === 'function' && !!netSendToRp(W, { t: 'ZH', id: z.id, ty: z.type, x: r2(z.x), y: r2(z.y) }); } catch (e) { } if (!sent) netZombieHit(z); }
+  } else { MX.zwhiff = (MX.zwhiff | 0) + 1; try { sfx('swing', W === P ? 0 : 8, z); } catch (e) { } }
+}
+/* invitado: se ve la preparación que manda el anfitrión */
+function ur175WindVis(z, on) { if (on && !z.windVis) ur175Cue(z); z.windVis = on; }
+function ur175Winding(z) { return (z.wind > 0 || z.windVis) && z.st !== 'dead' && z.st !== 'down'; }
+const redCache175 = new WeakMap();
+function ur175Red(spr) {
+  let f = redCache175.get(spr); if (f) return f;
+  f = cv(spr.width, spr.height); f.hi = spr.hi; f.ox = spr.ox; f.oy = spr.oy; f.ax = spr.ax; f.ay = spr.ay;
+  const g = f.getContext('2d'); g.globalCompositeOperation = 'copy'; g.drawImage(spr, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = '#ff2a14'; g.fillRect(0, 0, f.width, f.height); redCache175.set(spr, f); return f;
+}
+/* gruñido corto (0,18 s) para avisar del golpe */
+{
+  const _sfx = sfx;
+  sfx = function (n, dist, src) {
+    if (n !== 'snarl') return _sfx.apply(this, arguments);
+    if (!AC || muted) return; const vm = clamp(1 - (dist || 0) / 28, 0, 1); if (vm <= .05) return;
+    PANV = src && P && typeof src.x === 'number' ? clamp(((src.x - P.x) - (src.y - P.y)) / 18, -1, 1) * .85 : 0;
+    try { tone(130 + Math.random() * 40, .18, 'sawtooth', .05 * vm, 25); noiseBurst(.1, .035 * vm, 900); } catch (e) { }
+  };
+}
+/* USAR: cuánto te desvías de mirarlo (0 = de frente) */
+function ur175Face(x, y) { if (!P) return 0; return Math.abs(angDiff(Math.atan2(y - P.y, x - P.x), P.dir || 0)) * .18; }
 
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
@@ -24923,7 +24986,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -24964,7 +25027,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -24987,7 +25050,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25016,7 +25079,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25050,7 +25113,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25081,7 +25144,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -25114,7 +25177,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -25143,12 +25206,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.4') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.5') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.4';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.5';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
