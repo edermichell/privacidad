@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v17.6:
+• Más ligero: con la mochila, fabricar o el mapa abiertos el teléfono se calienta menos y gasta menos batería.
+• Componentes de anuncios, compras y privacidad actualizados.
+• 17.5: los zombis avisan antes de golpear. ¡Retrocede, rueda o pégales primero!
+• 17.4: botón RODAR para esquivar y contraatacar.
+
+--- English (optional) ---
+What's new in v17.6:
+• Lighter: with the backpack, crafting or map open your phone runs cooler and uses less battery.
+• Updated ads, purchases and privacy components.
+• 17.5: zombies telegraph their attacks. Step back, roll or hit them first!
+• 17.4: ROLL button to dodge and counterattack.

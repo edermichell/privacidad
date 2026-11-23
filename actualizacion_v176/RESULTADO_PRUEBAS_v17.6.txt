@@ -1,0 +1,72 @@
+Último Refugio 17.6 · resultado de las pruebas (2026-11-23)
+
+=== Compilación Android real (Gradle 8.14.3 + AGP 8.9.1 + SDK 36, igual que Android Studio)
+OK: app-release.aab y APK generados · versionCode 167 · targetSdk 36 · minSdk 24
+Avisos del compilador: 28, todos de la API clásica de Unity Ads (conservada a propósito). Del código propio: 0.
+Bibliotecas nuevas: minSdk 19-23 (compatibles con 24). Biblioteca nativa de Unity alineada a 16 KB (readelf: 0x4000; zipalign -P 16: OK).
+
+=== Pruebas nuevas (prueba_v176.js): 12 comprobaciones -> fallos: 0
+=== CPU del hilo principal (procesador ×4)
+  mochila 94% -> 51% · fabricar 91% -> 56% · mapa 97% -> 54% · menú principal 83% -> 66% · jugando 96% -> 97% (igual)
+
+=== Regresión completa (all176.sh): sin ningún fallo
+######## 17.6 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+== 4 jugadores
+fallos: 0
+== soak
+d4 21s {"Z":1653,"NPCS":187,"parts":99,"texts":23,"cars":301,"chunks":38,"HC2":1434,"SPR":35,"EVS":6,"JL":14,"buildings":302,"TRAPS":0,"day":5,"ls":159570,"mem":null,"ali
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+fallos: 0
+== suelo
+fallos: 0
+FIN2
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+######## 17.0 zona roja
+TODO OK
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+== prueba dura
+SALA1: 29.8 pasos/s (objetivo 30) · zombis vivos 171 · bajas 250 · errores del juego 0
+SALA2: 29.9 pasos/s (objetivo 30) · zombis vivos 168 · bajas 234 · errores del juego 0
+SALA3: 29.7 pasos/s (objetivo 30) · zombis vivos 208 · bajas 255 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3901
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN

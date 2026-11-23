@@ -1,0 +1,14 @@
+Asunto: Último Refugio v17.6 «Más ligero» — prueba de 10 minutos
+
+Hola equipo:
+
+La v17.6 no trae cosas nuevas que ver: trae cosas que NO deben romperse. Actualicé las piezas de anuncios, compras y privacidad (Google pedía versiones más nuevas) y el juego gasta mucho menos con los menús abiertos.
+
+QUÉ NECESITO QUE PRUEBEN (es rápido)
+1. El juego ocupa TODA la pantalla, sin barras. Si deslizan desde el borde, las barras aparecen un momento y se vuelven a ocultar.
+2. Si su teléfono tiene la cámara dentro de la pantalla: ¿queda alguna franja negra o algo tapado por la cámara?
+3. Que se vea un ANUNCIO (por ejemplo, el de «volver ya» al morir en una sala, o uno con recompensa).
+4. Abran la TIENDA y toquen una compra: debe abrirse la ventana de Google Play (pueden cancelar, no hace falta comprar).
+5. Dejen la mochila o el mapa abiertos un par de minutos: ¿se calienta menos el teléfono que antes? (El mundo sigue vivo: ¡ojo con los zombis!)
+
+Cualquier cosa rara, con captura y modelo de teléfono. ¡Gracias!
