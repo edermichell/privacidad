@@ -1,0 +1,16 @@
+Asunto: Último Refugio v17.7 «Conexión firme» — prueba de 10 minutos (multijugador)
+
+Hola equipo:
+
+La v17.7 arregla el multijugador. Necesito que lo prueben juntos.
+
+LO NUEVO
+- Cooperativo: cuando se unían varios a la vez, a veces uno se quedaba en «conectando» para siempre. Ya no debería pasar.
+- Salas del servidor: si se corta la conexión en plena partida, sale «Conexión perdida · reconectando…» y el juego vuelve a entrar solo en la sala. Deben aparecer donde estaban.
+
+QUÉ NECESITO QUE PRUEBEN
+1. Tres de ustedes únanse a la vez al cooperativo de un cuarto. ¿Alguien se queda en «conectando»?
+2. En una sala del servidor, en pleno juego, quiten el Wi-Fi 5 segundos y vuelvan a ponerlo (o pasen de Wi-Fi a datos). ¿Se reconecta solo? ¿Aparecen donde estaban, con su mochila?
+3. Mientras dice «reconectando», toquen «Salir al menú»: debe ir al menú y dejar de intentarlo.
+
+Cualquier cosa rara, con captura y modelo de teléfono. ¡Gracias!

@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v17.7:
+• Multijugador más firme: al unirse varios amigos nadie se queda atascado en «conectando».
+• Si se corta la conexión en una sala (p. ej. al pasar de Wi-Fi a datos), el juego se reconecta solo y vuelves donde estabas.
+• 17.6: más ligero con la mochila o el mapa abiertos.
+• 17.5: los zombis avisan antes de golpear.
+
+--- English (optional) ---
+What's new in v17.7:
+• Sturdier multiplayer: when several friends join, nobody gets stuck on "connecting".
+• If your connection drops in a room (e.g. switching from Wi-Fi to mobile data), the game reconnects on its own and you're back where you were.
+• 17.6: lighter with the backpack or map open.
+• 17.5: zombies telegraph their attacks.

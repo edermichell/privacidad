@@ -1,0 +1,83 @@
+Último Refugio 17.7 · resultado de las pruebas (2026-11-23)
+
+=== Uniones de 3 invitados al cooperativo (registro de mensajes)
+17.6: 3 fallos de 8 (un invitado atascado en «conectando»; el anfitrión nunca recibió su «hi»)
+17.7: 0 fallos de 16 (en 2 uniones el primer «hi» se perdió y la repetición a los 4 s lo salvó)
+
+=== Reconexión automática contra el servidor real (prueba_reconexion_v177.js): 12 comprobaciones -> fallos: 0 (repetida 4 veces)
+
+=== Posición al volver tras un corte (sala normal): servidor anterior ~7 casillas atrás · servidor 17.7 en su sitio
+
+=== Regresión completa (all177.sh) — parte del cliente
+######## 17.7 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":158,"rp":true}
+== 4 jugadores
+fallos: 0
+== soak
+d4 20s {"Z":1525,"NPCS":83,"parts":64,"texts":6,"cars":299,"chunks":32,"HC2":1434,"SPR":35,"EVS":6,"JL":13,"buildings":270,"TRAPS":0,"day":5,"ls":158846,"mem":null,"alive
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+fallos: 0
+== suelo
+fallos: 0
+FIN2
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+
+=== Regresión de todo lo que usa el servidor, con el servidor definitivo (all177srv.sh)
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+######## 17.0 zona roja
+TODO OK
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+######## 17.7 reconexión a la sala
+fallos: 0
+######## 17.7 uniones cooperativo (6 x 3 invitados)
+FALLOS 0 de 6
+== prueba dura
+SALA1: 29.7 pasos/s (objetivo 30) · zombis vivos 171 · bajas 266 · errores del juego 0
+SALA2: 29.8 pasos/s (objetivo 30) · zombis vivos 162 · bajas 257 · errores del juego 0
+SALA3: 29.8 pasos/s (objetivo 30) · zombis vivos 180 · bajas 240 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3931
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN
+
+Nota: en la primera pasada falló «R1» (nombres y aparición, sala PvP). Causa: esa prueba apaga la validación de movimiento y la posición «validada» se quedaba congelada en el punto de aparición; con el primer arreglo del servidor esa posición antigua se escribía. Corregido (la posición validada solo se usa con la validación activa y en PvP no se cambia el guardado). R1 pasó 3 de 3 después.

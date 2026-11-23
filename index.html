@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v17.6 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v17.7 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2328,8 +2328,11 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 167, UR_VERSION = '17.6', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 168, UR_VERSION = '17.7', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '17.7', t: 'Conexión firme', it: [
+    'Cooperativo: al unirse varios amigos, a veces uno se quedaba en «conectando» para siempre. Ya no: si su primer aviso se pierde, lo repite solo.',
+    'Salas del servidor: si se corta la conexión en plena partida (p. ej. al pasar de Wi-Fi a datos), el juego <b>se reconecta solo</b> a la misma sala y vuelves donde estabas.' ] },
   { v: '17.6', t: 'Más ligero', it: [
     'Con la mochila, fabricar, estado o el mapa abiertos el juego ya no dibuja la ciudad entera detrás: el teléfono se calienta menos y gasta menos batería.',
     'El menú principal también gasta menos. El mundo sigue vivo mientras miras la mochila, como siempre.',
@@ -12732,8 +12735,8 @@ function netMkPc() {
   return pc;
 }
 function netBind(ch) {
-  NET.ch = ch; ch.binaryType = 'arraybuffer';
-  ch.onopen = () => { NET.lastRx = performance.now(); NET.st = 'linked'; netUI(); if (NET.role === 'guest') { const sq = NET.spReq; NET.spReq = null; netSend(Object.assign({ t: 'hi', n: NET.name || 'Jugador 2', b: UR_BUILD }, sq ? { sp: sq.sp, ad: sq.ad } : {})); } };   /* v17.0: dónde reaparecer */
+  NET.hi177 = 0; NET.ch = ch; ch.binaryType = 'arraybuffer';
+  ch.onopen = () => { NET.lastRx = performance.now(); NET.st = 'linked'; netUI(); if (NET.role === 'guest') { const sq = NET.spReq; NET.spReq = null; NET.hi0 = Object.assign({ t: 'hi', n: NET.name || 'Jugador 2', b: UR_BUILD }, sq ? { sp: sq.sp, ad: sq.ad } : {}); netSend(NET.hi0); ur177HiRetry(); } };   /* v17.0: dónde reaparecer */
   ch.onclose = () => { netLost(); };
   ch.onmessage = e => { NET.lastRx = performance.now(); if (typeof e.data === 'string') { NET.rxBytes += e.data.length; try { netMsg(JSON.parse(e.data)); } catch (er) { if (typeof console !== 'undefined') console.error('net', er); } } else netBin(e.data); };
 }
@@ -12818,7 +12821,7 @@ function netLost() {
 /* ---------- mensajes ---------- */
 function netMsg(o) {
   switch (o.t) {
-    case 'hi': if (NET.role === 'host' && !NET.sending) { NET.sending = 1; NET.rpName = String(o.n || 'Jugador 2').slice(0, 14); netSendWorld().then(() => { NET.sending = 0; }); } break;                       // (anfitrión) el invitado llegó
+    case 'hi': if (NET.role === 'host' && !NET.sending && !NET.hi177) { NET.hi177 = 1; NET.sending = 1; NET.rpName = String(o.n || 'Jugador 2').slice(0, 14); netSendWorld().then(() => { NET.sending = 0; }); } break;                       // (anfitrión) el invitado llegó
     case 'W0': NET.rx = { n: o.n, gz: o.gz, parts: [], got: 0, au: o.au | 0, pv: o.pv | 0, ch: typeof o.ch === 'string' ? o.ch : null }; if (NET.role === 'guest') { NET.st = 'loading'; netUI(); } break;
     case 'W1': netGuestLoad(); break;
     case 'R': if (NET.role === 'host') { NET.ready = true; NET.st = 'playing'; NET.rp = Object.assign(NET.rp || {}, { ok: 1, name: NET.rpName || 'Jugador 2' }); netUI(); say((NET.rpName || 'Jugador 2') + ' se unió a la partida', 'good'); netSnap(); } break;
@@ -21309,7 +21312,7 @@ netSendWorld = async function () {
   const _nm = netMsg;
   netMsg = function (o) {
     if (NET.role === 'host' && NET.cur) {
-      if (o.t === 'hi') { if (!NET.sending) { const peer = NET.cur; NET.sending = 1; NET.rpName = (o.n && o.n !== 'Jugador 2') ? String(o.n).slice(0, 14) : 'Jugador ' + peer.slot; netSendWorld().then(() => { peer.sending = 0; }); } return; }
+      if (o.t === 'hi') { if (!NET.sending && !NET.cur.hi177) { const peer = NET.cur; peer.hi177 = 1; NET.sending = 1; NET.rpName = (o.n && o.n !== 'Jugador 2') ? String(o.n).slice(0, 14) : 'Jugador ' + peer.slot; netSendWorld().then(() => { peer.sending = 0; }); } return; }
       if (o.t === 'R') { const r = _nm.apply(this, arguments); if (NET.rp) NET.rp.id = NET.cur.slot; return r; }
     }
     return _nm.apply(this, arguments);
@@ -23647,6 +23650,92 @@ function ur176Covered() {
   };
 }
 
+/* ===================== v17.7: CONEXIÓN COOPERATIVA ROBUSTA =====================
+   Fallo medido: al unirse 3 invitados, en 3 de 8 intentos uno se quedaba en «conectando» para siempre. Su primer
+   mensaje («hi», «aquí estoy, mándame el mundo») se perdía en la carrera entre abrirse el canal y estar listo el
+   anfitrión, y nadie lo volvía a pedir. Ahora el invitado lo repite si en 4 s no le llega nada (cada 3 s, hasta 6 veces)
+   y el anfitrión ignora los repetidos de quien ya está recibiendo o recibió el mundo (nunca lo manda dos veces). */
+const UR177 = { hiT: null, hiN: 0 };
+function ur177HiRetry() {
+  clearTimeout(UR177.hiT); UR177.hiN = 0;
+  const tick = () => {
+    UR177.hiT = null;
+    if (NET.role !== 'guest' || NET.st !== 'linked' || !NET.ch || NET.ch.readyState !== 'open' || !NET.hi0 || UR177.hiN >= 6) return;
+    UR177.hiN++; netSend(Object.assign({}, NET.hi0, { re: UR177.hiN })); UR177.hiT = setTimeout(tick, 3000);
+  };
+  UR177.hiT = setTimeout(tick, 4000);
+}
+
+/* --- reconexión automática en salas del servidor ---
+   Antes: si se cortaba la conexión en plena partida (p. ej. el teléfono pasa de Wi-Fi a datos), «Se perdió la conexión»
+   y de vuelta al menú, a buscar la sala a mano. Ahora reintenta entrar en LA MISMA sala (1,5 · 3 · 5 · 8 · 12 · 15 · 20 s: ~1 minuto); el
+   servidor ya devuelve al jugador donde estaba. Mientras, el mundo queda quieto (no llegan datos), el movimiento se
+   bloquea y hay un botón para salir al menú. Tras 7 intentos fallidos, al menú como antes. Solo salas del servidor:
+   el cooperativo directo depende del anfitrión y sigue igual. */
+const RC177 = { room: null, on: false, n: 0, t: null, wd: null, delays: [1500, 3000, 5000, 8000, 12000, 15000, 20000] };
+function rc177Ui(show, txt) {
+  let el = document.getElementById('rc177');
+  if (!el && show) {
+    el = document.createElement('div'); el.id = 'rc177';
+    el.innerHTML = '<div class="rcbox"><div class="rcsp"></div><div id="rc177t"></div><button id="rc177b" type="button">Salir al menú</button></div>';
+    document.body.appendChild(el);
+    document.getElementById('rc177b').addEventListener('click', e => { e.stopPropagation(); rc177Stop(); try { netClose(); } catch (er) { } toMenu(); });
+  }
+  if (!el) return; el.hidden = !show; if (txt) document.getElementById('rc177t').textContent = txt;
+}
+function rc177Stop() { RC177.on = false; clearTimeout(RC177.t); clearTimeout(RC177.wd); RC177.t = RC177.wd = null; rc177Ui(false); }
+/* un intento: como al tocar la sala en la lista (si el servidor se reinició, la sala está dormida y hay que despertarla),
+   pero sin volver a preguntar lo de PvP: ya estaba dentro */
+async function rc177Join() {
+  const id = String(RC177.room.id || '').toUpperCase(); if (!S137.url) throw new Error('sin servidor');
+  let w = await s138Get(S137.url, '/sala/' + encodeURIComponent(id) + '/info'); if (!w || !w.ok) throw new Error('sin sala');
+  let room = w.sala;
+  if (room.estado !== 'activa') {
+    rc177Ui(true, 'Reconectando… despertando la sala');
+    const a = await s138Get(S137.url, '/sala/' + encodeURIComponent(id) + '/despertar'); if (!a || !a.ok) throw new Error('no despierta');
+    let ok = false; for (let i = 0; i < 40 && !ok && RC177.on; i++) { await new Promise(r => setTimeout(r, 1000)); const q = await s138Get(S137.url, '/sala/' + encodeURIComponent(id) + '/info'); if (q && q.ok && q.sala.estado === 'activa') { ok = true; room = q.sala; } }
+    if (!ok) throw new Error('no despertó');
+  }
+  if (!RC177.on) return;
+  if (room.jugadores >= room.max) throw new Error('llena');
+  try { clearTimeout(NET.joinT); } catch (e) { }   /* que el plazo de un intento anterior no corte este */
+  netJoinWs(room);
+  /* vigilante: si en 15 s no ha empezado a cargar, se corta este intento y se pasa al siguiente */
+  RC177.wd = setTimeout(() => { if (RC177.on && (NET.st === 'connecting' || NET.st === 'linked')) { try { netClose(); } catch (e) { } rc177Next(); } }, 15000);
+}
+function rc177Next() {
+  clearTimeout(RC177.wd); RC177.wd = null;
+  if (!RC177.on) return;
+  if (RC177.n >= RC177.delays.length) {   /* sin suerte: como antes */
+    rc177Stop(); say('No se pudo reconectar con el servidor', 'bad'); setTimeout(() => { if (STATE !== 'menu') toMenu(); }, 2500); return;
+  }
+  const d = RC177.delays[RC177.n++];
+  rc177Ui(true, 'Conexión perdida · reconectando (' + RC177.n + '/' + RC177.delays.length + ')…');
+  RC177.t = setTimeout(() => {
+    if (!RC177.on) return;
+    rc177Join().catch(() => rc177Next());
+  }, d);
+}
+{
+  const _jw = netJoinWs;
+  netJoinWs = function (room) { if (!RC177.on && room) RC177.room = Object.assign({}, room); return _jw.apply(this, arguments); };
+  const _nl = netLost;
+  netLost = function () {
+    if (NET.role === 'guest' && NET.srv && RC177.room && !RC177.on && (STATE === 'play' || STATE === 'dead')) {
+      RC177.on = true; RC177.n = 0; try { netClose(); } catch (e) { } say('Se perdió la conexión: reconectando…', 'bad'); rc177Next(); return;
+    }
+    return _nl.apply(this, arguments);
+  };
+  const _nf = netFail;
+  netFail = function (msg) { const r = _nf.apply(this, arguments); if (RC177.on) rc177Next(); return r; };
+  const _rk = readKeys;
+  readKeys = function () { _rk.apply(this, arguments); if (RC177.on) { IN.jx = IN.jy = 0; IN.atk = false; IN.run = false; } };
+  const _tm = toMenu;
+  toMenu = function () { if (RC177.on) rc177Stop(); return _tm.apply(this, arguments); };
+  /* reconectado: ya está jugando otra vez */
+  setInterval(() => { if (RC177.on && NET.st === 'playing' && NET.role === 'guest') { rc177Stop(); say('Reconectado', 'good'); } }, 400);
+}
+
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
   key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
@@ -25024,7 +25113,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -25065,7 +25154,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25088,7 +25177,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25117,7 +25206,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25151,7 +25240,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+  if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25182,7 +25271,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -25215,7 +25304,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -25244,12 +25333,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.6') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.7') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.6';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25445,5 +25534,14 @@ body #pause .pz-b::-webkit-scrollbar{width:6px}body #pause .pz-b::-webkit-scroll
 @media (max-height:520px){#bRoll{right:calc(116px + env(safe-area-inset-right,0px));bottom:calc(128px + env(safe-area-inset-bottom,0px));width:46px;height:46px;font-size:10px}}
 #touch .tb.cd{filter:saturate(.25) brightness(.62)}
 </style>
+<style>/* v17.7: reconexión */
+#rc177{position:fixed;inset:0;z-index:9000;background:rgba(6,8,7,.62);display:flex;align-items:center;justify-content:center;pointer-events:auto}
+#rc177[hidden]{display:none}
+#rc177 .rcbox{background:#101611;border:2px solid #3a5a3e;border-radius:8px;padding:18px 22px;text-align:center;color:#e8dcc0;font:20px VT323,monospace;max-width:80vw;box-shadow:0 6px 0 #000a}
+#rc177 .rcsp{width:26px;height:26px;margin:0 auto 10px;border:3px solid #3a5a3e;border-top-color:#8dbb6e;border-radius:50%;animation:rc177s 1s linear infinite}
+@keyframes rc177s{to{transform:rotate(360deg)}}
+#rc177 button{margin-top:12px;font:inherit;font-size:17px;padding:6px 14px;background:#1d2a1f;color:#e8dcc0;border:2px solid #3a5a3e;border-radius:6px}
+</style>
 </body>
+
 </html>

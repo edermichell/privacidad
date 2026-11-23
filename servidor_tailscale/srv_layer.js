@@ -293,7 +293,8 @@ SRV.boot = function (opt) {
   SRV.FAKE = new WeakSet();   /* objetos del suelo sin respaldo: recogerlos no cuenta */
   const itParts = it => { const d = ITEMS[it.id], o = [[it.id, d.stack ? Math.max(1, it.n | 0) : 1]]; if (d.gun && d.ammo && (it.a | 0) > 0) o.push([d.ammo, it.a | 0]); return o; };
   SRV.credIt = (peer, it) => { if (!it || !ITEMS[it.id]) return; const d = ITEMS[it.id]; SRV.cred(peer, it.id, d.stack ? Math.max(1, it.n | 0) : 1); if (d.gun && d.ammo && (it.a | 0) > 0) SRV.cred(peer, d.ammo, it.a | 0); };
-  SRV.vpos = p => p.mv ? [p.mv.x, p.mv.y] : [p.rp.nx !== undefined ? p.rp.nx : p.rp.x, p.rp.ny !== undefined ? p.rp.ny : p.rp.y];
+  /* v17.7: la posición «validada» solo vale mientras la validación está activa (si se apaga, p.mv se queda congelada) */
+  SRV.vpos = p => (SRV.MOV.on && p.mv) ? [p.mv.x, p.mv.y] : [p.rp.nx !== undefined ? p.rp.nx : p.rp.x, p.rp.ny !== undefined ? p.rp.ny : p.rp.y];
   const contPos = i => { if (i >= TRUNK_BASE) { const c = cars.find(q => TRUNK_BASE + q.id === i); return c ? [c.x, c.y] : null; } return [(i % W) + .5, ((i / W) | 0) + .5]; };
   const bag = items => { const m = new Map(); for (const it of (items || [])) { if (!it || !ITEMS[it.id]) continue; const k = it.id; m.set(k, (m.get(k) || []).concat([it])); } return m; };
   /* ¿lo que aparece en un mueble registrado por primera vez cabe en su tabla de botín? */
@@ -432,7 +433,11 @@ SRV.boot = function (opt) {
     try { if (!SRV.auth || !peer || !peer.chAu || peer.chDead || !peer.chBlob || !peer.rp || (peer.rp && peer.rp.dead)) return; const [x, y] = SRV.vpos ? SRV.vpos(peer) : [peer.rp.x, peer.rp.y]; if (!freeAt(x, y)) return;
       const b = peer.chBlob; b.P.x = Math.round(x * 100) / 100; b.P.y = Math.round(y * 100) / 100; if (Array.isArray(peer.bed)) b.srvBed = peer.bed; peer.chPend = JSON.stringify(b); } catch (e) { }
   };
-  { const _np2 = netPeerLost; netPeerLost = function (peer) { try { SRV.posFlush(peer); } catch (e) { } return _np2.apply(this, arguments); }; }
+  /* v17.7: en las salas SIN validación de movimiento se escribe YA. Antes quedaba «pendiente» y el guardado periódico solo
+     recorre a los conectados: si la conexión se cortaba (sin despedida del teléfono) nunca se escribía y, al volver, el
+     jugador aparecía donde se guardó la última vez. En la sala PvP (con validación) se deja como antes: la posición
+     validada (p.mv) puede quedarse atrás y pisaría la buena que manda el teléfono al salir (pendiente de revisar). */
+  { const _np2 = netPeerLost; netPeerLost = function (peer) { try { SRV.posFlush(peer); if (!(SRV.MOV && SRV.MOV.on)) SRV.charFlush(peer); } catch (e) { } return _np2.apply(this, arguments); }; }
   { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'saco' ? 'Apareces en tu saco de dormir.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
   /* ===== v16.3 · CHAT DE VOZ: posiciones para el servidor, aviso al jugador y ruido para los zombis ===== */
   SRV.voz = opt.voz !== false; SRV.vozR = +opt.vozR || 40;
