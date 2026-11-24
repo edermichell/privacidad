@@ -1,0 +1,20 @@
+Asunto: Último Refugio v18.0 «Agarrones y multitudes» — prueba de 15 minutos
+
+Hola equipo:
+
+La v18.0 cambia cómo se pelea cuerpo a cuerpo. Necesito sus impresiones.
+
+LO NUEVO
+- Agarrones: a veces un zombi no te golpea, TE AGARRA. Sale «¡TE AGARRA!» con una barra: toquen la pantalla muy rápido (en cualquier sitio) para soltarse y empujarlo. Si no, a los 2 segundos muerde. Pasa más sin aliento y con los corredores. Rodar a tiempo lo evita.
+- En una multitud se siguen viendo: si un zombi queda delante, aparece su contorno claro y un aro a sus pies.
+- Sala PvP: si alguien se desconecta en plena pelea, su cuerpo se queda dormido 30 s y se le puede atacar. Si vuelve a tiempo, despierta en él.
+
+QUÉ NECESITO QUE PRUEBEN
+1. Peleen cuerpo a cuerpo contra varios zombis hasta que los agarren 3 o 4 veces. ¿Pasa muy seguido o muy poco? ¿Les da tiempo a soltarse tocando?
+2. Métanse en un grupo de zombis: ¿se ven bien a ustedes mismos? ¿El contorno molesta?
+3. Juegan 10 minutos, salen con «Guardar y salir» y vuelven con CONTINUAR: ¿todo igual?
+4. (Sala PvP, dos personas) Peleen, y que uno cierre la app. El otro: ¿ve el cuerpo tumbado «(desconectado)»? ¿Puede atacarlo? El que salió: vuelva antes de 30 s. ¿Despierta en su cuerpo?
+
+Si algo se ve raro, manden una captura y el modelo del teléfono. ¡Gracias!
+
+[PEGAR AQUÍ el enlace de la prueba cerrada]

@@ -1,0 +1,13 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v18.0:
+• Los zombis pueden agarrarte: toca la pantalla muy rápido para soltarte o te morderán.
+• En medio de una multitud te sigues viendo: aparece tu contorno.
+• Sala PvP: si te desconectas en combate, tu cuerpo se queda dormido 30 s (los demás pueden atacarlo). Si vuelves a tiempo, despiertas en él.
+
+--- English (optional) ---
+What's new in v18.0:
+• Zombies can grab you: tap the screen fast to break free or get bitten.
+• You can still see yourself in a crowd: your outline shows through.
+• PvP room: if you disconnect mid-fight, your body stays asleep for 30 s (others can attack it). Come back in time and you wake up in it.

@@ -1,0 +1,112 @@
+RESULTADOS DE LA BATERÍA COMPLETA · v18.0 (cliente 18.0 + servidor nuevo) · 2026-11-24
+Cada bloque muestra solo las líneas de resumen (fallos: N) y cualquier FAIL.
+
+######## 18.0 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+FAIL partida de la v105 cargada en la v106: imagen DISTINTA | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+== 4 jugadores
+fallos: 0
+== soak
+d4 19s {"Z":1610,"NPCS":40,"parts":107,"texts":2,"cars":341,"chunks":39,"HC2":1434,"SPR":35,"EVS":6,"JL":14,"buildings":270,"TRAPS":0,"day":5,"ls":157707,"mem":null,"aliv
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+fallos: 0
+== suelo
+fallos: 0
+FIN2
+== 18.0 agarrón, silueta y guardado
+fallos: 0
+== 17.4-17.6
+FAIL rodando: esquiva el golpe del bandido pero no la bala {"h1":94.5,"h2":89}
+fallos: 1
+FAIL alejarse durante la preparación hace que falle {"had":true,"w0":0,"golpes":1,"fallos":1,"hp":97.82591382999004}
+fallos: 1
+fallos: 0
+fallos: 0
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+######## 17.0 zona roja
+TODO OK
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+######## 17.8 PvP: posición validada, cortes y teletransporte
+fallos: 0
+######## 17.9 el cuerpo se queda
+fallos: 0
+######## 18.0 agarrón en sala
+fallos: 0
+######## 17.7 reconexión a la sala
+fallos: 0
+######## 17.7 uniones cooperativo (6 x 3 invitados)
+FALLOS 0 de 6
+== prueba dura
+SALA1: 29.8 pasos/s (objetivo 30) · zombis vivos 183 · bajas 273 · errores del juego 0
+SALA2: 29.8 pasos/s (objetivo 30) · zombis vivos 223 · bajas 252 · errores del juego 0
+SALA3: 29.8 pasos/s (objetivo 30) · zombis vivos 157 · bajas 266 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3937
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN
+EXIT=0
+
+######## NOTAS SOBRE LOS 3 «FAIL» DE ARRIBA (bloque cliente)
+Las tres pruebas antiguas chocaban con lo nuevo de la 18.0. Ningún fallo era del juego:
+- 13.5->13.6 (imagen idéntica entre versiones): la silueta nueva se dibujaba (un zombi delante del jugador).
+  La prueba apaga cada novedad visual para comparar; ahora apaga también XR180 y GRAB, como ya hacía con ZWIND, BLOOD, etc.
+- 17.4 (rodar) y 17.5 (alejarse durante la preparación): un agarrón de golpes anteriores de la misma prueba sujetaba al jugador.
+  No podía rodar ni alejarse, que es lo que debe pasar. Ahora esas pruebas apagan los agarrones; se prueban aparte en prueba_v180.js.
+Repetidas tras el ajuste:
+== 13.5 -> 13.6: OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 17.4: fallos: 0
+== 17.5: fallos: 0 (OK alejarse durante la preparación hace que falle)
+
+######## Tras quitar el guardado de las novedades (solo cambia el texto), repetidas:
+== novedades (upd180): fallos: 0
+== 18.0 agarrón, silueta y guardado (test180): fallos: 0
+
+######## Agarrón en una sala del servidor (prueba_agarron_sala_v180.js), 5 pasadas seguidas: 5 x «fallos: 0». Detalle de la última:
+OK   el invitado entra en la sala 
+OK   el servidor usa el juego 18.0 (tiene agarrones) 
+OK   el zombi del servidor agarra al invitado (golpe «ZH» convertido en agarrón) {"id":37,"need":4,"hp":100,"w":0,"zid":37}
+OK   el agarrón recuerda qué zombi es (id del servidor) {"cliente":37,"servidor":37}
+OK   mientras agarra, ese zombi no le hiere aparte {"g":true,"w":0}
+OK   forcejeando se suelta 
+OK   el servidor recibe «ZG» y aturde a ese zombi {"stun":0.25,"st":"down"}
+OK   sin errores de página []
+fallos: 0
+(Antes fallaba a veces por la propia prueba: ponía el zombi a 0,7 casillas sin mirar si había una pared. Ahora busca una casilla libre con línea de visión.)
+
+######## Compilación Android (bundleRelease, sin firmar): exit=0, app-release.aab generado (versionCode 170, versionName 18.0).

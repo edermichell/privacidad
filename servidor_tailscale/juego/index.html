@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v17.7 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v18.0 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -944,7 +944,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
       <div class="hbody" id="how">
         <div class="hp" data-t="0">
           <p><b>Mover:</b> WASD o flechas. En el celular, un joystick aparece donde pongas el pulgar.</p>
-          <p><b>Correr:</b> Shift / CORRER (cansa y hace ruido). <b>Sigilo:</b> C / SIGILO. <b>Rodar:</b> Z / RODAR (esquiva golpes de zombis un instante; gasta aguante).</p>
+          <p><b>Correr:</b> Shift / CORRER (cansa y hace ruido). <b>Sigilo:</b> C / SIGILO. <b>Rodar:</b> Z / RODAR (esquiva golpes de zombis un instante; gasta aguante). <b>Agarrón:</b> si un zombi te sujeta, toca la pantalla o pulsa teclas muy rápido para soltarte.</p>
           <p><b>Atacar:</b> clic o Espacio. En el celular apunta solo al zombi más cercano. <b>Usar:</b> E / USAR (puertas, buscar, recoger, dormir, talar, cocinar).</p>
           <p><b>Mochila:</b> I · <b>Estado:</b> H · <b>Fabricar:</b> K · <b>Construir:</b> V (R gira) · <b>Mapa:</b> M · <b>Linterna:</b> Q · <b>Recargar:</b> R · <b>Barricada:</b> B · <b>Lanzar (molotov, petardos, bengala, bomba):</b> G · <b>Armas:</b> 1-9 · <b>Cambiar arma:</b> X · <b>Empujar:</b> F · <b>Pausa:</b> Esc / P.</p>
         </div>
@@ -2328,8 +2328,15 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 168, UR_VERSION = '17.7', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 170, UR_VERSION = '18.0', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '18.0', t: 'Agarrones y multitudes', it: [
+    'Un zombi ya no solo golpea: a veces <b>te agarra</b>. Toca la pantalla muy rápido (o pulsa teclas) para soltarte y empujarlo; si no lo logras, te muerde.',
+    'Sin aliento, contra corredores o en difícil te agarran más. Rodar a tiempo lo evita y un compañero puede soltarte golpeando al zombi.',
+    'En medio de una multitud <b>te sigues viendo</b>: si un zombi, una persona o un auto te tapa, aparece tu contorno y un aro a tus pies.' ] },
+  { v: '17.9', t: 'El cuerpo se queda', it: [
+    'Sala PvP: si te desconectas en pleno combate ya no mueres al instante. Tu <b>cuerpo se queda dormido</b> donde estabas 30 s y los demás pueden atacarlo.',
+    'Si vuelves a tiempo, despiertas en tu cuerpo con la vida que le quede. Si lo matan, sueltas tu mochila como siempre; si nadie lo toca, conservas el personaje.' ] },
   { v: '17.7', t: 'Conexión firme', it: [
     'Cooperativo: al unirse varios amigos, a veces uno se quedaba en «conectando» para siempre. Ya no: si su primer aviso se pierde, lo repite solo.',
     'Salas del servidor: si se corta la conexión en plena partida (p. ej. al pasar de Wi-Fi a datos), el juego <b>se reconecta solo</b> a la misma sala y vuelves donde estabas.' ] },
@@ -4711,13 +4718,13 @@ const PARTS = [['cabeza', .08], ['cuello', .04], ['torso', .26], ['brazo', .28],
 const PSLOT = { cabeza: 'head', torso: 'body', brazo: 'body', pierna: 'legs' };
 function zombieHit(z) {
   if (P.ghost > 0) return;
-  const chance = (P.sleep ? 1 : (P.sneak ? .5 : .62)) + (z.type === 'runner' ? .1 : 0);
+  const chance = GRAB.sure ? 9 : (P.sleep ? 1 : (P.sneak ? .5 : .62)) + (z.type === 'runner' ? .1 : 0);
   if (Math.random() > chance) { sfx('swing', 1); return; }
   let part = wpick(Math.random, PARTS); if (z.type === 'crawler') part = 'pierna'; const slot = PSLOT[part];
   P.hurt = .4; shake = 4; camKick(Math.atan2(P.y - z.y, P.x - z.x), 3, true); P.hitFrom = (z.x - z.y) > (P.x - P.y) ? 1 : -1;
   if (clothBlock(part, 'melee')) { sfx('swing', 1); return; }
   const type = mechWoundType(z, part); const W_ = WTAB[type];
-  const mult = trPain() * (part === 'cuello' ? 2 : 1) * (part === 'cabeza' ? 1.4 : 1) * DIFF.dmg * (z.type === 'brute' ? 1.3 : z.type === 'crawler' ? .8 : 1);
+  const mult = trPain() * (part === 'cuello' ? 2 : 1) * (part === 'cabeza' ? 1.4 : 1) * DIFF.dmg * GRAB.mul * (z.type === 'brute' ? 1.3 : z.type === 'crawler' ? .8 : 1);
   P.hp -= W_.hp * mult; if (typeof spawnText === 'function') spawnText(P.x, P.y, '-' + Math.round(W_.hp * mult), '#ff6a5a');
   const wnd = { part, type, bleed: W_.bleed * mult * trBleed(), decay: W_.decay, pain: W_.pain * trPain(), bandaged: false, inf: false, infT: 0 }; if (type === 'fractura') { wnd.splint = false; wnd.heal = 0; }
   if (type === 'mordida') { if (!P.inf) P.inf = .5; }
@@ -4796,7 +4803,7 @@ function findInteract() {
   for (const q of TRAPS) { const d = Math.hypot(q.x - px, q.y - py); if (d < 1.5 && d < bs) { bs = d; best = { type: 'trap', q, x: q.x, y: q.y }; } }
   for (const f of fires) { if (f.kind !== 'camp') continue; const d = Math.hypot(f.x - px, f.y - py); if (d < 1.8 && d < bs) { bs = d; best = { type: 'fire', f, x: f.x, y: f.y }; } }
   { const dg = dogNear(); if (dg) { const d = Math.hypot(dg.x - px, dg.y - py); const sd = d + Math.abs(angDiff(Math.atan2(dg.y - py, dg.x - px), P.dir)) * .14; if (d < 2.1 && sd < bs) { bs = sd; best = { type: 'dog', x: dg.x, y: dg.y }; } } }
-  for (const n of NPCS) { if (n.st === 'dead' || (n.fac === 'hostile' && n.sur !== 1)) continue; const d = Math.hypot(n.x - px, n.y - py); if (d > 2.1) continue; const sn = d + Math.abs(angDiff(Math.atan2(n.y - py, n.x - px), P.dir)) * .14; if (sn < bs) { bs = sn; best = { type: 'npc', n, x: n.x, y: n.y }; } }
+  for (const n of NPCS) { if (n.st === 'dead' || n.zz || (n.fac === 'hostile' && n.sur !== 1)) continue; const d = Math.hypot(n.x - px, n.y - py); if (d > 2.1) continue; const sn = d + Math.abs(angDiff(Math.atan2(n.y - py, n.x - px), P.dir)) * .14; if (sn < bs) { bs = sn; best = { type: 'npc', n, x: n.x, y: n.y }; } }
   if (NET.role === 'guest' && NET.pvp) for (const r of NET.oth.values()) { if (!r.ok || r.dead) continue; const d = Math.hypot(r.x - px, r.y - py); if (d < 2.2 && d < bs + .3) { bs = d; best = { type: 'plr', r, x: r.x, y: r.y }; } }   /* v15.3: E sobre un jugador abre la alianza */
   if (typeof baseFind === 'function') { const bf = baseFind(px, py, bs, best); if (bf) best = bf; }
   return best;
@@ -5575,15 +5582,16 @@ let ZSD = [];   /* v17.1: diccionario de colores y tipos de zombi del último gu
 function buildSave() {
   try { floorTrim(); } catch (e) { typeof dbgc === 'function' && dbgc(e); }
   {
-    const doors = [], bars = [], trees = [];
-    for (let i = 0; i < W * H; i++) { if (to[i] === O_DOOR && (td[i] & 1)) doors.push(i); if (tbar[i] > 0) bars.push([i, tbar[i], tbh[i]]); }
+    const doors = [], bars = [], trees = [], cut180 = [];
+    { const n = W * H, T_ = to, D_ = td, B_ = tbar, BH_ = tbh, TV_ = tvTree, OD = O_DOOR, ON = O_NONE;   /* v18.0: un solo recorrido (antes dos) */
+      for (let i = 0; i < n; i++) { const o = T_[i]; if (o === OD) { if (D_[i] & 1) doors.push(i); } else if (o === ON && TV_[i]) cut180.push(i); if (B_[i] > 0) bars.push([i, B_[i], BH_[i]]); } }
     const cont = []; containers.forEach((c, i) => { if (c.items) cont.push([i, c.items]); });
     const s = {
       v: 3, jl: jlSave(), wp: wpSave(), tr: trSave(), sos: sosSave(), dl: delSave(), seed: SEED, wg: WG, diff: DIFFK, min: GT.min, kills: GT.kills, heliT: GT.heliT,
       P: { x: P.x, y: P.y, dir: P.dir, hp: P.hp, hun: P.hun, thi: P.thi, fat: P.fat, end: P.end, inf: P.inf, wounds: P.wounds, inv: P.inv, eq: P.inv.indexOf(P.eq), cloth: Object.fromEntries(Object.entries(P.cloth).map(([k, v]) => [k, P.inv.indexOf(v)])), light: P.light, sk: P.sk, kills: P.kills, painkill: P.painkill, sick: P.sick, wet: P.wet, shirt: P.shirt, cold: P.cold, prof: P.prof, rep: P.rep || 0 },
       Z: (() => { const o = [], r2 = v => Math.round(v * 100) / 100, D = new Map(), d = c => { let q = D.get(c); if (q === undefined) { q = D.size; D.set(c, q); } return q; }; for (const z of Z) if (z.st !== 'dead') o.push([r2(z.x), r2(z.y), Math.round(z.hp), r2(z.spd), r2(z.hear), d(z.skin), d(z.shirt), d(z.pants), d(z.hair), d(z.type), (z.blood ? 1 : 0) | (z.torn ? 2 : 0)]); ZSD = [...D.keys()]; return o; })(), zd: ZSD, /* v104: sin toFixed (era el 30 % del coste del guardado con miles de zombis) */
       bld: bldSaveData(), doors, bars, lk: lockSave(), mech: mechSave(), cont: cont.filter(a => a[0] < TRUNK_BASE), cars: cars.map(c => [+c.x.toFixed(2), +c.y.toFixed(2), +c.a.toFixed(3), +c.fuel.toFixed(1), Math.round(c.hp), c.col, c.dead ? 1 : 0, (containers.get(TRUNK_BASE + c.id) || {}).items || null]), drv: P.drive ? cars.indexOf(P.drive) : -1, pumps: [...pumps], fl: floorItems, fires: fires.map(f => [+f.x.toFixed(2), +f.y.toFixed(2), Math.round(f.t), f.kind]), barrels: barrels.map(b => [+b.x.toFixed(2), +b.y.toFixed(2), +b.w.toFixed(2)]), plots: plots.map(q => [+q.x.toFixed(2), +q.y.toFixed(2), Math.round(q.g), q.c || '', Math.round(q.w == null ? 60 : q.w), q.pest ? 1 : 0, q.bad ? 1 : 0, Math.round(q.pt || 0)]), bs: baseSave(), hordeDay: GT.hordeDay,
-      cut: (() => { const a = []; for (let i = 0; i < W * H; i++) if (to[i] === O_NONE && tvTree[i]) a.push(i); return a; })(),
+      cut: cut180,
       ex: exRle78(), dog: dogSave(), mk: mkSave(), lt: ltSave(), npc: npcSave(), ob: obSave(), mil: milSave(), dy: DAILY ? DAILY.key : 0, cs: { m: GMODE, w: P.wind }, qs: QI
     };
     return s;
@@ -6978,7 +6986,7 @@ function npcSpec(n, f) {
   if (sp) UR128_RENDER_SPEC_STATS.npcReused++;
   else { sp = {}; NPC_RENDER_SPEC_POOL128.set(n, sp); UR128_RENDER_SPEC_STATS.npcCreated++; }
   const lie = n.st === 'dead'; let pose = 'walk', ph = 0; const g = n.wid && NG[n.wid];
-  if (lie) pose = 'lie'; else if (n.atkT > 0 && !g) { pose = 'atk'; ph = Math.min(5, Math.floor(n.atkT * 6)); } else if (g && (n.aimT > .05 || n.lunge > 0 || (n.st === 'chase' && n.los) || n.st === 'fight' || (n.follow && n.thr && n.thrD < 8))) pose = 'aim';
+  if (lie || n.zz) pose = 'lie'; else if (n.atkT > 0 && !g) { pose = 'atk'; ph = Math.min(5, Math.floor(n.atkT * 6)); } else if (g && (n.aimT > .05 || n.lunge > 0 || (n.st === 'chase' && n.los) || n.st === 'fight' || (n.follow && n.thr && n.thrD < 8))) pose = 'aim';
   sp.type = 'p'; sp.zomb = false; sp.fem = n.pitch > 1.15; sp.skin = n.skin; sp.shirt = n.shirt; sp.pants = n.pants; sp.hair = n.hair;
   sp.front = f.front; sp.fx = f.fx; sp.frame = n.moving ? (Math.floor(n.anim * 13.8) & 15) : 0; sp.nf = 16; sp.pose = pose; sp.ph = ph;
   sp.wid = n.wid; sp.head = n.head; sp.pack = n.pack ? 1 : 0; sp.jacket = n.jacket; sp.hurt = 0; sp.dead = lie; sp.blood = lie;
@@ -12974,7 +12982,7 @@ function netApplyCar(o) {
 }
 /* civiles: diálogo y comercio del invitado (el anfitrión conserva la verdad del civil) */
 function netNpcOpen(o) {
-  const n = NPCS.find(q => q.id === o.id); if (!n || n.st === 'dead' || n.fac === 'hostile') { netSend({ t: 'NS', id: o.id, no: 1 }); return; }
+  const n = NPCS.find(q => q.id === o.id); if (!n || n.st === 'dead' || n.fac === 'hostile' || n.linger) { netSend({ t: 'NS', id: o.id, no: 1 }); return; }
   n.talk = true; n.rtalk = performance.now() + 90000;
   netSend({ t: 'NS', id: n.id, stock: n.stock || null, fac: n.fac, gift: n.gift | 0, follow: n.follow ? 1 : 0, own: (n.own === 'g' && !netOwns(n)) ? 'x' : (n.own || ''), hp: Math.round(n.hp), maxhp: n.maxhp, pitch: n.pitch, name: n.name, type: n.type });
 }
@@ -13136,7 +13144,7 @@ function netSnap() {
   for (const n of NPCS) {
     const dx = n.x - gx, dy = n.y - gy; if (dx > RR || dx < -RR || dy > RR || dy < -RR) continue; if (n.st === 'dead' && (dx > 28 || dx < -28 || dy > 28 || dy < -28)) continue;
     nin.add(n.id); const gn = n.wid && NG[n.wid];
-    const a = [n.id, r2(n.x), r2(n.y), r2(n.dir), n.st, Math.round(n.hp), (n.moving ? 1 : 0) | (n.lunge > 0 ? 2 : 0) | (n.atkT > 0 ? 4 : 0) | ((gn && (n.aimT > .05 || n.lunge > 0 || (n.st === 'chase' && n.los) || n.st === 'fight')) ? 8 : 0) | (n.stun > 0 ? 16 : 0) | (n.follow ? 32 : 0) | (n.fac === 'hostile' ? 64 : n.fac === 'friend' ? 128 : 0) | (n.own === 'g' && netOwns(n) ? 256 : 0), n.sayT > 0 && n.say ? n.say : 0];
+    const a = [n.id, r2(n.x), r2(n.y), r2(n.dir), n.st, Math.round(n.hp), (n.moving ? 1 : 0) | (n.lunge > 0 ? 2 : 0) | (n.atkT > 0 ? 4 : 0) | ((gn && (n.aimT > .05 || n.lunge > 0 || (n.st === 'chase' && n.los) || n.st === 'fight')) ? 8 : 0) | (n.stun > 0 ? 16 : 0) | (n.follow ? 32 : 0) | (n.fac === 'hostile' ? 64 : n.fac === 'friend' ? 128 : 0) | (n.own === 'g' && netOwns(n) ? 256 : 0) | (n.zz ? 512 : 0), n.sayT > 0 && n.say ? n.say : 0];
     const sg = a.join('|'), old = nl.get(n.id); if (old === sg) continue;
     if (old === undefined) a.push(n.type, n.fac, n.name, n.skin, n.hair, n.shirt, n.pants, n.head, n.jacket, n.pack ? 1 : 0, n.wid, n.maxhp, n.pitch, n.cl === undefined ? -1 : n.cl);
     nl.set(n.id, sg); ns.push(a);
@@ -13171,7 +13179,7 @@ function netApplySnap(o) {
     let n = NET.nm.get(a[0]);
     if (!n) { if (a.length < 21) continue; n = { npc: true, id: a[0], type: a[8], fac: a[9], name: a[10], skin: a[11], hair: a[12], shirt: a[13], pants: a[14], head: a[15], jacket: a[16], pack: a[17], wid: a[18], maxhp: a[19], pitch: a[20], x: a[1], y: a[2], tx: a[1], ty: a[2], dir: a[3], st: 'idle', hp: a[5], anim: Math.random() * 8, moving: false, lunge: 0, atkT: 0, aimT: 0, stun: 0, hitT: 0, say: null, sayT: 0, follow: false, talk: false, thr: null, thrD: 99, los: false, kx: 0, ky: 0, bump: -1 }; if (a[21] >= 0) n.cl = a[21]; NET.nm.set(a[0], n); }
     n.tx = a[1]; n.ty = a[2]; n.dir = a[3]; if (a[4] !== n.st) { if (a[4] === 'dead') n.dieAt = n.born ? now : 0; } n.born = 1; n.st = a[4]; n.hp = a[5]; const f = a[6]; n.moving = !!(f & 1); if (f & 2) n.lunge = .3; n.atkT = f & 4 ? .15 : 0; n.aimT = f & 8 ? .5 : 0; if (f & 16) n.stun = .2; n.follow = !!(f & 32); if (!DLG || DLG.n !== n) { n.fac = f & 64 ? 'hostile' : f & 128 ? 'friend' : 'neutral'; n.own = f & 256 ? 'g' : undefined; }
-    n.say = a[7] || null; n.sayT = a[7] ? 1 : 0;
+    n.say = a[7] || null; n.sayT = a[7] ? 1 : 0; n.zz = (f & 512) ? 1 : 0;
   }
   if (o.nr) for (const id of o.nr) NET.nm.delete(id);
   if (o.nr || o.n.length) { NPCS.length = 0; for (const n of NET.nm.values()) NPCS.push(n); }
@@ -17283,10 +17291,14 @@ function sv73Unpack(o) {
     let js;
     try { const s = buildSave(); s.ts = Date.now(); js = JSON.stringify(s); } catch (e) { SV73.err = 'build: ' + e; SV73.ok = false; return; }
     SV73.mem = js;
-    let ok = false;
-    try { localStorage.setItem(SAVEKEY, js); ok = localStorage.getItem(SAVEKEY) === js; if (!ok) SV73.err = 'no se pudo leer de vuelta'; } catch (e) { SV73.err = String(e && e.name || e); }
-    SV73.ok = ok;
-    sv73Backup(false);
+    const wr = () => {
+      let ok = false;
+      try { localStorage.setItem(SAVEKEY, js); ok = localStorage.getItem(SAVEKEY) === js; if (!ok) SV73.err = 'no se pudo leer de vuelta'; } catch (e) { SV73.err = String(e && e.name || e); }
+      SV73.ok = ok;
+      sv73Backup(false);
+    };
+    if (SV180.auto) { SV180.pend = js; setTimeout(() => { if (SV180.pend === js) { SV180.pend = null; if (SV73.mem === js && STATE === 'play' && P && !P.dead) wr(); } }, 0); }   /* v18.0: escritura partida en dos tareas (si muere justo entre medias no se resucita el guardado borrado) */
+    else { SV180.pend = null; wr(); }
   };
   const _hs = hasSave; hasSave = function () { return !!sv73Raw(); };
   loadGame = function () { try { return applySave(JSON.parse(sv73Raw()), false); } catch (e) { return false; } };
@@ -17303,6 +17315,7 @@ async function sv73Doc() {
     SV73.uid = id; SV73.db = db.doc('data/users/' + id + '/save'); return SV73.db;
   } catch (e) { SV73.db = false; return null; }
 }
+const SV180 = { auto: 0, pend: null };   /* v18.0: guardado automático en dos tareas */
 function sv73Backup(force) {
   if (SV73.busy) { SV73.dirty = true; return SV73.p; }   // ya hay una copia en curso: quien espera obtiene su resultado
   const now = Date.now(); if (!force && now - SV73.lastDb < 45000) return Promise.resolve();
@@ -22531,7 +22544,7 @@ function drawPlayer() {
     if (P.rec > 0) sh -= fxs * Math.ceil(P.rec * 18);
     if (P.hurt > .1) sh -= (P.hurt > .28 ? 3 : 1) * (P.hitFrom || 1);
   }
-  const yy = Y + bob - Math.round(hop * 8);
+  const yy = Y + bob - Math.round(hop * 8); XR180.spr = spr; XR180.x = X - spr.ox; XR180.y = yy - spr.oy; XR180.on = !P.sleep;
   if (!sh && !P.sleep) ur132DrawPixelRim(spr, X - spr.ox, yy - spr.oy);
   if (sh && !P.sleep) drawSplit(spr, X, yy, sh); else ctx.drawImage(spr, X - spr.ox, yy - spr.oy);
   if (P.hurt > .3) { const fl = flashOf(spr); ctx.globalAlpha = .5; ctx.drawImage(fl, X - spr.ox, yy - spr.oy); ctx.globalAlpha = 1; }
@@ -22825,6 +22838,7 @@ function render(dt) {
     }
     else if (e.t === 'fl') { const [ax, ay] = w2sRender(e.x, e.y); ctx.fillStyle = '#fff4c0'; ctx.fillRect(Math.round(ax) - 3, Math.round(ay) - 14, 6, 5); ctx.fillStyle = '#ffd24a'; ctx.fillRect(Math.round(ax) - 2, Math.round(ay) - 13, 4, 3); pushRenderLight(lights, ax, ay - 12, 60, 1, 1); }
   }
+  if (!menu) { try { xr180Draw(); } catch (e) { } XR180.on = false; }   /* v18.0: te ves aunque te tapen */
   drawParts(); if (!menu) { vaporTick(dt); drawVapors(); seasonAmbient(dt, Q); drawFlys(dt); }
   // ambiente: hojas al viento, humo de chimeneas, luciérnagas
   if (!menu || true) ambient(dt, Q, menu);
@@ -22952,7 +22966,7 @@ function frame(ts) {
     saveT += dt;
     if (saveT > 30) {
       if (typeof s91SaveOk === 'function' && !s91SaveOk()) saveT = 24;
-      else { saveT = 0; const sv0 = measure ? performance.now() : 0; saveGame(); if (measure) { saveMs = performance.now() - sv0; PERF.saveCount++; PERF.saveMax = Math.max(PERF.saveMax, saveMs); PERF.diagSaveMax = Math.max(PERF.diagSaveMax, saveMs); } }
+      else { saveT = 0; const sv0 = measure ? performance.now() : 0; SV180.auto = 1; try { saveGame(); } finally { SV180.auto = 0; } if (measure) { saveMs = performance.now() - sv0; PERF.saveCount++; PERF.saveMax = Math.max(PERF.saveMax, saveMs); PERF.diagSaveMax = Math.max(PERF.diagSaveMax, saveMs); } }
     }   /* v91: no guardar en plena pelea */
   } else if (STATE === 'menu') { const sim0 = measure ? performance.now() : 0; updMenu(dt); if (measure) simMs = performance.now() - sim0; }
   const rdt = PAUSED && !NET.on ? 0 : dt;
@@ -23734,6 +23748,202 @@ function rc177Next() {
   toMenu = function () { if (RC177.on) rc177Stop(); return _tm.apply(this, arguments); };
   /* reconectado: ya está jugando otra vez */
   setInterval(() => { if (RC177.on && NET.st === 'playing' && NET.role === 'guest') { rc177Stop(); say('Reconectado', 'good'); } }, 400);
+}
+
+/* ===================== v18.0: AGARRÓN (FORCEJEO) =====================
+   Cuando un zombi acierta, a veces no golpea: TE AGARRA. Quedas sujeto ~1,9 s (no puedes andar, atacar ni rodar)
+   y tienes que FORCEJEAR: tocar la pantalla (cualquier sitio), pulsar teclas o sacudir el joystick. Si llegas a
+   los forcejeos necesarios, lo empujas y queda aturdido; si no, te muerde (el golpe que iba a darte, algo más fuerte).
+   Otros zombis te pueden golpear mientras tanto. Si un compañero aturde o mata al zombi, te suelta.
+   - Más probable sin aliento, con corredores y en difícil; menos en casual. Nunca en la torre, con jefes ni con reptantes.
+   - Fuerza: cada 4 niveles, un forcejeo menos. Bruto: hacen falta más.
+   - En red funciona en el teléfono de quien lo sufre (el anfitrión ya le manda el golpe «ZH»). Al soltarse,
+     el invitado pide al anfitrión que aturda al zombi («ZG»; el anfitrión comprueba que esté a su lado).
+     Las apps y servidores antiguos ignoran «ZG»: el zombi simplemente no queda aturdido allí.
+   - El estado vive fuera de P (no se guarda en la partida). */
+const GRAB = { off: false, cur: null, cd: 0, sure: 0, mul: 1, el: null, jA: null, stats: { n: 0, free: 0, bit: 0 } };
+function ur180Chance(z) {
+  let p = .16;
+  if (P.end < 20) p += .14;
+  if (z.type === 'runner') p += .08; else if (z.type === 'brute') p -= .04;
+  try { if (DIFFK === 'hard') p *= 1.25; else if (CASUAL) p *= .6; } catch (e) { }
+  return p;
+}
+function ur180Can(z) {
+  if (GRAB.off || GRAB.cur || GRAB.cd > 0 || !P || P.dead || P.drive || P.sleep || P.tw || P.roll || P.ghost > 0) return false;
+  if (P.act && P.act.climb) return false;
+  if (!z || !isFinite(z.x) || z.wb || z.type === 'crawler' || z.st === 'dead' || z.st === 'down') return false;
+  if (NET.role === 'guest' && z.id == null) return false;
+  return Math.hypot(z.x - P.x, z.y - P.y) < 1.5;
+}
+function ur180Need(z) {
+  let n = z.type === 'brute' ? 8 : 5;
+  try { if (DIFFK === 'hard') n++; else if (CASUAL) n--; } catch (e) { }
+  try { n -= Math.floor((sl('str') || 0) / 4); } catch (e) { }
+  return Math.max(3, n);
+}
+function ur180Dur() { let d = 1.9; try { if (DIFFK === 'hard') d = 1.6; else if (CASUAL) d = 2.3; } catch (e) { } return d; }
+function ur180El() {
+  if (GRAB.el) return GRAB.el;
+  const d = document.createElement('div'); d.id = 'grab180'; d.hidden = true;
+  d.innerHTML = '<b>¡TE AGARRA!</b><span></span><i><em></em></i><u><s></s></u>';
+  document.body.appendChild(d); GRAB.el = d; return d;
+}
+function ur180Ui() {
+  const G = GRAB.cur, d = ur180El();
+  if (!G) { if (!d.hidden) d.hidden = true; return; }
+  if (d.hidden) { d.hidden = false; d.querySelector('span').textContent = (IN.touch ? 'Toca la pantalla rápido' : 'Pulsa teclas o haz clic rápido') + ' para soltarte'; }
+  d.querySelector('em').style.width = Math.min(100, G.n / G.need * 100).toFixed(1) + '%';
+  d.querySelector('s').style.width = Math.max(0, 100 - G.t / G.dur * 100).toFixed(1) + '%';
+  d.classList.toggle('hit', TIME - G.tapT < .09);
+}
+function ur180Start(z) {
+  GRAB.cur = { z, id: z.id, t: 0, dur: ur180Dur(), need: ur180Need(z), n: 0, tapT: -9, a: Math.atan2(z.y - P.y, z.x - P.x) };
+  GRAB.jA = null; GRAB.stats.n++; MX.grabs = (MX.grabs | 0) + 1;
+  if (P.act && !P.act.climb && P.act.name !== 'sleep') P.act = null;
+  P.sneak = false; P.atk = 0; P.dir = GRAB.cur.a; P.hurt = Math.max(P.hurt || 0, .25);
+  try { camKick(GRAB.cur.a + Math.PI, 3, true); } catch (e) { } shake = Math.max(shake, 3);
+  try { sfx('snarl', 0, z); } catch (e) { } try { vibrate(45); } catch (e) { }
+  if (!tipSeen.has('grab180')) tip('grab180', 'Nuevo: un zombi te puede AGARRAR. ' + (IN.touch ? 'Toca la pantalla' : 'Pulsa teclas o haz clic') + ' muy rápido para soltarte; si no, te muerde. Rodar a tiempo lo evita.');
+  ur180Ui();
+}
+function ur180Tap(w) {
+  const G = GRAB.cur; if (!G || STATE !== 'play' || PAUSED) return;
+  G.n += w || 1; G.tapT = TIME; P.end = Math.max(0, P.end - 1.2);
+  try { spawnPart('dust', P.x, P.y, .25, 2); } catch (e) { }
+  try { vibrate(10); } catch (e) { }
+  if (G.n >= G.need) ur180Free();
+}
+/* soltarse: empuja al zombi y lo deja aturdido */
+function ur180Free() {
+  const G = GRAB.cur; if (!G) return; GRAB.cur = null; GRAB.cd = 4; GRAB.stats.free++; MX.grabFree = (MX.grabFree | 0) + 1;
+  const z = G.z, a = Math.atan2(z.y - P.y, z.x - P.x);
+  if (NET.role === 'guest') { try { netSend({ t: 'ZG', id: G.id }); } catch (e) { } z.stun = Math.max(z.stun || 0, .3); }   /* invitado: el anfitrión lo aturde; aquí solo se ve */
+  else ur180Push(z, a);
+  P.dir = a; P.atkCd = Math.min(P.atkCd || 0, .05);
+  try { sfx('swing', 0); } catch (e) { } try { makeNoise(P.x, P.y, 5); } catch (e) { } try { addXP('str', 1); } catch (e) { }
+  try { spawnText(P.x, P.y, '¡Libre!', '#9dff8a'); } catch (e) { }
+  shake = Math.max(shake, 3); ur180Ui();
+}
+function ur180Push(z, a) {
+  if (!z || z.st === 'dead') return;
+  const f = z.type === 'brute' ? 5 : 9; z.kx = Math.cos(a) * f; z.ky = Math.sin(a) * f;
+  z.stun = Math.max(z.stun || 0, z.type === 'brute' ? .8 : 1.3); z.wind = 0; z.windT = null; z.atkCd = Math.max(z.atkCd || 0, 1.2);
+  if (z.type !== 'brute' && z.st !== 'down' && Math.random() < .35) { z.st = 'down'; z.downAt = performance.now(); z.downT = 1.6 + Math.random(); }
+  try { spawnPart('dust', z.x, z.y, .3, 4); } catch (e) { }
+}
+/* no se soltó a tiempo: mordisco (el golpe que iba a llegar, seguro y algo más fuerte) */
+function ur180Bite() {
+  const G = GRAB.cur; if (!G) return; GRAB.cur = null; GRAB.cd = 5; GRAB.stats.bit++; ur180Ui();
+  const z = G.z; GRAB.sure = 1; GRAB.mul = 1.3;
+  try { zombieHit(z); } finally { GRAB.sure = 0; GRAB.mul = 1; }
+  if (z && z.st !== 'dead' && NET.role !== 'guest') { z.atkCd = Math.max(z.atkCd || 0, 1.1); z.wind = 0; z.windT = null; }
+}
+function ur180Let(why) { GRAB.cur = null; GRAB.cd = Math.max(GRAB.cd, 2); ur180Ui(); if (why) try { say(why, 'good'); } catch (e) { } }
+/* cada cuadro: tiempo, sacudidas del joystick y si el zombi sigue agarrando */
+function ur180Step(dt) {
+  if (GRAB.cd > 0) GRAB.cd -= dt;
+  const G = GRAB.cur; if (!G) return;
+  if (!P || P.dead || P.drive || P.tw || STATE !== 'play') { ur180Let(); return; }
+  const z = G.z;
+  if (!z || z.st === 'dead' || z.dead || (NET.role === 'guest' && NET.zm && !NET.zm.has(G.id))) { ur180Let('El zombi te ha soltado'); return; }
+  if ((z.stun || 0) > 0 || z.st === 'down' || Math.hypot(z.x - P.x, z.y - P.y) > 1.8) { ur180Let('¡Te has librado del agarrón!'); return; }
+  G.t += dt;
+  const jx = IN.jx || 0, jy = IN.jy || 0;
+  if (Math.hypot(jx, jy) > .55) { const a = Math.atan2(jy, jx); if (GRAB.jA !== null && Math.abs(angDiff(a, GRAB.jA)) > 1.75) ur180Tap(.5); GRAB.jA = a; }
+  if (!GRAB.cur) return;
+  if (NET.role !== 'guest') { z.wind = 0; z.windT = null; z.atkCd = Math.max(z.atkCd || 0, .5); z.lunge = Math.max(z.lunge || 0, .15); z.dir = Math.atan2(P.y - z.y, P.x - z.x); }
+  P.dir = Math.atan2(z.y - P.y, z.x - P.x); P.moving = false;
+  if (G.t >= G.dur) ur180Bite();
+  else ur180Ui();
+}
+{
+  const _zh = zombieHit;
+  zombieHit = function (z) {
+    if (GRAB.sure || (typeof ur174Inv === 'function' && ur174Inv())) return _zh.apply(this, arguments);
+    const G = GRAB.cur;
+    if (G) { if (z === G.z || (z && z.id != null && z.id === G.id)) return; return _zh.apply(this, arguments); }   /* el que agarra no golpea aparte */
+    if (ur180Can(z) && Math.random() < ur180Chance(z)) { ur180Start(z); return; }
+    return _zh.apply(this, arguments);
+  };
+  const _up = updPlayer;
+  updPlayer = function (dt) {
+    try { ur180Step(dt); } catch (e) { GRAB.cur = null; }
+    if (GRAB.cur) { const jx = IN.jx, jy = IN.jy; IN.jx = 0; IN.jy = 0; try { return _up.apply(this, arguments); } finally { IN.jx = jx; IN.jy = jy; if (P) P.moving = false; } }
+    return _up.apply(this, arguments);
+  };
+  const _ta = tryAttack; tryAttack = function () { if (GRAB.cur) return false; return _ta.apply(this, arguments); };
+  const _sv = shove; shove = function () { if (GRAB.cur) return; return _sv.apply(this, arguments); };
+  const _rl = urRoll; urRoll = function () { if (GRAB.cur) return false; return _rl.apply(this, arguments); };
+  /* forcejeo: cualquier toque o tecla (sin repetición automática) */
+  const tap = e => { if (!GRAB.cur) return; if (e.type === 'keydown' && (e.repeat || e.code === 'Escape')) return; ur180Tap(1); };
+  window.addEventListener('pointerdown', tap, true); window.addEventListener('keydown', tap, true);
+  /* el jugador sujeto tiembla */
+  const _dp = drawPlayer;
+  drawPlayer = function () {
+    if (!GRAB.cur) return _dp.apply(this, arguments);
+    const k = TIME - GRAB.cur.tapT < .12 ? 2.2 : 1, jx = Math.round(Math.sin(TIME * 61) * k), jy = Math.round(Math.cos(TIME * 47) * k * .5);
+    ctx.save(); ctx.translate(jx, jy); try { return _dp.apply(this, arguments); } finally { ctx.restore(); }
+  };
+  /* anfitrión: un invitado se soltó → aturdir a ese zombi si de verdad está a su lado */
+  const _nm = netMsg;
+  netMsg = function (o) {
+    if (o && o.t === 'ZG') {
+      if (NET.role !== 'guest') { try { const pe = NET.cur, r = pe && pe.rp, z = Z.find(q => q.id === o.id);
+        if (r && z && z.st !== 'dead' && Math.hypot(z.x - r.x, z.y - r.y) < 2.2 && !((pe.zgT || 0) > performance.now() - 1500)) { pe.zgT = performance.now(); ur180Push(z, Math.atan2(z.y - r.y, z.x - r.x)); } } catch (e) { } }
+      return;
+    }
+    return _nm.apply(this, arguments);
+  };
+}
+ACH.push({ id: 'grab10', n: 'Escurridizo', d: 'Suéltate de 10 agarrones de zombi', t: () => (MX.grabFree | 0) >= 10 });
+
+/* ===================== v18.0: TE VES AUNQUE TE TAPEN =====================
+   En una multitud los zombis (o un auto, o una persona) que quedan delante tapaban al jugador por completo.
+   Ahora, si algo te tapa, encima se dibuja tu silueta clara y un aro a tus pies. Solo trabaja cuando hay algo
+   delante de verdad y solo mira lo que está a tu lado (unas comparaciones por cuadro). */
+const XR180 = { off: false, spr: null, x: 0, y: 0, on: false, n: 0, a: 0 };
+const xrCache180 = new WeakMap();
+function xr180Sil(spr) {
+  let f = xrCache180.get(spr); if (f) return f;
+  const mk = () => { const c = cv(spr.width, spr.height); c.hi = spr.hi; c.ox = spr.ox; c.oy = spr.oy; c.ax = spr.ax; c.ay = spr.ay; return c; };   /* mismas marcas que el sprite (alta resolución) */
+  const fill = mk(), g = fill.getContext('2d');
+  g.globalCompositeOperation = 'copy'; g.drawImage(spr, 0, 0); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = '#c8f4ff'; g.fillRect(0, 0, fill.width, fill.height);
+  const line = mk(), h = line.getContext('2d'), k = spr.hi ? 2 : 1;          /* contorno: la silueta engordada menos el sprite */
+  for (const d of [[k, 0], [-k, 0], [0, k], [0, -k]]) h.drawImage(fill, d[0], d[1]);
+  h.globalCompositeOperation = 'destination-out'; h.drawImage(spr, 0, 0); h.globalCompositeOperation = 'source-over';
+  f = { fill, line }; xrCache180.set(spr, f); return f;
+}
+/* ¿algo dibujado después del jugador le tapa? (en la vista isométrica, lo que está «más abajo» se dibuja encima) */
+function xr180Cover(px, py, it, big) {
+  const s0 = px + py, d0 = px - py;
+  for (const e of it) {
+    if (!e || e.st === 'dead' || e.dead || e === P) continue;
+    const ds = (e.x + e.y) - s0; if (ds <= .05 || ds > (big ? 3.2 : 1.9)) continue;
+    if (Math.abs((e.x - e.y) - d0) < (big ? 2 : .95)) return true;
+  }
+  return false;
+}
+function xr180Covered() {
+  const px = P.x, py = P.y, g = NET.role === 'guest';
+  if (xr180Cover(px, py, g && NET.zm ? NET.zm.values() : xr180Near(Z, px, py))) return true;
+  if (xr180Cover(px, py, g && NET.nm ? NET.nm.values() : xr180Near(NPCS, px, py))) return true;
+  if (NET.oth && NET.oth.size && xr180Cover(px, py, NET.oth.values())) return true;
+  if (NET.rp && NET.role === 'host' && xr180Cover(px, py, [NET.rp])) return true;
+  return xr180Cover(px, py, xr180Near(cars, px, py, 4), true);
+}
+const XRN180 = [];
+function xr180Near(a, px, py, r) { r = r || 2.5; XRN180.length = 0; for (let i = 0; i < a.length; i++) { const e = a[i]; if (Math.abs(e.x - px) < r && Math.abs(e.y - py) < r) XRN180.push(e); } return XRN180; }
+function xr180Draw() {
+  if (XR180.off || !XR180.on || !XR180.spr || STATE !== 'play' || !P || P.dead || P.drive || P.sleep || P.tw) { XR180.a = 0; return; }
+  const cov = xr180Covered(); XR180.a += ((cov ? 1 : 0) - XR180.a) * .35; if (XR180.a < .03) return;
+  if (cov) XR180.n++;
+  const [sx, sy] = w2sRender(P.x, P.y), X = RP(sx), Y = RP(sy);
+  ctx.globalAlpha = .55 * XR180.a; ctx.strokeStyle = '#c8f4ff'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.ellipse(X, Y, 11, 5, 0, 0, TAU); ctx.stroke();
+  const sil = xr180Sil(XR180.spr); ctx.globalAlpha = .22 * XR180.a; ctx.drawImage(sil.fill, XR180.x, XR180.y); ctx.globalAlpha = .9 * XR180.a; ctx.drawImage(sil.line, XR180.x, XR180.y);
+  ctx.globalAlpha = 1; ctx.lineWidth = 1;
 }
 
 const SPRC = {
@@ -25113,7 +25323,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -25154,7 +25364,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25177,7 +25387,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+  if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25206,7 +25416,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25240,7 +25450,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+  if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25271,7 +25481,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -25304,7 +25514,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -25333,12 +25543,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 17.7') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 18.0') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 17.7';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.0';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25542,6 +25752,19 @@ body #pause .pz-b::-webkit-scrollbar{width:6px}body #pause .pz-b::-webkit-scroll
 @keyframes rc177s{to{transform:rotate(360deg)}}
 #rc177 button{margin-top:12px;font:inherit;font-size:17px;padding:6px 14px;background:#1d2a1f;color:#e8dcc0;border:2px solid #3a5a3e;border-radius:6px}
 </style>
+<style>/* v18.0: agarrón (forcejeo) */
+#grab180{position:fixed;left:50%;top:22%;transform:translateX(-50%);z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 14px 10px;border-radius:12px;background:#2a0806e0;border:2px solid #ff5a3c;box-shadow:0 0 18px #ff3a1c66;font-family:VT323,"Courier New",monospace;color:#ffe6dc;text-align:center;min-width:220px}
+#grab180[hidden]{display:none}
+#grab180 b{font-size:26px;letter-spacing:2px;color:#ff7a5a;text-shadow:0 0 6px #ff2a0a}
+#grab180 span{font-size:17px}
+#grab180 i{display:block;width:200px;height:12px;border-radius:6px;background:#0008;border:1px solid #ffffff40;overflow:hidden}
+#grab180 em{display:block;height:100%;width:0;background:linear-gradient(90deg,#7dff6b,#d8ff6b);transition:width .06s}
+#grab180 u{display:block;width:200px;height:4px;border-radius:2px;background:#0008;overflow:hidden}
+#grab180 s{display:block;height:100%;width:100%;background:#ff5a3c}
+#grab180.hit{transform:translateX(-50%) scale(1.06)}
+@media (max-height:520px){#grab180{top:14%;padding:5px 10px 7px;min-width:180px}#grab180 b{font-size:21px}#grab180 span{font-size:14px}#grab180 i{width:170px}#grab180 u{width:170px}}
+</style>
 </body>
+
 
 </html>
