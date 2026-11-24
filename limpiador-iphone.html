@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Limpiador">
+<meta name="theme-color" content="#0b0f14">
+<title>Limpiador iPhone</title>
+<style>
+:root{--bg:#0b0f14;--bg2:#141b24;--bg3:#1d2733;--line:#2a3646;--tx:#eef3f8;--mut:#93a4b8;--acc:#30d5a0;--acc2:#4aa8ff;--warn:#ffc547;--bad:#ff6b6b;--r:14px}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f3f5f8;--bg2:#fff;--bg3:#eaeef3;--line:#d6dde6;--tx:#10161d;--mut:#5b6b7d;--acc:#0a9f73;--acc2:#1a73d6;--warn:#a46a00;--bad:#d33}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{display:flex;flex-direction:column;overflow:hidden}
+header{padding:calc(env(safe-area-inset-top) + 10px) 16px 8px;flex:0 0 auto}
+header h1{margin:0;font-size:26px;letter-spacing:-.3px}header p{margin:2px 0 0;color:var(--mut);font-size:13px}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 24px}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:10px 0}
+.card h3{margin:0 0 6px;font-size:17px}.card p{margin:6px 0;color:var(--mut);font-size:14px}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:14px;font:600 16px inherit;background:var(--acc);color:#04130d;text-align:center;cursor:pointer;touch-action:manipulation}
+.btn.alt{background:var(--bg3);color:var(--tx)}.btn.warn{background:var(--warn);color:#2a1b00}.btn.sm{padding:9px 12px;font-size:14px;display:inline-block;width:auto}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0}.row>*{flex:1}.row label{flex:2;font-size:14px;color:var(--tx)}
+input[type=range]{width:100%;accent-color:var(--acc)}select{background:var(--bg3);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:9px;font-size:15px}
+.note{font-size:13px;color:var(--mut)}.warnbox{background:rgba(255,197,71,.12);border:1px solid rgba(255,197,71,.45);border-radius:12px;padding:10px 12px;font-size:13px;margin:10px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--mut)}
+.stat.link{cursor:pointer}.stat.link b{color:var(--acc)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--bg2);color:var(--tx);border-radius:99px;padding:8px 14px;font-size:14px;cursor:pointer}.chip.on{background:var(--acc);color:#04130d;border-color:var(--acc);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0}
+.ph{position:relative;aspect-ratio:1;background:var(--bg3);border-radius:8px;overflow:hidden;cursor:pointer;content-visibility:auto}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}.ph.sel img,.ph.sel .ph-empty{opacity:.45}
+.ph-empty{display:flex;align-items:center;justify-content:center;height:100%;font-size:28px}
+.ph .sz,.ph .du,.ph .bs{position:absolute;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;background:rgba(0,0,0,.65);color:#fff}
+.ph .sz{left:4px;bottom:4px}.ph .du{right:4px;bottom:4px}.ph .bs{left:4px;top:4px;background:rgba(48,213,160,.9);color:#04130d}
+.ph .ck{position:absolute;right:5px;top:5px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);color:transparent;font-size:15px;line-height:20px;text-align:center}
+.ph.sel .ck{background:var(--acc);border-color:var(--acc);color:#04130d;font-weight:700}
+.gh{display:flex;justify-content:space-between;gap:8px;margin:14px 0 2px;font-size:13px;color:var(--mut)}.gh b{color:var(--tx)}
+#bar{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 64px);background:var(--bg2);border:1px solid var(--acc);border-radius:16px;padding:10px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:5}
+#bar[hidden]{display:none}#bar .t{flex:1;font-size:14px}#bar .t b{font-size:16px}
+#tabs{flex:0 0 auto;display:flex;background:var(--bg2);border-top:1px solid var(--line);padding:6px 4px calc(env(safe-area-inset-bottom) + 4px)}
+#tabs button{flex:1;background:none;border:0;color:var(--mut);padding:6px 2px;font-size:11px;cursor:pointer}#tabs button span{display:block;font-size:21px}#tabs button.on{color:var(--acc)}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9;display:none;align-items:flex-end}#sheet.on{display:flex}
+#sheet .in{background:var(--bg2);width:100%;max-height:88%;overflow-y:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 18px)}
+#sheet h3{margin:0 0 8px}#sheet ol{padding-left:20px;margin:8px 0}#sheet li{margin:6px 0;font-size:14px}
+.list{font-size:12px;color:var(--mut);max-height:160px;overflow:auto;background:var(--bg3);border-radius:10px;padding:8px;margin:8px 0}
+.prog{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin:8px 0}.prog i{display:block;height:100%;width:0;background:var(--acc);transition:width .2s}
+.chk{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.chk:last-child{border:0}
+.chk input{width:22px;height:22px;margin-top:2px;accent-color:var(--acc);flex:0 0 auto}.chk b{display:block;font-size:15px}.chk span{font-size:13px;color:var(--mut)}.chk em{font-style:normal;font-size:12px;color:var(--acc)}
+.res{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.res img{width:48px;height:48px;object-fit:cover;border-radius:8px}.res div{flex:1;min-width:0}.res .ok{color:var(--acc)}.res .no{color:var(--warn)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 130px);transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:90vw;text-align:center}#toast.on{opacity:1}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧹 Limpiador</h1>
+  <p>Todo se analiza en tu iPhone. No se sube nada a Internet.</p>
+</header>
+
+<main>
+<!-- ================= FOTOS ================= -->
+<section class="tab on" id="t-photos">
+  <div class="card" id="intro">
+    <h3>Encuentra qué borrar</h3>
+    <p>Elige fotos y vídeos de tu biblioteca. Detecto <b>duplicados, parecidas, capturas, borrosas y archivos pesados</b> y te digo cuánto espacio puedes liberar.</p>
+    <label class="btn" for="pick">📷 Elegir fotos y vídeos</label>
+    <input id="pick" type="file" accept="image/*,video/*" multiple>
+    <div class="warnbox">⚠️ Safari <b>no puede borrar</b> tus fotos: Apple no lo permite. Aquí marcas lo que sobra y yo te guío para borrarlo en la app Fotos en 30 segundos. Analiza por tandas de unas 300–500 para que Safari no se quede sin memoria.</div>
+  </div>
+
+  <div class="card" id="progress" hidden>
+    <b id="pgText">Analizando…</b>
+    <div class="prog"><i id="pgBar"></i></div>
+  </div>
+
+  <div id="dash" hidden>
+    <div class="stats">
+      <div class="stat"><b id="sN">0</b><span>archivos analizados</span></div>
+      <div class="stat"><b id="sS">0</b><span>ocupan en total</span></div>
+      <div class="stat"><b id="sP" style="color:var(--acc)">0</b><span>se pueden liberar (estimado)</span></div>
+      <div class="stat"><b id="sSel">0</b><span>seleccionado ahora</span></div>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip on" data-v="all">Resumen</button>
+      <button class="chip" data-v="dups">Duplicadas y parecidas</button>
+      <button class="chip" data-v="shots">Capturas</button>
+      <button class="chip" data-v="blur">Borrosas</button>
+      <button class="chip" data-v="big">Pesadas</button>
+    </div>
+    <div id="view"></div>
+    <div class="row" style="margin-top:14px">
+      <label class="btn alt sm" for="pick2" style="text-align:center">＋ Añadir más</label>
+      <input id="pick2" type="file" accept="image/*,video/*" multiple>
+      <button class="btn alt sm" id="reset">Empezar de nuevo</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMPRIMIR ================= -->
+<section class="tab" id="t-comp">
+  <div class="card">
+    <h3>Comprimir fotos</h3>
+    <p>Crea copias más ligeras de tus fotos pesadas. Luego las guardas en Fotos y borras las originales.</p>
+    <label class="btn" for="cmpPick">Elegir fotos</label>
+    <input id="cmpPick" type="file" accept="image/*" multiple>
+    <div class="row"><label>Tamaño máximo</label>
+      <select id="cmpMax"><option value="3000">3000 px (casi igual)</option><option value="2048" selected>2048 px (recomendado)</option><option value="1600">1600 px</option><option value="1280">1280 px (pantalla)</option></select></div>
+    <div class="row"><label>Calidad <span id="cmpQv">75%</span></label><input id="cmpQ" type="range" min="40" max="95" value="75"></div>
+    <button class="btn" id="cmpGo" disabled>Comprimir</button>
+    <div class="prog" id="cmpPg" hidden><i id="cmpPgBar"></i></div>
+  </div>
+  <div class="card" id="cmpOut" hidden>
+    <h3 id="cmpSum">Resultado</h3>
+    <div id="cmpList"></div>
+    <button class="btn" id="cmpShare" style="margin-top:10px">⬆️ Guardar en Fotos (compartir)</button>
+    <p class="note">En el menú que se abre, elige <b>«Guardar imagen»</b> (o «Guardar N imágenes»). Después borra las originales en Fotos y vacía «Eliminados recientemente».</p>
+    <div class="warnbox">El vídeo no se comprime aquí (Safari no puede hacerlo bien). Para vídeos, baja la calidad de grabación (mira la pestaña Guía).</div>
+  </div>
+</section>
+
+<!-- ================= GUIA ================= -->
+<section class="tab" id="t-guide">
+  <div class="card"><h3>Guía de limpieza de iOS</h3><p>Marca lo que ya hiciste. Ordenado de más a menos espacio típico.</p>
+    <div class="note" id="guideSum"></div></div>
+  <div class="card" id="guideList"></div>
+  <div class="card"><h3>Abrir directamente</h3>
+    <button class="btn alt" id="openPhotos">📸 Abrir la app Fotos</button>
+    <p class="note">Ajustes no se puede abrir desde una web. Ve a: <b>Ajustes → General → Almacenamiento del iPhone</b>.</p></div>
+</section>
+
+<!-- ================= SITIO ================= -->
+<section class="tab" id="t-site">
+  <div class="card"><h3>Datos de esta página</h3>
+    <div class="stats" style="margin-top:8px"><div class="stat"><b id="stU">—</b><span>usado por esta página</span></div><div class="stat"><b id="stQ">—</b><span>cuota que Safari le permite</span></div></div>
+    <p class="note" id="stNote"></p>
+    <button class="btn alt" id="stClear">Borrar datos de esta página</button>
+  </div>
+  <div class="card"><h3>Instalar como app</h3>
+    <p>En Safari: botón <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>. Se abrirá a pantalla completa, como una app.</p></div>
+  <div class="card"><h3>Privacidad</h3>
+    <p>Las fotos que eliges se leen en memoria para analizarlas y se descartan al cerrar la página. No se guardan ni se envían a ningún servidor. Solo se guardan tus marcas de la guía en este navegador.</p></div>
+</section>
+</main>
+
+<div id="bar" hidden>
+  <div class="t"><b id="bN">0</b> seleccionadas<br><span id="bS" style="color:var(--acc)">liberan 0 MB</span></div>
+  <button class="btn alt sm" id="bClear">Quitar</button>
+  <button class="btn sm" id="bHow">Cómo borrar</button>
+</div>
+
+<nav id="tabs">
+  <button class="on" data-t="photos"><span>🖼️</span>Fotos</button>
+  <button data-t="comp"><span>🗜️</span>Comprimir</button>
+  <button data-t="guide"><span>✅</span>Guía</button>
+  <button data-t="site"><span>⚙️</span>Sitio</button>
+</nav>
+
+<div id="sheet"><div class="in" id="sheetIn"></div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const fmt=b=>b>=1e9?(b/1e9).toFixed(2)+' GB':b>=1e6?(b/1e6).toFixed(1)+' MB':Math.max(1,Math.round(b/1e3))+' KB';
+const mmss=s=>{s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const store={get(k,d){try{const v=localStorage.getItem('lim.'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('lim.'+k,JSON.stringify(v))}catch(e){}}};
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2400);}
+
+/* =====================================================================
+   Análisis de imágenes y vídeos (todo local)
+===================================================================== */
+const SIM=6;            // distancia máxima (de 64 bits) para considerar "parecida"
+const BLUR_T=30;        // por debajo de esta nitidez, "borrosa"
+const items=[],seen=new Set();let nid=1,view='all',bigMB=20,groups=[];
+
+function scaled(src,max,w,h){const s=Math.min(1,max/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*s));c.height=Math.max(1,Math.round(h*s));c.getContext('2d').drawImage(src,0,0,c.width,c.height);return c;}
+function gray(c,w,h){const t=document.createElement('canvas');t.width=w;t.height=h;const g=t.getContext('2d',{willReadFrequently:true});g.drawImage(c,0,0,w,h);const d=g.getImageData(0,0,w,h).data,a=new Float32Array(w*h);for(let i=0;i<w*h;i++)a[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];return a;}
+function dhash(c){const a=gray(c,9,8);let hi=0,lo=0;for(let y=0;y<8;y++)for(let x=0;x<8;x++){const b=a[y*9+x]>a[y*9+x+1]?1:0,i=y*8+x;if(i<32)hi=((hi<<1)|b)>>>0;else lo=((lo<<1)|b)>>>0;}return [hi,lo];}
+function blurScore(c){const s=Math.min(1,160/Math.max(c.width,c.height)),w=Math.max(8,Math.round(c.width*s)),h=Math.max(8,Math.round(c.height*s)),a=gray(c,w,h);let n=0,sum=0,sq=0;for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const v=4*a[y*w+x]-a[y*w+x-1]-a[y*w+x+1]-a[(y-1)*w+x]-a[(y+1)*w+x];sum+=v;sq+=v*v;n++;}const m=sum/n;return sq/n-m*m;}
+const pc=x=>{x=x-((x>>>1)&0x55555555);x=(x&0x33333333)+((x>>>2)&0x33333333);return Math.imul((x+(x>>>4))&0x0f0f0f0f,0x01010101)>>>24;};
+const ham=(a,b)=>pc((a[0]^b[0])>>>0)+pc((a[1]^b[1])>>>0);
+
+/* firma rápida del contenido: tamaño + inicio + final + muestras del medio */
+async function sig(f){
+  const N=524288,parts=[f.slice(0,Math.min(N,f.size))];
+  if(f.size>2*N){parts.push(f.slice(f.size-N));const step=Math.floor((f.size-2*N)/9);for(let i=1;i<=8;i++)parts.push(f.slice(N+i*step,N+i*step+4096));}
+  let h1=0xdeadbeef^f.size,h2=0x41c6ce57^f.size;
+  for(const p of parts){const u=new Uint8Array(await p.arrayBuffer());for(let i=0;i<u.length;i++){h1=Math.imul(h1^u[i],2654435761);h2=Math.imul(h2^u[i],1597334677);}}
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);
+  h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (h1>>>0).toString(16)+(h2>>>0).toString(16)+'-'+f.size;
+}
+
+async function analyzeImage(it){
+  const url=URL.createObjectURL(it.file);
+  try{
+    const img=new Image();img.decoding='async';img.src=url;await img.decode();
+    it.w=img.naturalWidth;it.h=img.naturalHeight;
+    const base=scaled(img,256,it.w,it.h);
+    it.thumb=scaled(base,160,base.width,base.height).toDataURL('image/jpeg',.6);
+    it.dh=dhash(base);it.blur=blurScore(base);
+    img.src='';
+  }catch(e){it.err=true;}
+  finally{URL.revokeObjectURL(url);}
+  try{it.sig=await sig(it.file);}catch(e){}
+}
+function analyzeVideo(it){
+  return new Promise(res=>{
+    const url=URL.createObjectURL(it.file),v=document.createElement('video');
+    v.muted=true;v.playsInline=true;v.preload='metadata';v.src=url;
+    let done=false,t;const fin=()=>{if(done)return;done=true;clearTimeout(t);URL.revokeObjectURL(url);v.removeAttribute('src');try{v.load();}catch(e){}sig(it.file).then(s=>{it.sig=s;res();},()=>res());};
+    t=setTimeout(fin,5000);
+    v.onloadedmetadata=()=>{it.dur=v.duration||0;it.w=v.videoWidth;it.h=v.videoHeight;try{v.currentTime=Math.min(1,(v.duration||0)/2);}catch(e){fin();}};
+    v.onseeked=()=>{try{it.thumb=scaled(v,160,v.videoWidth,v.videoHeight).toDataURL('image/jpeg',.6);}catch(e){}fin();};
+    v.onerror=()=>{it.err=true;fin();};
+  });
+}
+
+async function addFiles(list){
+  const fresh=[];
+  for(const f of list){
+    const key=f.name+'|'+f.size+'|'+f.lastModified;if(seen.has(key))continue;seen.add(key);
+    const video=(f.type||'').startsWith('video')||/\.(mov|mp4|m4v)$/i.test(f.name);
+    const it={id:nid++,file:f,kind:video?'video':'image',size:f.size,date:f.lastModified,name:f.name,type:f.type||'',w:0,h:0,thumb:'',sig:'',dh:null,blur:null,dur:0,sel:false,err:false,best:false,group:0};
+    items.push(it);fresh.push(it);
+  }
+  if(!fresh.length){toast('Esos archivos ya estaban analizados');return;}
+  $('#progress').hidden=false;let done=0,idx=0;
+  const total=fresh.length,upd=()=>{$('#pgText').textContent=`Analizando ${done} de ${total}…`;$('#pgBar').style.width=(done/total*100)+'%';};upd();
+  const worker=async()=>{while(idx<fresh.length){const it=fresh[idx++];try{await(it.kind==='video'?analyzeVideo(it):analyzeImage(it));}catch(e){it.err=true;}done++;upd();if(done%25===0){await new Promise(r=>setTimeout(r,0));}}};
+  await Promise.all([worker(),worker(),worker()]);
+  $('#progress').hidden=true;
+  buildGroups();render();
+  toast(`Listo: ${total} archivos analizados`);
+}
+
+/* ---- grupos de duplicadas / parecidas ---- */
+function buildGroups(){
+  const all=items.filter(i=>!i.err);
+  const p=all.map((_,i)=>i),find=x=>{while(p[x]!==x){p[x]=p[p[x]];x=p[x];}return x;},uni=(a,b)=>{a=find(a);b=find(b);if(a!==b)p[a]=b;};
+  const flat=h=>h&&ham(h,[0,0])<6;
+  for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){
+    const a=all[i],b=all[j];
+    if(a.sig&&a.sig===b.sig){uni(i,j);continue;}
+    if(a.kind==='image'&&b.kind==='image'&&a.dh&&b.dh&&!flat(a.dh)&&!flat(b.dh)){
+      const ra=a.w/a.h,rb=b.w/b.h;
+      if(Math.abs(ra-rb)<.06&&ham(a.dh,b.dh)<=SIM)uni(i,j);
+    }
+  }
+  const map=new Map();all.forEach((it,i)=>{const r=find(i);if(!map.has(r))map.set(r,[]);map.get(r).push(it);});
+  groups=[];items.forEach(i=>{i.group=0;i.best=false;});
+  let gid=1;
+  for(const m of map.values()){
+    if(m.length<2)continue;
+    const exact=m.every(x=>x.sig&&x.sig===m[0].sig);
+    const best=[...m].sort((a,b)=>(b.w*b.h-a.w*a.h)||((b.blur||0)-(a.blur||0))||(b.size-a.size))[0];
+    best.best=true;m.forEach(x=>x.group=gid);
+    const waste=m.filter(x=>x!==best).reduce((s,x)=>s+x.size,0);
+    groups.push({id:gid++,items:m,exact,best,waste});
+  }
+  groups.sort((a,b)=>b.waste-a.waste);
+}
+
+/* ---- categorías ---- */
+const isShot=i=>i.kind==='image'&&(i.type==='image/png'||/screenshot|captura/i.test(i.name));
+function cats(){
+  const dups=groups.flatMap(g=>g.items),shots=items.filter(i=>!i.err&&isShot(i)),
+        blur=items.filter(i=>!i.err&&i.kind==='image'&&i.blur!=null&&i.blur<BLUR_T&&!isShot(i)),
+        big=items.filter(i=>!i.err&&i.size>=bigMB*1e6).sort((a,b)=>b.size-a.size);
+  return {dups,shots,blur,big};
+}
+const sumSize=a=>a.reduce((s,i)=>s+i.size,0);
+
+/* ---- selección ---- */
+function selected(){return items.filter(i=>i.sel);}
+function autoSelect(kind){
+  const c=cats();
+  if(kind==='dups'){groups.forEach(g=>g.items.forEach(i=>{i.sel=!i.best;}));}
+  else if(kind==='shots')c.shots.forEach(i=>i.sel=true);
+  else if(kind==='blur')c.blur.forEach(i=>i.sel=true);
+  render();toast('Marcadas. Revisa y quita las que quieras conservar.');
+}
+
+/* =====================================================================
+   Pintado
+===================================================================== */
+const card=it=>`<div class="ph${it.sel?' sel':''}" data-id="${it.id}">${it.thumb?`<img src="${it.thumb}" alt="" loading="lazy">`:`<div class="ph-empty">${it.kind==='video'?'🎞️':'🖼️'}</div>`}<span class="sz">${fmt(it.size)}</span>${it.kind==='video'?`<span class="du">▶ ${mmss(it.dur)}</span>`:''}${it.best?'<span class="bs">⭐ Mejor</span>':''}<span class="ck">✓</span></div>`;
+
+function render(){
+  const has=items.some(i=>!i.err||true)&&items.length>0;
+  $('#dash').hidden=!has;
+  $('#intro').hidden=has;
+  const c=cats(),potential=groups.reduce((s,g)=>s+g.waste,0)+sumSize(c.shots)+sumSize(c.blur);
+  $('#sN').textContent=items.length;$('#sS').textContent=fmt(sumSize(items));$('#sP').textContent=fmt(potential);
+  const sel=selected();$('#sSel').textContent=fmt(sumSize(sel));
+  $$('#chips .chip').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  const v=$('#view');
+  const errN=items.filter(i=>i.err).length;
+  const errNote=errN?`<p class="note">${errN} archivo(s) no se pudieron leer (formato no compatible) y se ignoran.</p>`:'';
+  if(view==='all'){
+    v.innerHTML=`<div class="stats" style="margin-top:6px">
+      <div class="stat link" data-go="dups"><b>${groups.reduce((s,g)=>s+g.items.length,0)}</b><span>en ${groups.length} grupos de duplicadas/parecidas · libera ${fmt(groups.reduce((s,g)=>s+g.waste,0))}</span></div>
+      <div class="stat link" data-go="shots"><b>${c.shots.length}</b><span>capturas de pantalla · ${fmt(sumSize(c.shots))}</span></div>
+      <div class="stat link" data-go="blur"><b>${c.blur.length}</b><span>borrosas · ${fmt(sumSize(c.blur))}</span></div>
+      <div class="stat link" data-go="big"><b>${c.big.length}</b><span>pesadas (≥ ${bigMB} MB) · ${fmt(sumSize(c.big))}</span></div></div>${errNote}
+      <p class="note">Toca una categoría, revisa las marcadas y pulsa «Cómo borrar». Los resultados son orientativos: mira cada foto antes de borrar.</p>`;
+  }else if(view==='dups'){
+    if(!groups.length)v.innerHTML='<p class="note">No encontré duplicadas ni parecidas en lo analizado.</p>';
+    else v.innerHTML=`<button class="btn" data-auto="dups">Marcar sobrantes (conserva ⭐ la mejor de cada grupo)</button>`+
+      groups.map(g=>`<div class="gh"><span><b>${g.exact?'Idénticas':'Parecidas'} ×${g.items.length}</b></span><span>sobran ${fmt(g.waste)}</span></div><div class="grid">${g.items.map(card).join('')}</div>`).join('');
+  }else{
+    const list=view==='shots'?c.shots:view==='blur'?c.blur:c.big;
+    const sorted=[...list].sort((a,b)=>view==='shots'?b.date-a.date:b.size-a.size);
+    let head='';
+    if(view==='shots')head=`<button class="btn" data-auto="shots">Marcar todas las capturas (${fmt(sumSize(list))})</button><p class="note">Capturas = imágenes PNG. Revisa antes: algunas pueden ser importantes (recibos, entradas, contraseñas).</p>`;
+    if(view==='blur')head=`<button class="btn" data-auto="blur">Marcar todas las borrosas (${fmt(sumSize(list))})</button><p class="note">Detección aproximada por falta de nitidez: puede marcar fotos nocturnas o artísticas que sí quieres.</p>`;
+    if(view==='big')head=`<div class="row"><label>Mostrar archivos de más de <b id="bigV">${bigMB} MB</b></label></div><input type="range" id="bigR" min="5" max="300" step="5" value="${bigMB}">`;
+    v.innerHTML=head+(sorted.length?`<div class="grid">${sorted.map(card).join('')}</div>`:'<p class="note">Nada en esta categoría.</p>')+errNote;
+    const r=$('#bigR');if(r)r.oninput=e=>{bigMB=+e.target.value;$('#bigV').textContent=bigMB+' MB';clearTimeout(window._bt);window._bt=setTimeout(render,250);};
+  }
+  updateBar();
+}
+function updateBar(){const s=selected();$('#bar').hidden=!s.length;$('#bN').textContent=s.length;$('#bS').textContent='liberan '+fmt(sumSize(s));$('#sSel').textContent=fmt(sumSize(s));}
+
+document.addEventListener('click',e=>{
+  const ph=e.target.closest('.ph');
+  if(ph){const it=items.find(i=>i.id===+ph.dataset.id);if(it){it.sel=!it.sel;ph.classList.toggle('sel',it.sel);updateBar();}return;}
+  const a=e.target.closest('[data-auto]');if(a){autoSelect(a.dataset.auto);return;}
+  const g=e.target.closest('[data-go]');if(g){view=g.dataset.go;render();return;}
+});
+$('#chips').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;view=b.dataset.v;render();};
+$('#bClear').onclick=()=>{items.forEach(i=>i.sel=false);render();};
+$('#reset').onclick=()=>{if(!confirm('¿Descartar el análisis y empezar de nuevo?'))return;items.length=0;seen.clear();groups=[];view='all';$('#dash').hidden=true;$('#intro').hidden=false;updateBar();};
+for(const id of ['pick','pick2'])$('#'+id).onchange=e=>{const f=[...e.target.files];e.target.value='';if(f.length)addFiles(f);};
+
+/* ---- hoja "Cómo borrar" ---- */
+function openSheet(html){$('#sheetIn').innerHTML=html;$('#sheet').classList.add('on');}
+$('#sheet').onclick=e=>{if(e.target.id==='sheet')$('#sheet').classList.remove('on');};
+$('#bHow').onclick=()=>{
+  const s=selected().sort((a,b)=>b.date-a.date),total=sumSize(s);
+  const line=i=>`${new Date(i.date).toLocaleString('es',{dateStyle:'medium',timeStyle:'short'})} · ${i.kind==='video'?'vídeo '+mmss(i.dur):'foto'} · ${i.w}×${i.h} · ${fmt(i.size)}`;
+  openSheet(`<h3>Borrar ${s.length} archivos (${fmt(total)})</h3>
+    <p class="note">Safari no puede borrarlos por ti. Hazlo así en la app Fotos:</p>
+    <ol>
+      <li>Toca <b>Abrir Fotos</b> (abajo).</li>
+      <li>Usa los álbumes ya preparados por iOS: <b>Álbumes → Utilidades → Duplicados</b> (iOS 16+) y <b>Capturas de pantalla</b>, o busca por fecha con la lista de abajo.</li>
+      <li>Toca <b>Seleccionar</b>, elige las fotos y pulsa la papelera.</li>
+      <li><b>Importante:</b> Álbumes → Utilidades → <b>Eliminados recientemente</b> → Seleccionar → <b>Eliminar todo</b>. Si no, el espacio no se libera hasta 30 días después.</li>
+    </ol>
+    <div class="list" id="sheetList">${s.slice(0,300).map(i=>esc(line(i))).join('<br>')}${s.length>300?'<br>…':''}</div>
+    <button class="btn alt" id="shCopy" style="margin-bottom:8px">Copiar lista</button>
+    <button class="btn" id="shOpen">📸 Abrir Fotos</button>`);
+  $('#shCopy').onclick=async()=>{const t=s.map(line).join('\n');try{await navigator.clipboard.writeText(t);toast('Lista copiada');}catch(e){toast('No se pudo copiar');}};
+  $('#shOpen').onclick=()=>{location.href='photos-redirect://';};
+};
+$('#openPhotos').onclick=()=>{location.href='photos-redirect://';};
+
+/* =====================================================================
+   Comprimir
+===================================================================== */
+let cmpFiles=[],cmpRes=[];
+$('#cmpPick').onchange=e=>{cmpFiles=[...e.target.files];e.target.value='';$('#cmpGo').disabled=!cmpFiles.length;$('#cmpGo').textContent=cmpFiles.length?`Comprimir ${cmpFiles.length} foto(s) · ${fmt(cmpFiles.reduce((s,f)=>s+f.size,0))}`:'Comprimir';};
+$('#cmpQ').oninput=e=>{$('#cmpQv').textContent=e.target.value+'%';};
+const toBlob=(c,q)=>new Promise(r=>c.toBlob(r,'image/jpeg',q));
+$('#cmpGo').onclick=async()=>{
+  const max=+$('#cmpMax').value,q=+$('#cmpQ').value/100;
+  cmpRes.forEach(r=>URL.revokeObjectURL(r.url));cmpRes=[];
+  $('#cmpPg').hidden=false;$('#cmpGo').disabled=true;
+  for(let i=0;i<cmpFiles.length;i++){
+    const f=cmpFiles[i];$('#cmpPgBar').style.width=(i/cmpFiles.length*100)+'%';
+    const url=URL.createObjectURL(f);
+    try{
+      const img=new Image();img.src=url;await img.decode();
+      const c=scaled(img,max,img.naturalWidth,img.naturalHeight),b=await toBlob(c,q);
+      img.src='';
+      const name=(f.name.replace(/\.[^.]+$/,'')||'foto')+'-ligera.jpg';
+      const better=b.size<f.size*.95;
+      cmpRes.push({name,blob:b,orig:f.size,url:URL.createObjectURL(b),w:c.width,h:c.height,better});
+    }catch(e){cmpRes.push({name:f.name,orig:f.size,err:true});}
+    finally{URL.revokeObjectURL(url);}
+    await new Promise(r=>setTimeout(r,0));
+  }
+  $('#cmpPgBar').style.width='100%';setTimeout(()=>$('#cmpPg').hidden=true,400);$('#cmpGo').disabled=false;
+  const ok=cmpRes.filter(r=>r.better),saved=ok.reduce((s,r)=>s+r.orig-r.blob.size,0);
+  $('#cmpOut').hidden=false;
+  $('#cmpSum').textContent=`Ahorras ${fmt(saved)} (${ok.length} de ${cmpRes.length} mejoran)`;
+  $('#cmpList').innerHTML=cmpRes.map(r=>r.err?`<div class="res"><div>${esc(r.name)}<br><span class="no">No se pudo leer</span></div></div>`:
+    `<div class="res"><img src="${r.url}" alt=""><div>${esc(r.name)}<br>${fmt(r.orig)} → <b class="${r.better?'ok':'no'}">${fmt(r.blob.size)}</b> · ${r.w}×${r.h}${r.better?'':' (no mejora: conserva la original)'}</div><a href="${r.url}" download="${esc(r.name)}" class="btn alt sm">⬇️</a></div>`).join('');
+  $('#cmpShare').disabled=!ok.length;
+};
+$('#cmpShare').onclick=async()=>{
+  const files=cmpRes.filter(r=>r.better).map(r=>new File([r.blob],r.name,{type:'image/jpeg'}));
+  if(!files.length)return;
+  try{
+    if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files});}
+    else toast('Tu navegador no permite compartir archivos: usa los botones ⬇️');
+  }catch(e){if(e.name!=='AbortError')toast('No se pudo abrir el menú de compartir');}
+};
+
+/* =====================================================================
+   Guía
+===================================================================== */
+const GUIDE=[
+ ['Vaciar «Eliminados recientemente» en Fotos','Álbumes → Utilidades → Eliminados recientemente → Seleccionar → Eliminar todo. Lo que borras no libera espacio hasta que haces esto.','Puede liberar varios GB'],
+ ['Fotos → álbum «Duplicados» (iOS 16+)','Álbumes → Utilidades → Duplicados → Combinar. Conserva la mejor versión de cada una.','1–5 GB'],
+ ['Borrar vídeos pesados','Álbumes → Tipos de medios → Vídeos. Los de 4K a 60 fps ocupan ~400 MB por minuto.','Hasta decenas de GB'],
+ ['Grabar en menos peso','Ajustes → Cámara → Grabar vídeo: 1080p HD a 30 fps. Ajustes → Cámara → Formatos: Alta eficiencia.','Evita ocupar más'],
+ ['Optimizar almacenamiento con iCloud Fotos','Ajustes → [tu nombre] → iCloud → Fotos → «Optimizar almacenamiento del iPhone». Necesita espacio en iCloud.','Hasta 50 % o más'],
+ ['Revisar apps pesadas','Ajustes → General → Almacenamiento del iPhone. Si una app ocupa mucho en «Documentos y datos», bórrala y vuelve a instalarla (ojo con perder datos).','1–10 GB'],
+ ['Descargar apps que no usas','En la misma pantalla: «Descargar app». Conserva datos y libera la app.','Variable'],
+ ['Mensajes: adjuntos y conservación','Almacenamiento del iPhone → Mensajes → Revisar fotos/vídeos grandes. Ajustes → Mensajes → Conservar mensajes: 1 año.','0,5–5 GB'],
+ ['WhatsApp/Telegram','Dentro de la app: Ajustes → Almacenamiento y datos → Administrar almacenamiento. Desactiva guardar en Fotos automáticamente.','1–10 GB'],
+ ['Safari: historial y datos','Ajustes → Safari (iOS 18: Ajustes → Apps → Safari) → Borrar historial y datos de sitios. Cierra tus sesiones.','100 MB – 2 GB'],
+ ['Música, podcasts y TV descargados','Almacenamiento del iPhone → Música / Podcasts / TV → quita descargas.','Variable'],
+ ['Archivos y Descargas','App Archivos → Eliminados recientemente y carpeta Descargas.','Variable'],
+ ['«Datos del sistema» enorme','Actualiza iOS, reinicia el iPhone y espera unas horas. Como último recurso: copia de seguridad y restaurar.','Variable']
+];
+function renderGuide(){
+  const st=store.get('guide',{});
+  $('#guideList').innerHTML=GUIDE.map((g,i)=>`<label class="chk"><input type="checkbox" data-gi="${i}"${st[i]?' checked':''}><div><b>${esc(g[0])}</b><span>${esc(g[1])}</span><br><em>${esc(g[2])}</em></div></label>`).join('');
+  $('#guideSum').textContent=`Completado: ${Object.values(st).filter(Boolean).length} de ${GUIDE.length}`;
+  $$('[data-gi]').forEach(c=>c.onchange=()=>{const s=store.get('guide',{});s[c.dataset.gi]=c.checked;store.set('guide',s);$('#guideSum').textContent=`Completado: ${Object.values(s).filter(Boolean).length} de ${GUIDE.length}`;});
+}
+
+/* =====================================================================
+   Sitio
+===================================================================== */
+async function refreshSite(){
+  try{
+    if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();$('#stU').textContent=fmt(e.usage||0);$('#stQ').textContent=fmt(e.quota||0);$('#stNote').textContent='Estimación de Safari para esta página, no de todo el iPhone.';}
+    else $('#stNote').textContent='Tu navegador no ofrece estimación de almacenamiento.';
+  }catch(e){}
+}
+$('#stClear').onclick=async()=>{
+  if(!confirm('¿Borrar los datos guardados por esta página (tus marcas de la guía)?'))return;
+  try{localStorage.clear();}catch(e){}
+  try{if(window.caches){for(const k of await caches.keys())await caches.delete(k);}}catch(e){}
+  try{if(indexedDB.databases){for(const d of await indexedDB.databases())indexedDB.deleteDatabase(d.name);}}catch(e){}
+  try{if(navigator.serviceWorker){for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();}}catch(e){}
+  renderGuide();refreshSite();toast('Datos de la página borrados');
+};
+
+/* ---- pestañas ---- */
+$$('#tabs button').forEach(b=>b.onclick=()=>{$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));$$('.tab').forEach(t=>t.classList.toggle('on',t.id==='t-'+b.dataset.t));$('#bar').style.display=b.dataset.t==='photos'?'':'none';$('main').scrollTop=0;if(b.dataset.t==='site')refreshSite();});
+
+renderGuide();refreshSite();
+</script>
+</body>
+</html>
