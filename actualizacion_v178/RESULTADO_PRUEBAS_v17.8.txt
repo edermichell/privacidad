@@ -1,0 +1,41 @@
+Último Refugio 17.8 (solo servidor) · resultado de las pruebas (2026-11-24)
+
+=== Prueba nueva PvP (prueba_pvp_posicion_v178.js) con la validación ENCENDIDA
+Servidor 17.7: tras un corte volvía ~4 casillas atrás (1 fallo).
+Servidor 17.8: 0 fallos en 7 pasadas (caminar, rodar, correr, conducir, corte, teletransporte inmediato y con 10 s de espera).
+Nota: en 2 pasadas sin limpiar zombis el jugador apareció en un punto al azar: murió por la regla PvP «desconectarse en combate» (los zombis lo tenían en combate). Es el comportamiento previsto; la prueba ahora quita los zombis.
+
+=== Batería de todo lo que usa el servidor (all178srv.sh)
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+######## 17.0 zona roja
+TODO OK
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+######## 17.8 PvP: posición validada, cortes y teletransporte
+fallos: 0
+######## 17.7 reconexión a la sala
+fallos: 0
+######## 17.7 uniones cooperativo (6 x 3 invitados)
+FALLOS 0 de 6
+== prueba dura
+SALA1: 29.8 pasos/s (objetivo 30) · zombis vivos 193 · bajas 260 · errores del juego 0
+SALA2: 29.9 pasos/s (objetivo 30) · zombis vivos 230 · bajas 203 · errores del juego 0
+SALA3: 29.9 pasos/s (objetivo 30) · zombis vivos 187 · bajas 264 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3961
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN

@@ -433,11 +433,29 @@ SRV.boot = function (opt) {
     try { if (!SRV.auth || !peer || !peer.chAu || peer.chDead || !peer.chBlob || !peer.rp || (peer.rp && peer.rp.dead)) return; const [x, y] = SRV.vpos ? SRV.vpos(peer) : [peer.rp.x, peer.rp.y]; if (!freeAt(x, y)) return;
       const b = peer.chBlob; b.P.x = Math.round(x * 100) / 100; b.P.y = Math.round(y * 100) / 100; if (Array.isArray(peer.bed)) b.srvBed = peer.bed; peer.chPend = JSON.stringify(b); } catch (e) { }
   };
-  /* v17.7: en las salas SIN validación de movimiento se escribe YA. Antes quedaba «pendiente» y el guardado periódico solo
-     recorre a los conectados: si la conexión se cortaba (sin despedida del teléfono) nunca se escribía y, al volver, el
-     jugador aparecía donde se guardó la última vez. En la sala PvP (con validación) se deja como antes: la posición
-     validada (p.mv) puede quedarse atrás y pisaría la buena que manda el teléfono al salir (pendiente de revisar). */
-  { const _np2 = netPeerLost; netPeerLost = function (peer) { try { SRV.posFlush(peer); if (!(SRV.MOV && SRV.MOV.on)) SRV.charFlush(peer); } catch (e) { } return _np2.apply(this, arguments); }; }
+  /* v17.7/v17.8: al irse se escribe YA la última posición que conoce el servidor. Antes quedaba «pendiente» y el guardado
+     periódico solo recorre a los conectados: si la conexión se cortaba (sin despedida del teléfono) nunca se escribía y,
+     al volver, el jugador aparecía donde se guardó la última vez. v17.8: también en la sala PvP, con la posición VALIDADA
+     (comprobado: sigue al jugador al caminar, rodar, correr y conducir), y esa posición queda fijada: un guardado tardío
+     del teléfono (p. ej. el que la auditoría aplaza 2,5 s) ya no puede cambiarla. Así un teletransporte (trampa) no se
+     conserva al salir y volver. */
+  /* casilla libre más cercana (hasta 3) a una posición: si la validada cae en una puerta o un marco, no se pierde */
+  SRV.freeNear = (x, y) => { if (freeAt(x, y)) return [x, y]; for (let r = 1; r <= 3; r++) for (let k = 0; k < 8 * r; k++) { const a = k / (8 * r) * 6.2832, qx = Math.floor(x + Math.cos(a) * r) + .5, qy = Math.floor(y + Math.sin(a) * r) + .5; if (freeAt(qx, qy)) return [qx, qy]; } return null; };
+  { const _np2 = netPeerLost; netPeerLost = function (peer) { try {
+      SRV.posFlush(peer);
+      const b = peer && peer.chBlob;
+      if (b && b.P && !peer.chDead && SRV.auth && peer.chAu && peer.rp && !peer.rp.dead) {
+        const vp = SRV.vpos(peer);   /* si posFlush no pudo usarla (casilla ocupada), la libre más cercana */
+        if (vp && isFinite(vp[0]) && Math.hypot(b.P.x - vp[0], b.P.y - vp[1]) > 1.5) { const q = SRV.freeNear(vp[0], vp[1]); if (q) { b.P.x = Math.round(q[0] * 100) / 100; b.P.y = Math.round(q[1] * 100) / 100; peer.chPend = JSON.stringify(b); } }
+        peer.chLeftPos = [b.P.x, b.P.y];
+      }
+      SRV.charFlush(peer);
+    } catch (e) { } return _np2.apply(this, arguments); }; }
+  { const _cp = SRV.charPut; SRV.charPut = function (peer, c, fin) {
+      if (!peer || !peer.chLeftPos) return _cp.apply(this, arguments);
+      try { const o = JSON.parse(c); if (o && o.P) { o.P.x = peer.chLeftPos[0]; o.P.y = peer.chLeftPos[1]; c = JSON.stringify(o); } } catch (e) { }
+      const r = _cp.call(this, peer, c, fin); try { SRV.charFlush(peer); } catch (e) { } return r;   /* ya no está en la lista: se escribe aquí */
+    }; }
   { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'saco' ? 'Apareces en tu saco de dormir.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
   /* ===== v16.3 · CHAT DE VOZ: posiciones para el servidor, aviso al jugador y ruido para los zombis ===== */
   SRV.voz = opt.voz !== false; SRV.vozR = +opt.vozR || 40;
