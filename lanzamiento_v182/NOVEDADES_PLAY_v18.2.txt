@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v18.2:
+• Nuevo ajuste «Forcejeo fácil»: suéltate de un agarrón manteniendo el dedo en la pantalla.
+• Animaciones con más peso: los zombis retroceden al recibir un golpe, caen con impacto y se levantan poco a poco.
+• Los zombis pueden agarrarte: toca la pantalla muy rápido para soltarte.
+• Sala PvP: si te desconectas en combate, tu cuerpo se queda dormido 30 s.
+
+--- English (optional) ---
+What's new in v18.2:
+• New "Easy struggle" setting: break free from a grab by holding your finger on the screen.
+• Weightier animations: zombies recoil when hit, fall with impact and get back up gradually.
+• Zombies can grab you: tap the screen fast to break free.
+• PvP room: if you disconnect mid-fight, your body stays asleep for 30 s.

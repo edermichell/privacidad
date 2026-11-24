@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v18.1 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v18.2 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -1146,7 +1146,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
         <div class="srow"><span>Límite de FPS<small>30 ahorra batería</small></span><button id="bFps" type="button"></button></div>
         <div class="srow"><span>Mostrar FPS</span><button id="bFpsS" type="button"></button></div>
         <div class="srow"><span>Diagnóstico avanzado<small>FPS, tiempo de fotograma, zombis, NPC, partículas y sprites</small></span><button id="bDiagS" type="button">ABRIR</button></div>
-        <div class="srow"><span>Sacudida de cámara<small>golpes, disparos y explosiones</small></span><button id="bShake" type="button"></button></div>
+        <div class="srow"><span>Sacudida de cámara<small>golpes, disparos y explosiones</small></span><button id="bShake" type="button"></button></div><div class="srow"><span>Forcejeo fácil<small>agarrones: la mitad de toques, o mantén el dedo</small></span><button id="bGrabE" type="button"></button></div>
         <div class="srow"><span>Vibración<small>al recibir daño, disparar y morir (teléfono)</small></span><button id="bVibe" type="button"></button></div>
         <div class="srow"><span>Avisos de amenaza<small>flechas rojas en el borde hacia zombis que te persiguen fuera de la pantalla</small></span><button id="bThreat" type="button"></button></div>
         <div class="srow"><span>Animación de entrada<small>zoom y título al abrir la partida</small></span><button id="bEnt" type="button"></button></div>
@@ -2328,8 +2328,13 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 171, UR_VERSION = '18.1', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 172, UR_VERSION = '18.2', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '18.2', t: 'Arreglos y forcejeo fácil', it: [
+    'Nuevo ajuste <b>Forcejeo fácil</b> (Ajustes): para soltarte de un agarrón hacen falta la mitad de toques, o basta con mantener el dedo en la pantalla.',
+    'Agarrón: tus toques y teclas para soltarte ya no pulsan botones sin querer (antes podías tirar cosas de la mochila con «Soltar» o abrir el mapa). Si tenías un panel abierto, se cierra.',
+    'Mientras te agarran ya no puedes abrir maleteros ni armarios ni subirte a un auto con USAR.',
+    'Sala PvP: el cuerpo de un jugador desconectado ya no se queda en el mundo para siempre si el servidor guarda o se reinicia mientras está ahí.' ] },
   { v: '18.1', t: 'Animaciones con peso', it: [
     'Los golpes se notan: zombis y personas <b>retroceden</b> y se encogen un instante al recibir un golpe.',
     'Las caídas tienen impacto: el cuerpo cae con un arco, <b>choca contra el suelo</b> levantando polvo y ya no «salta» al cadáver.',
@@ -13932,7 +13937,7 @@ function setRender() {
   setPips('pipV', OPT.vol); setPips('pipM', mus); setPips('pipA', amb);
   $('bSndP').textContent = YN(!muted); $('bQual').textContent = q; $('bHD').textContent = RS === 4 ? 'Ultra' : RS === 3 ? 'Alta' : 'Estándar';
   $('bFps').textContent = OPT.fps ? OPT.fps + ' FPS' : 'Libre'; $('bFpsS').textContent = YN(OPT.showFps);
-  $('bShake').textContent = YN(!OPT.noShake); $('bEnt').textContent = YN(!OPT.noEnterFx);
+  $('bShake').textContent = YN(!OPT.noShake); { const ge = $('bGrabE'); if (ge) ge.textContent = YN(!!OPT.grabEasy); } $('bEnt').textContent = YN(!OPT.noEnterFx);
   $('bAuto').textContent = YN(OPT.autoRun); $('bTips').textContent = YN(!OPT.noTips); $('bIntroT').textContent = YN(INTR.on);
   const ig = STATE === 'play'; $('bLay').disabled = !ig; $('layNote').textContent = ig ? 'cambia tamaño, posición y mano izquierda' : 'disponible dentro de una partida';
   const has = hasSave(); $('bSetDel').disabled = !has || ig; $('delNote').textContent = ig ? 'sal al menú para borrar la partida' : has ? 'no se puede deshacer' : 'no hay partida guardada';
@@ -24025,6 +24030,46 @@ drawNpc = an181Wrap(drawNpc, false);
   };
 }
 
+/* ===================== v18.2: ARREGLOS =====================
+   1) Agarrón: con un zombi sujetándote, USAR ya no abre maleteros ni armarios ni te sube a un auto (el toque o la tecla ya
+      cuentan como forcejeo). Y al empezar el agarrón se cierran los paneles abiertos (mochila, fabricar, mapa…): los toques
+      de forcejeo caían sobre sus botones (p. ej. «Soltar») y no se veía al zombi. */
+{
+  const _di = doInteract; doInteract = function () { if (typeof GRAB !== 'undefined' && GRAB.cur) return; return _di.apply(this, arguments); };
+  const _gs = ur180Start; ur180Start = function (z) { try { if (typeof UI !== 'undefined' && UI.closeAll) UI.closeAll(); } catch (e) { } return _gs.apply(this, arguments); };
+}
+/* 2) Mientras dura el agarrón, los toques y teclas solo cuentan como forcejeo: no pulsan botones (antes, tocando rápido se
+      podía pulsar «Soltar» en la mochila y tirar cosas, o abrir el mapa o construir sin querer). Siguen funcionando la
+      pausa, Escape y el joystick (sacudirlo también es forcejear). El forcejeo se cuenta antes, con «pointerdown». */
+{
+  const block182 = e => {
+    if (typeof GRAB === 'undefined' || !GRAB.cur || STATE !== 'play') return;
+    if (e.type === 'keydown') { if (e.code === 'Escape' || e.code === 'F2') return; e.stopImmediatePropagation(); e.preventDefault(); return; }
+    const t = e.target; if (!t || !t.closest) return; const b = t.closest('button, .tb'); if (!b || b.id === 'bPause') return;
+    e.stopImmediatePropagation(); if (e.cancelable) e.preventDefault();
+  };
+  for (const ty of ['touchstart', 'mousedown', 'click', 'keydown']) window.addEventListener(ty, block182, { capture: true, passive: false });
+}
+/* 3) Accesibilidad: «Forcejeo fácil» (Ajustes). Machacar la pantalla cuesta a algunas personas (una mano, dedos, artritis).
+      Con la opción activada: hacen falta la mitad de forcejeos y basta con MANTENER el dedo en la pantalla (o una tecla):
+      cuenta un forcejeo cada 0,25 s. */
+const GE182 = { hold: 0, keys: new Set(), acc: 0 };
+{
+  window.addEventListener('pointerdown', () => { GE182.hold++; }, true);
+  const up = () => { GE182.hold = Math.max(0, GE182.hold - 1); }; window.addEventListener('pointerup', up, true); window.addEventListener('pointercancel', up, true);
+  window.addEventListener('blur', () => { GE182.hold = 0; GE182.keys.clear(); });
+  window.addEventListener('keydown', e => { if (e.code !== 'Escape') GE182.keys.add(e.code); }, true);
+  window.addEventListener('keyup', e => { GE182.keys.delete(e.code); }, true);
+  const _nd = ur180Need; ur180Need = function () { const n = _nd.apply(this, arguments); return OPT.grabEasy ? Math.max(2, Math.ceil(n / 2)) : n; };
+  const _st = ur180Step; ur180Step = function (dt) {
+    const r = _st.apply(this, arguments);
+    if (OPT.grabEasy && GRAB.cur && STATE === 'play' && !PAUSED && (GE182.hold > 0 || GE182.keys.size)) { GE182.acc += dt; if (GE182.acc >= .25) { GE182.acc = 0; ur180Tap(1); } } else GE182.acc = 0;
+    return r;
+  };
+  const _gs = ur180Start; ur180Start = function () { const r = _gs.apply(this, arguments); try { if (OPT.grabEasy) { const s = document.querySelector('#grab180 span'); if (s) s.textContent = (IN.touch ? 'Mantén el dedo en la pantalla' : 'Mantén pulsada una tecla') + ' para soltarte'; } } catch (e) { } return r; };
+  const b = document.getElementById('bGrabE'); if (b) b.addEventListener('click', () => { OPT.grabEasy = !OPT.grabEasy; saveOpt(); setRender(); });
+}
+
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
   key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
@@ -25402,7 +25447,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -25443,7 +25488,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25466,7 +25511,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25495,7 +25540,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25529,7 +25574,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+  if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25560,7 +25605,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -25593,7 +25638,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -25622,12 +25667,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 18.1') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 18.2') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.1';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.2';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';

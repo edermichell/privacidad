@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Probar servidor de Último Refugio</title>
+<style>
+/* Dos columnas: servidor A (tu PC) y servidor B (el VPS), medidos igual, lado a lado. */
+:root {
+  --bg: #eef0ea; --panel: #ffffff; --ink: #1d221c; --muted: #5d665b; --line: #d3d8cf;
+  --accent: #b5541f; --accent-ink: #ffffff; --ok: #2f7d3b; --mid: #9a6b00; --bad: #b3261e;
+  --mono: ui-monospace, Menlo, Consolas, 'Courier New', monospace;
+  --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #121511; --panel: #1a1e18; --ink: #e5e8e0; --muted: #9aa395; --line: #2d332a;
+  --accent: #e07a3c; --accent-ink: #1a0d05; --ok: #6cc47a; --mid: #e6c35c; --bad: #f08a80; color-scheme: dark } }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--body); padding: 20px 16px 40px }
+.wrap { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px }
+h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); line-height: 1.15 }
+h1 small { display: block; font: 600 12px/1 var(--mono); letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px }
+p.lead { margin: 6px 0 0; color: var(--muted); max-width: 70ch }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start }
+.srv { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0 }
+.srv h2 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.tag { font: 600 11px/1 var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--muted) }
+label { font-size: 13px; color: var(--muted) }
+input { width: 100%; font: 15px var(--mono); padding: 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink) }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.m { border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-width: 0 }
+.m small { display: block; font: 600 11px/1.2 var(--mono); letter-spacing: .8px; text-transform: uppercase; color: var(--muted) }
+.m b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; margin-top: 4px }
+.m span { font-size: 12px; color: var(--muted) }
+.ok { color: var(--ok) } .mid { color: var(--mid) } .bad { color: var(--bad) }
+.verdict { border-radius: 8px; padding: 10px 12px; font-weight: 600; border: 1px solid var(--line) }
+.verdict.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); border-color: var(--ok) }
+.verdict.mid { background: color-mix(in srgb, var(--mid) 14%, transparent); border-color: var(--mid) }
+.verdict.bad { background: color-mix(in srgb, var(--bad) 12%, transparent); border-color: var(--bad) }
+.rooms { overflow-x: auto }
+table { width: 100%; border-collapse: collapse; font-size: 13px }
+th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); white-space: nowrap }
+th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .6px; color: var(--muted); border-top: 0 }
+td.n { font-variant-numeric: tabular-nums }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+button { font: 600 15px var(--body); padding: 12px 18px; border-radius: 8px; border: 1px solid transparent; cursor: pointer }
+.pri { background: var(--accent); color: var(--accent-ink) }
+.sec { background: var(--panel); color: var(--ink); border-color: var(--line) }
+button:disabled { opacity: .6; cursor: default }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 12px 14px; font-size: 14px }
+.note ul { margin: 6px 0 0; padding-left: 18px }
+textarea { width: 100%; min-height: 160px; font: 12.5px/1.45 var(--mono); padding: 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink) }
+.err { color: var(--bad); font-size: 13px; overflow-wrap: anywhere }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><small>Último Refugio · servidor</small>Probar servidor</h1>
+    <p class="lead">Mide desde este dispositivo lo mismo que vive un jugador: si el servidor responde, el ping, la velocidad, si abre el canal del juego y cómo están sus salas. Pon dos direcciones para comparar tu PC con el VPS.</p>
+  </header>
+
+  <div class="cols">
+    <section class="srv" id="A">
+      <h2>Servidor A <span class="tag">tu PC</span></h2>
+      <div><label for="urlA">Dirección</label><input id="urlA" value="https://server.tail12bbaa.ts.net" spellcheck="false" autocomplete="off"></div>
+      <div class="out"></div>
+    </section>
+    <section class="srv" id="B">
+      <h2>Servidor B <span class="tag">VPS</span></h2>
+      <div><label for="urlB">Dirección (vacío = no probar)</label><input id="urlB" placeholder="http://IP-DEL-VPS:8080" spellcheck="false" autocomplete="off"></div>
+      <div class="out"></div>
+    </section>
+  </div>
+
+  <div class="bar">
+    <button class="pri" id="go" type="button">Probar</button>
+    <button class="sec" id="cp" type="button" hidden>Copiar resultado</button>
+    <span id="st" class="tag"></span>
+  </div>
+
+  <textarea id="txt" readonly hidden aria-label="Resultado en texto"></textarea>
+
+  <div class="note">
+    <b>Cómo leerlo</b>
+    <ul>
+      <li><b>Ping</b> (lo que más se nota al jugar): menos de 80 ms bien, 80–150 ms aceptable, más de 150 ms se nota retraso.</li>
+      <li><b>Bajada</b> es lo que el servidor te puede mandar. Cada jugador usa ~0,2 Mbit/s; la cifra también depende de TU internet, así que compara A y B desde el mismo sitio.</li>
+      <li><b>Canal del juego</b> tiene que decir «conecta»: es por donde viaja la partida.</li>
+      <li><b>Salas:</b> si están activas, cuántos jugadores hay y si dan errores (lo normal es 0). La fluidez de cada sala (pasos/s, 30 es lo ideal) la ves en el panel del servidor. Para saber cuántos jugadores aguanta el VPS de verdad, corre <code>PRUEBA_DURA</code> en el propio VPS.</li>
+      <li>Ábrelo en el PC con Chrome o Edge (doble clic al archivo). En el teléfono es más fácil abrir <code>…/prueba</code> en la dirección del servidor.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const clean = u => { u = String(u || '').trim().replace(/\/+$/, ''); if (u && !/^https?:\/\//i.test(u)) u = 'http://' + u; return u; };
+try { const b = localStorage.getItem('ur_probar_b'); if (b) $('#urlB').value = b; const a = localStorage.getItem('ur_probar_a'); if (a) $('#urlA').value = a; } catch (e) { }
+
+async function timed(url, opt, ms) {
+  const c = new AbortController(), t = setTimeout(() => c.abort(), ms || 8000), a = performance.now();
+  try { const r = await fetch(url, Object.assign({ cache: 'no-store', signal: c.signal }, opt || {})); return { r, ms: performance.now() - a }; } finally { clearTimeout(t); }
+}
+async function ping(base, n) {
+  const v = []; let lost = 0;
+  for (let i = 0; i < n; i++) { try { const { r, ms } = await timed(base + '/prueba/ping?t=' + Date.now() + i, null, 3000); if (r.ok) { await r.text(); v.push(ms); } else lost++; } catch (e) { lost++; } await sleep(120); }
+  if (!v.length) return { lost };
+  v.sort((a, b) => a - b); return { med: v[Math.floor(v.length / 2)], min: v[0], p95: v[Math.min(v.length - 1, Math.floor(v.length * .95))], lost };
+}
+async function down(base) {
+  let best = null;
+  for (const kb of [512, 2048]) { try { const { r } = await timed(base + '/prueba/down?kb=' + kb + '&t=' + Date.now(), null, 20000); const a = performance.now(); const b = await r.arrayBuffer(); const s = (performance.now() - a) / 1000; const mb = b.byteLength * 8 / 1e6 / Math.max(.05, s); best = Math.max(best || 0, mb); } catch (e) { } }
+  return best;
+}
+async function up(base) {
+  try { const body = new Blob([new Uint8Array(1024 * 1024)], { type: 'text/plain' }); const a = performance.now(); const { r } = await timed(base + '/prueba/up', { method: 'POST', body }, 20000); await r.json(); return 8 / Math.max(.05, (performance.now() - a) / 1000); } catch (e) { return null; }
+}
+function ws(base) {
+  return new Promise(res => {
+    const u = base.replace(/^http/i, 'ws') + '/ws?role=guest&room=SALA1&uid=prueba&n=x&s=x', a = performance.now(); let done = 0;
+    const f = (ok, m) => { if (done) return; done = 1; res({ ok, ms: Math.round(performance.now() - a), m }); };
+    try { const w = new WebSocket(u); w.onopen = () => { f(true); try { w.close(); } catch (e) { } }; w.onclose = e => f(e.code >= 4000 || done, e.code); w.onerror = () => setTimeout(() => f(false, 'error'), 300); setTimeout(() => { f(false, 'sin respuesta'); try { w.close(); } catch (e) { } }, 8000); } catch (e) { f(false, String(e)); }
+  });
+}
+const cls = (v, g, m, lowGood) => v == null ? 'bad' : lowGood ? (v <= g ? 'ok' : v <= m ? 'mid' : 'bad') : (v >= g ? 'ok' : v >= m ? 'mid' : 'bad');
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+async function test(id, base, lines) {
+  const out = $('#' + id + ' .out'); out.innerHTML = '<span class="tag">Midiendo…</span>';
+  const R = { base };
+  try { const { r, ms } = await timed(base + '/estado', null, 10000); R.estado = await r.json(); R.estadoMs = ms; } catch (e) { R.error = e.name === 'AbortError' ? 'no responde (10 s)' : 'no se puede conectar (' + (e.message || e) + ')'; }
+  if (R.error) {
+    out.innerHTML = '<div class="verdict bad">No se puede usar: ' + esc(R.error) + '</div><p class="err">Comprueba la dirección, que el servidor esté encendido (INICIAR_SERVIDOR) y, en un VPS, que el puerto esté abierto en el cortafuegos.</p>';
+    lines.push('== ' + id + ' ' + base, 'ERROR: ' + R.error, ''); return;
+  }
+  R.ping = await ping(base, 15); R.down = await down(base); R.up = await up(base); R.ws = await ws(base);
+  const P = R.ping, sal = (R.estado.salas || []);
+  const cP = cls(P.med, 80, 150, true), cD = cls(R.down, 5, 1.5), cU = cls(R.up, 2, .5), cW = R.ws.ok ? 'ok' : 'bad';
+  const bad = [cP, cW].includes('bad') || P.lost > 3, mid = [cP, cD, cU].includes('mid') || (R.down != null && R.down < 1.5);
+  const verdict = bad ? ['bad', 'No sirve así: ' + (cW === 'bad' ? 'el canal del juego no conecta' : 'el ping es demasiado alto o se pierden respuestas')] : mid ? ['mid', 'Sirve, con alguna pega (revisa lo marcado en amarillo)'] : ['ok', 'Listo para jugar desde aquí'];
+  const act = sal.filter(s => s.estado === 'activa');
+  out.innerHTML =
+    '<div class="verdict ' + verdict[0] + '">' + esc(verdict[1]) + '</div>' +
+    '<div class="metrics">' +
+    '<div class="m"><small>Ping</small><b class="' + cP + '">' + (P.med != null ? Math.round(P.med) + ' ms' : '—') + '</b><span>' + (P.med != null ? 'mín ' + Math.round(P.min) + ' · peor ' + Math.round(P.p95) + ' · perdidos ' + P.lost + '/15' : 'sin respuesta') + '</span></div>' +
+    '<div class="m"><small>Canal del juego</small><b class="' + cW + '">' + (R.ws.ok ? 'conecta' : 'no conecta') + '</b><span>' + (R.ws.ok ? R.ws.ms + ' ms' : esc(R.ws.m)) + '</span></div>' +
+    '<div class="m"><small>Bajada</small><b class="' + cD + '">' + (R.down != null ? R.down.toFixed(1) + ' Mbit/s' : '—') + '</b><span>del servidor a ti</span></div>' +
+    '<div class="m"><small>Subida</small><b class="' + cU + '">' + (R.up != null ? R.up.toFixed(1) + ' Mbit/s' : '—') + '</b><span>de ti al servidor</span></div>' +
+    '</div>' +
+    '<div class="tag">Salas · ' + act.length + ' activa(s) de ' + sal.length + '</div>' +
+    '<div class="rooms"><table><thead><tr><th>Sala</th><th>Estado</th><th>Jugadores</th><th>Zombis</th><th>Errores</th></tr></thead><tbody>' +
+    sal.map(s => '<tr><td>' + esc(s.nombre) + (s.pvp ? ' <span class="tag">PvP</span>' : '') + '</td><td class="' + (s.estado === 'activa' ? 'ok' : '') + '">' + esc(s.estado) + '</td><td class="n">' + (s.jugadores | 0) + '/' + (s.max | 0) + '</td><td class="n">' + (s.zombis == null ? '—' : s.zombis) + '</td><td class="n ' + ((s.errores | 0) ? 'bad' : '') + '">' + (s.errores | 0) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+  lines.push('== ' + id + ' ' + base, 'Veredicto: ' + verdict[1],
+    'Ping: ' + (P.med != null ? Math.round(P.med) + ' ms (mín ' + Math.round(P.min) + ', peor ' + Math.round(P.p95) + ', perdidos ' + P.lost + '/15)' : 'sin respuesta'),
+    'Bajada: ' + (R.down != null ? R.down.toFixed(1) : '?') + ' Mbit/s · Subida: ' + (R.up != null ? R.up.toFixed(1) : '?') + ' Mbit/s',
+    'Canal del juego: ' + (R.ws.ok ? 'conecta (' + R.ws.ms + ' ms)' : 'NO conecta (' + R.ws.m + ')'),
+    'Salas: ' + sal.map(s => s.nombre + ' ' + s.estado + ' ' + (s.jugadores | 0) + '/' + (s.max | 0) + (s.errores ? ' errores ' + s.errores : '')).join(' | '), '');
+}
+
+$('#go').addEventListener('click', async () => {
+  const a = clean($('#urlA').value), b = clean($('#urlB').value);
+  try { localStorage.setItem('ur_probar_a', $('#urlA').value); localStorage.setItem('ur_probar_b', $('#urlB').value); } catch (e) { }
+  if (!a && !b) { $('#st').textContent = 'Escribe al menos una dirección'; return; }
+  $('#go').disabled = true; $('#cp').hidden = true; $('#txt').hidden = true; $('#st').textContent = 'Midiendo (unos 30 s por servidor)…';
+  const lines = ['Prueba de servidor · Último Refugio · ' + new Date().toLocaleString(), 'Desde: ' + navigator.userAgent, ''];
+  if (a) await test('A', a, lines); else $('#A .out').innerHTML = '';
+  if (b) await test('B', b, lines); else $('#B .out').innerHTML = '<span class="tag">Sin dirección: no se prueba</span>';
+  $('#txt').value = lines.join('\n'); $('#txt').hidden = false; $('#cp').hidden = false; $('#go').disabled = false; $('#st').textContent = 'Terminado';
+});
+$('#cp').addEventListener('click', () => {
+  const t = $('#txt'); const sel = () => { t.focus(); t.select(); $('#st').textContent = 'Texto seleccionado: cópialo con Ctrl+C'; };
+  try { navigator.clipboard.writeText(t.value).then(() => { $('#st').textContent = 'Resultado copiado'; }, sel); } catch (e) { sel(); }
+});
+</script>
+</body>
+</html>

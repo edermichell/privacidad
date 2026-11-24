@@ -873,6 +873,14 @@ SRV.boot = function (opt) {
     if (!busy && SRV.pauseEmpty) { SRV.paused = true; return; }
     SRV.paused = false; return _ug.apply(this, arguments);
   };
+  /* ----- v18.2 · el cuerpo dormido NO se guarda en el mundo -----
+     Es un personaje del mundo (NPC) mientras dura; el guardado del mundo (cada 2 min, al dormirse la sala vacía, al cerrar) lo grababa
+     como un personaje más y, al reiniciar o despertar la sala, quedaba para siempre un «Nombre (desconectado)» paseando por el mapa.
+     Mientras se guarda, los cuerpos se apartan un instante de la lista (todo en el mismo paso: nadie lo ve). */
+  { const _ns = npcSave; npcSave = function () {
+      const out = []; for (let i = NPCS.length - 1; i >= 0; i--) if (NPCS[i] && NPCS[i].linger) out.push(NPCS.splice(i, 1)[0]);
+      try { return _ns.apply(this, arguments); } finally { for (let i = out.length - 1; i >= 0; i--) NPCS.push(out[i]); }
+    }; }
   /* ----- v17.9 · tras morir NO se reaparece junto al propio cadáver (sala PvP) -----
      La aparición al azar elige, entre ~60 puntos de la costa, el más alejado de los demás jugadores: tras morir solía tocar el MISMO
      punto que la vez anterior, y si el jugador no se había movido, junto a su mochila recién caída. Ahora se evita el sitio de la muerte

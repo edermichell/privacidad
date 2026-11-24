@@ -1,0 +1,107 @@
+RESULTADOS DE LA BATERÍA COMPLETA · v18.2 (cliente 18.2 + servidor nuevo) · 2026-11-24
+Cada bloque muestra solo las líneas de resumen (fallos: N) y cualquier FAIL.
+
+######## 18.2 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+== 4 jugadores
+fallos: 0
+== soak
+d4 21s {"Z":1565,"NPCS":41,"parts":261,"texts":2,"cars":308,"chunks":40,"HC2":1434,"SPR":35,"EVS":6,"JL":12,"buildings":263,"TRAPS":0,"day":5,"ls":152427,"mem":null,"aliv
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+fallos: 0
+== suelo
+fallos: 0
+FIN2
+== 18.2 agarrón: botones, paneles y forcejeo fácil
+fallos: 0
+== 18.1 animaciones
+fallos: 0
+== 18.0 agarrón, silueta y guardado
+fallos: 0
+== 17.4-17.6
+fallos: 0
+OK   alejarse durante la preparación hace que falle {"had":true,"w0":0,"golpes":0,"fallos":1,"hp":100}
+fallos: 0
+FAIL con la mochila abierta 20 s la calidad automática no se mueve {"LOWQ":false,"highT":0}
+fallos: 1
+fallos: 0
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+######## 17.0 zona roja
+TODO OK
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+######## 17.8 PvP: posición validada, cortes y teletransporte
+fallos: 0
+######## 17.9 el cuerpo se queda
+fallos: 0
+######## 18.0 agarrón en sala
+fallos: 0
+######## 17.7 reconexión a la sala
+fallos: 0
+######## 17.7 uniones cooperativo (6 x 3 invitados)
+
+######## NOTAS
+1) El proceso de pruebas se reinició a mitad de la sección «uniones cooperativo»; esa sección y la prueba dura se repitieron después (abajo).
+2) «13.5 -> 13.6», «2 jugadores» y «soak» no imprimieron resultado en esta pasada; repetidas por separado (abajo): todas bien.
+3) FAIL «con la mochila abierta 20 s la calidad automática no se mueve» (prueba de la 17.6): esa prueba deja un zombi persiguiendo al jugador con la mochila abierta.
+   Con la 18.2 el zombi lo agarra y la mochila se cierra a propósito, así que la prueba dejaba de medir lo que quería. Ahora apaga los agarrones (como las de la 17.4 y la 17.5).
+
+######## Repetidas
+== 17.6: fallos: 0
+== 13.5 -> 13.6: OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores: host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play",...,"rp":true} · errores []
+== soak
+d4 18s {"Z":1583,"NPCS":158,"parts":10,"texts":0,"cars":308,"chunks":34,"HC2":1434,"SPR":35,"EVS":6,"JL":11,"buildings":263,"TRAPS":0,"day":5,"ls":154490,"mem":null,"alive":1575}
+ERRS_FOUND []
+######## 17.7 uniones cooperativo (6 x 3 invitados)
+FALLOS 0 de 6
+== prueba dura
+SALA1: 30.0 pasos/s (objetivo 30) · zombis vivos 157 · bajas 252 · errores del juego 0
+SALA2: 30.0 pasos/s (objetivo 30) · zombis vivos 196 · bajas 255 · errores del juego 0
+SALA3: 30.0 pasos/s (objetivo 30) · zombis vivos 230 · bajas 252 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3931
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN
+EXIT=0
+
+######## Errores silenciosos (copia instrumentada: 109 catch vacíos del juego y 99 del servidor avisan)
+Bot individual 4-6 días (3.144 y 1.882 acciones): 0 errores · 3 bots en sala PvP 5 min (cortes, salidas en combate, cuerpos): servidor 0, teléfonos 0, errores de página 0.
+
+######## Compilación Android (bundleRelease, sin firmar): exit=0, app-release.aab (versionCode 172, versionName 18.2).
