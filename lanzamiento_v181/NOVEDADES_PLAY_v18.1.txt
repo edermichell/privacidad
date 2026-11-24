@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v18.1:
+• Animaciones con más peso: los zombis retroceden al recibir un golpe, caen con impacto y se levantan poco a poco.
+• Los zombis pueden agarrarte: toca la pantalla muy rápido para soltarte.
+• En medio de una multitud te sigues viendo.
+• Sala PvP: si te desconectas en combate, tu cuerpo se queda dormido 30 s.
+
+--- English (optional) ---
+What's new in v18.1:
+• Weightier animations: zombies recoil when hit, fall with impact and get back up gradually.
+• Zombies can grab you: tap the screen fast to break free.
+• You can still see yourself in a crowd.
+• PvP room: if you disconnect mid-fight, your body stays asleep for 30 s.
