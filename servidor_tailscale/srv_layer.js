@@ -456,7 +456,7 @@ SRV.boot = function (opt) {
       try { const o = JSON.parse(c); if (o && o.P) { o.P.x = peer.chLeftPos[0]; o.P.y = peer.chLeftPos[1]; c = JSON.stringify(o); } } catch (e) { }
       const r = _cp.call(this, peer, c, fin); try { SRV.charFlush(peer); } catch (e) { } return r;   /* ya no está en la lista: se escribe aquí */
     }; }
-  { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'saco' ? 'Apareces en tu saco de dormir.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
+  { const _sw = netSendWorld; netSendWorld = function () { const pe = NET.cur; const r = _sw.apply(this, arguments); try { if (pe && pe.spWhy && pe.spWhy !== 'inicio') { const m = pe.spWhy === 'cama' ? 'Apareces en tu cama.' : pe.spWhy === 'cuerpo' ? 'Vuelves a tu cuerpo: seguía donde lo dejaste en combate.' : pe.spWhy === 'saco' ? 'Apareces en tu saco de dormir.' : pe.spWhy === 'ultima' ? 'Apareces donde lo dejaste.' : 'Apareces en un lugar al azar.'; setTimeout(() => { try { SRV.aliSay(pe, m, 'tip'); } catch (e) { } }, 6000); } } catch (e) { } return r; }; }
   /* ===== v16.3 · CHAT DE VOZ: posiciones para el servidor, aviso al jugador y ruido para los zombis ===== */
   SRV.voz = opt.voz !== false; SRV.vozR = +opt.vozR || 40;
   setInterval(() => { try { if (!SRV.ctl || SRV.ctl.readyState !== 1) return; const l = [];
@@ -582,7 +582,64 @@ SRV.boot = function (opt) {
       try { const peer = NET.cur; if (peer && o && o.k && SRV.auth && peer.chAu && !peer.chDead) { if (SRV.pvp) SRV.dropLoot(peer); peer.chDead = 1; peer.chPend = null; if (SRV.muerte === true || (SRV.muerte !== false && !CASUAL)) { SRV.charDead(peer); slog(who(peer) + ' murió: personaje borrado'); } } } catch (e) { }
       return r;
     }; }
-  { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) SRV.pvpKill(peer, null, true); else SRV.charFlush(peer); } catch (e) { } try { if (peer && peer.uid) SRV.seen.set(peer.uid, Date.now()); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
+  { const _npl = netPeerLost; netPeerLost = function (peer, silent) { try { if (SRV.pvp && peer.A > 0 && !peer.chDead && performance.now() - (peer.lastCombat || -1e9) < SRV.PV.combat) { if (!(SRV.LNG && SRV.LNG.on && SRV.lingerStart(peer))) SRV.pvpKill(peer, null, true); } else SRV.charFlush(peer); } catch (e) { } try { if (peer && peer.uid) SRV.seen.set(peer.uid, Date.now()); } catch (e) { } try { if (SRV.pvp) { const u = peer.uid; setTimeout(() => { try { SRV.aliSendGroup(u); } catch (e) { } }, 80); } } catch (e) { } return _npl.apply(this, arguments); }; }   /* v15.2: cortar la conexión en pleno combate = morir (el cuerpo deja su botín) */
+  /* ===== v17.9 · EL CUERPO SE QUEDA (sala PvP) =====
+     Antes, desconectarse menos de 20 s después de un combate = morir al instante (para que nadie huya cerrando la app). Con la
+     reconexión automática (17.7) eso mataba también a quien solo perdía la señal. Ahora el CUERPO se queda dormido donde estaba
+     (un personaje no jugador tumbado, «Nombre (desconectado)», con su vida) durante «cuerpoSeg» (30 s):
+       · si lo matan (jugadores o zombis), muere como antes: suelta la mochila y el personaje se borra; el golpe final cuenta
+         como muerte en PvP para quien lo dé (recompensas incluidas);
+       · si el jugador vuelve a tiempo, despierta en su cuerpo con la vida que le quede (sin protección de aparición);
+       · si nadie lo mata y no vuelve, el cuerpo desaparece y conserva el personaje donde lo dejó. */
+  SRV.LNG = { on: opt.cuerpo !== false, ms: Math.max(10, +opt.cuerpoSeg || 30) * 1000 };
+  SRV.lingers = new Map();
+  SRV.lingerStart = peer => {
+    try {
+      const r = peer && peer.rp; if (!r || typeof mkNpc !== 'function') return false;
+      let [x, y] = SRV.vpos(peer); const q = SRV.freeNear ? SRV.freeNear(x, y) : null; if (q) { x = q[0]; y = q[1]; }
+      const sp = r.sp || {}, n = mkNpc('refugee', x, y, { hx: x, hy: y, hr: 0 });
+      Object.assign(n, { linger: peer.uid, fac: 'neutral', wid: null, mag: 0, spd: 0, pack: 0, jacket: null, zz: 1, say: 'Zzz…', sayT: 1e9, chatT: 1e9, maxhp: 100, hp: Math.max(1, Math.min(100, peer.A || 100)), dir: r.dir || 0 });
+      n.name = String(r.name || 'Jugador').slice(0, 14) + ' (desconectado)';
+      for (const k of ['skin', 'shirt', 'pants', 'hair', 'head']) if (sp[k]) n[k] = sp[k];
+      r.x = r.nx = x; r.y = r.ny = y;   /* (mkNpc ya lo añade a NPCS) */
+      const L = { n, peer, t: Date.now() }; L.tm = setTimeout(() => SRV.lingerEnd(peer.uid, 'tiempo'), SRV.LNG.ms); SRV.lingers.set(peer.uid, L);
+      slog(who(peer) + ' se desconectó en combate: su cuerpo se queda ' + Math.round(SRV.LNG.ms / 1000) + ' s');
+      return true;
+    } catch (e) { slog('cuerpo: ' + e.message); return false; }
+  };
+  SRV.lingerEnd = (uid, why) => {
+    const L = SRV.lingers.get(uid); if (!L) return null; SRV.lingers.delete(uid); clearTimeout(L.tm);
+    if (why !== 'muerte') { const i = NPCS.indexOf(L.n); if (i >= 0) NPCS.splice(i, 1); }
+    if (why === 'tiempo') slog(who(L.peer) + ': su cuerpo desaparece (no volvió a tiempo; conserva el personaje)');
+    return L;
+  };
+  /* el cuerpo no anda, no habla ni huye */
+  { const _un = updNpc; updNpc = function (n, dt) { if (n && n.linger) { n.moving = false; if (n.stun > 0) n.stun -= dt; n.kx = n.ky = 0; n.say = n.st === 'dead' ? null : 'Zzz…'; n.sayT = n.st === 'dead' ? 0 : 1e9; return; } return _un.apply(this, arguments); }; }
+  /* golpes: sin reputación ni «provocar» (no es un civil); al llegar a 0, muerte PvP del jugador */
+  { const _dn = damageNpc; damageNpc = function (n, dmg, o) {
+      if (!n || !n.linger) return _dn.apply(this, arguments); if (n.st === 'dead') return;
+      n.hp -= dmg; n.hitT = performance.now(); n.stun = .22; try { spawnPart('blood', n.x, n.y, 1.2, 6); } catch (e) { }
+      if (n.hp <= 0) npcDie(n, o || {});
+    }; }
+  { const _nd = npcDie; npcDie = function (n, o) {
+      if (!n || !n.linger) return _nd.apply(this, arguments);
+      n.st = 'dead'; n.dieAt = performance.now(); n.moving = false; n.zz = 0; n.say = null; n.sayT = 0; try { decals.push({ x: n.x, y: n.y, s: 4, a: 1 }); } catch (e) { }
+      const L = SRV.lingerEnd(n.linger, 'muerte'); if (!L) return;
+      const att = (o && o.by === 'p' && NET.cur && NET.cur !== L.peer && NET.peers.includes(NET.cur)) ? NET.cur : null;
+      const by = att ? ((att.rp && att.rp.name) || 'otro jugador') : (o && o.by === 'z' ? 'los zombis' : null);
+      try { if (L.peer.rp) { L.peer.rp.x = L.peer.rp.nx = n.x; L.peer.rp.y = L.peer.rp.ny = n.y; } SRV.pvpKill(L.peer, by, true, att); } catch (e) { slog('cuerpo (muerte): ' + e.message); }
+    }; }
+  /* si vuelve a tiempo: aparece en su cuerpo y con su vida */
+  { const _sf = SRV.spawnFor; SRV.spawnFor = peer => {
+      const L = peer && peer.uid ? SRV.lingers.get(peer.uid) : null;
+      if (L && L.n.st !== 'dead') { SRV.lingerEnd(peer.uid, 'vuelve'); peer.lingerA = Math.max(1, Math.round(L.n.hp)); slog(who(peer) + ' volvió a su cuerpo con ' + peer.lingerA + ' de vida'); return { p: [L.n.x, L.n.y], why: 'cuerpo' }; }
+      return _sf(peer);   /* ojo: función flecha: «arguments» no sería el del jugador */
+    }; }
+  { const _hs = SRV.hpSync; SRV.hpSync = (peer, h) => {
+      const first = peer && peer.A === undefined; const r = _hs(peer, h);
+      if (first && peer && peer.lingerA !== undefined && peer.A !== undefined) { peer.A = Math.min(peer.A, peer.lingerA); peer.bud = 0; peer.protUntil = performance.now(); try { netSendRaw(peer, { t: 'HP', h: Math.round(peer.A) }); } catch (e) { } delete peer.lingerA; }
+      return r;
+    }; }
   { const _pl = SRV.players; SRV.players = () => _pl().map(x => { const p = NET.peers.find(q => q.slot === x.slot); return Object.assign(x, { build: p ? p.build | 0 : 0, rechazos: p ? p.rej | 0 : 0 }); }); }
   /* ===== v17.0 · ZONA ROJA (lado del servidor) =====
      A) Paredes, puertas y muebles construidos con vida visible: cada golpe se anuncia a todos (LKH) y se reparan con martillo (WRP), nunca en pleno asalto.
@@ -816,4 +873,21 @@ SRV.boot = function (opt) {
     if (!busy && SRV.pauseEmpty) { SRV.paused = true; return; }
     SRV.paused = false; return _ug.apply(this, arguments);
   };
+  /* ----- v17.9 · tras morir NO se reaparece junto al propio cadáver (sala PvP) -----
+     La aparición al azar elige, entre ~60 puntos de la costa, el más alejado de los demás jugadores: tras morir solía tocar el MISMO
+     punto que la vez anterior, y si el jugador no se había movido, junto a su mochila recién caída. Ahora se evita el sitio de la muerte
+     (40 casillas) durante 30 min; si no hay otro punto, se usa el de siempre. */
+  SRV.deadAt = new Map(); SRV.spAvoid = null;
+  { const _pk = SRV.pvpKill; SRV.pvpKill = function (peer) { try { const d0 = peer && SRV.deadAt.get(peer.uid); if (peer && peer.uid && !peer.chDead && !(d0 && Date.now() - d0[2] < 3000)) {   /* si murió su cuerpo dormido, ya se anotó dónde */ const p = SRV.vpos(peer); if (p && isFinite(p[0])) SRV.deadAt.set(peer.uid, [p[0], p[1], Date.now()]); } } catch (e) { } return _pk.apply(this, arguments); }; }
+  { const _le = SRV.lingerEnd; SRV.lingerEnd = function (uid, why) { const L = _le.apply(this, arguments); try { if (why === 'muerte' && L && L.n) SRV.deadAt.set(uid, [L.n.x, L.n.y, Date.now()]); } catch (e) { } return L; }; }
+  { const _ps = SRV.pickSpawn; SRV.pickSpawn = function () {
+      const a = SRV.spAvoid; if (!a) return _ps.apply(this, arguments);
+      let s = null; for (let k = 0; k < 12; k++) { s = _ps.apply(this, arguments); if (s && Math.hypot(s[0] - a[0], s[1] - a[1]) > 40) return s; }
+      try { const far = (SRV.cands || []).filter(c => Math.hypot(c[0] - a[0], c[1] - a[1]) > 40); if (far.length) return far[(Math.random() * far.length) | 0]; } catch (e) { }
+      return s || _ps.apply(this, arguments);
+    }; }
+  { const _sf = SRV.spawnFor; SRV.spawnFor = function (peer) {
+      const d = peer && peer.uid && SRV.deadAt.get(peer.uid); SRV.spAvoid = d && Date.now() - d[2] < 30 * 60000 ? d : null;
+      try { return _sf.apply(this, arguments); } finally { SRV.spAvoid = null; }
+    }; }
 };
