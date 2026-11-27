@@ -1,0 +1,13 @@
+{
+  "name": "icc-sistema-gestion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de gestión empresarial de IMPULSO CAPITAL CIUDADANO S.A.S.",
+  "main": "server.js",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "restablecer-clave": "node --no-warnings scripts/restablecer-clave.js",
+    "test": "node --no-warnings --test test/*.test.js"
+  }
+}
