@@ -39,12 +39,23 @@ Luego abra **http://localhost:3000** en el navegador.
 | **Marketing** | Campañas con presupuesto, gasto, CTR, CPI y ROAS; calendario de contenido para redes sociales. |
 | **Tareas y obligaciones** | Pendientes con fecha límite (DIAN, PILA, Cámara de Comercio…), responsables y prioridad. |
 | **Configuración** | Datos de la empresa, parámetros de nómina del año (SMMLV, auxilio de transporte…), respaldo. |
-| **Seguridad** | Cambio de número/contraseña, sesiones abiertas y bitácora de todos los accesos y cambios. |
+| **Usuarios y permisos** | Un usuario por empleado, con rol y permisos por módulo. |
+| **Mi cuenta y seguridad** | Cambio de contraseña, sesiones abiertas y bitácora de accesos y cambios (con el usuario que los hizo). |
+
+## Usuarios y permisos
+
+- **Administrador principal:** entra con el número de empresa y la contraseña maestra, dejando vacío el campo «Usuario» (o escribiendo `admin`).
+- **Cada empleado** entra con **número de empresa + su usuario + su contraseña**. Se crean en *Sistema → Usuarios y permisos* o desde *Empleados* con el botón «👤 Usuario».
+- Al crear o restablecer un usuario, el sistema genera una **contraseña temporal**; la persona debe cambiarla la primera vez que entra.
+- Roles listos: **Administrador**, **Contador**, **Recursos humanos**, **Marketing**, **Desarrollo**, **Consulta** y **Personalizado** (eligiendo módulo por módulo *Sin acceso / Ver / Editar*).
+- Lo que un usuario no tiene permitido no aparece en su menú, y el servidor lo rechaza aunque intente entrar directo.
+- Desactivar un usuario cierra sus sesiones de inmediato. La bitácora registra **quién** hizo cada cosa.
+- Solo los administradores gestionan usuarios, ven la bitácora completa y descargan respaldos; solo el principal puede cambiar el número de empresa.
 
 ## Seguridad incluida
 
 - Contraseña guardada con **scrypt + sal aleatoria** (no se puede leer ni recuperar).
-- **Bloqueo de 15 minutos** tras 5 intentos fallidos (por equipo y por número de empresa).
+- **Bloqueo de 15 minutos** tras 5 intentos fallidos (por equipo y por usuario).
 - Cierre de sesión automático por inactividad (30 min por defecto) y máximo 12 h por sesión.
 - Cookies `HttpOnly` + `SameSite=Strict`, protección CSRF y política de seguridad de contenido (CSP) contra XSS.
 - **Bitácora** de inicios de sesión, intentos fallidos y cada creación, edición o eliminación.

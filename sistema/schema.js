@@ -107,6 +107,7 @@ const RESOURCES = {
 
   facturas: {
     label: 'Facturación y cobros', singular: 'cobro', icon: '🧾',
+    refsExtra: { terceros: ['tipo_doc', 'identificacion', 'direccion', 'ciudad', 'email'] },
     title: ['numero'], order: 'fecha DESC, id DESC',
     fields: [
       { k: 'numero', label: 'Número (vacío = automático)', type: 'text', list: true },
@@ -128,6 +129,10 @@ const RESOURCES = {
 
   contratos: {
     label: 'Contratos', singular: 'contrato', icon: '📝',
+    refsExtra: {
+      empleados: ['tipo_doc', 'documento', 'cargo', 'direccion', 'ciudad', 'tipo_contrato', 'salario_integral'],
+      terceros: ['tipo_doc', 'identificacion', 'direccion', 'ciudad'],
+    },
     title: ['titulo'], order: "fecha_fin IS NULL OR fecha_fin = '', fecha_fin ASC",
     fields: [
       { k: 'titulo', label: 'Título', type: 'text', required: true, list: true },

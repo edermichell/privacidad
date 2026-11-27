@@ -21,7 +21,10 @@
   const fts = (ms) => new Date(ms).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
   const sum = (arr, k) => arr.reduce((a, r) => a + (Number(typeof k === 'function' ? k(r) : r[k]) || 0), 0);
 
-  const S = { schema: null, config: {}, cache: {}, idle: null };
+  const S = { schema: null, config: {}, cache: {}, opc: {}, yo: null, idle: null };
+  const MOD = { movimientos: 'contabilidad', facturas: 'facturas', terceros: 'terceros', empleados: 'empleados', contratos: 'contratos', documentos: 'documentos', juegos: 'juegos', campanas: 'marketing', publicaciones: 'marketing', tareas: 'tareas' };
+  const NIV = { no: 0, ver: 1, editar: 2 };
+  const puede = (mod, nivel = 'ver') => !!S.yo && (S.yo.admin || (NIV[S.yo.permisos[mod]] || 0) >= NIV[nivel]);
 
   async function api(method, url, body) {
     const opts = { method, headers: { 'X-ICC': '1' }, credentials: 'same-origin' };
@@ -39,6 +42,10 @@
   }
   const cargar = async (...names) => {
     await Promise.all(names.map(async (n) => { S.cache[n] = await api('GET', '/api/r/' + n); }));
+  };
+  // Listas para selectores (id + nombre). "para" pide los datos extra que ese módulo necesita.
+  const cargarOpc = async (para, ...names) => {
+    await Promise.all(names.map(async (n) => { S.opc[n] = await api('GET', `/api/opciones/${n}?para=${para}`); }));
   };
 
   function toast(msg, err) {
@@ -101,7 +108,7 @@
   // ───────────────────────── Esquema y formato ─────────────────────────
   const def = (n) => S.schema[n];
   const titulo = (n, row) => (row ? def(n).title.map((k) => row[k]).filter(Boolean).join(' ') : '');
-  const refLabel = (n, id) => { if (!id) return ''; const r = (S.cache[n] || []).find((x) => x.id === id); return r ? titulo(n, r) : `#${id}`; };
+  const refLabel = (n, id) => { if (!id) return ''; const r = (S.opc[n] || S.cache[n] || []).find((x) => x.id === id); return r ? titulo(n, r) : `#${id}`; };
   const COLOR_ESTADO = {
     ok: ['Activo', 'Vigente', 'Pagada', 'Publicado', 'Publicada', 'Hecha', 'Activa', 'Ingreso', 'Mantenimiento'],
     warn: ['Pendiente', 'Borrador', 'En firma', 'Vacaciones', 'Pausada', 'En curso', 'Programada', 'Beta / pruebas', 'Media', 'Incapacidad'],
@@ -159,7 +166,7 @@
       case 'bool': return `<label class="check"><input type="checkbox" name="${f.k}" ${val ? 'checked' : ''}> ${esc(f.label)}</label>`;
       case 'select': input = `<select ${nm}>${opcionesSelect(f, val, n === 'movimientos' ? row.tipo : null)}</select>`; break;
       case 'ref': {
-        const lista = S.cache[f.ref] || [];
+        const lista = S.opc[f.ref] || [];
         input = `<select ${nm}><option value="">— Ninguno —</option>${lista.map((r) => `<option value="${r.id}" ${r.id === val ? 'selected' : ''}>${esc(titulo(f.ref, r))}</option>`).join('')}</select>`;
         break;
       }
@@ -173,7 +180,7 @@
       case 'url': input = `<input type="url" ${nm} value="${esc(val)}" placeholder="https://">`; break;
       default: input = `<input type="text" ${nm} value="${esc(val)}" maxlength="300">`;
     }
-    return `<label class="${wide}">${esc(f.label)}${req}${input}</label>`;
+    return `<label class="${wide}"><span>${esc(f.label)}${req}</span>${input}</label>`;
   }
   function leerFormulario(form, fields) {
     const out = {};
@@ -187,7 +194,7 @@
   async function abrirFormulario(n, row, alGuardar, presets = {}) {
     const d = def(n);
     const refs = [...new Set(d.fields.filter((f) => f.type === 'ref').map((f) => f.ref))];
-    try { await cargar(...refs); } catch (e) { return fallo(e); }
+    try { await cargarOpc(n, ...refs); } catch (e) { return fallo(e); }
     const datos = row ? { ...row } : {};
     if (!row) for (const f of d.fields) if (f.def !== undefined) datos[f.k] = f.def === '@hoy' ? hoy() : f.def;
     Object.assign(datos, presets);
@@ -226,7 +233,9 @@
   async function vistaRecurso(el, n, opts = {}) {
     const d = def(n);
     const refs = [...new Set(d.fields.filter((f) => f.type === 'ref').map((f) => f.ref))];
-    await cargar(n, ...refs);
+    await Promise.all([cargar(n), cargarOpc(n, ...refs)]);
+    const editable = puede(MOD[n], 'editar');
+    const acciones = (opts.acciones || []).filter((a) => editable || !a.edita);
     const st = { q: '', f: {} };
     const filtrables = d.fields.filter((f) => f.filter);
     const cols = d.fields.filter((f) => f.list);
@@ -237,9 +246,10 @@
         <input type="search" id="q" placeholder="Buscar en ${esc(d.label.toLowerCase())}…" aria-label="Buscar">
         ${filtrables.map((f) => `<select data-filtro="${f.k}" aria-label="${esc(f.label)}"><option value="">${esc(f.label)}: todos</option>${f.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select>`).join('')}
         ${opts.toolbarExtra || ''}
+        ${editable ? '' : '<span class="badge info">👁️ Solo lectura</span>'}
         <span class="grow"></span>
         <button id="exp">⬇️ Exportar</button>
-        ${d.noCreate || opts.sinNuevo ? '' : `<button class="primary" id="nuevo">＋ Nuevo ${esc(d.singular)}</button>`}
+        ${d.noCreate || opts.sinNuevo || !editable ? '' : `<button class="primary" id="nuevo">＋ Nuevo ${esc(d.singular)}</button>`}
       </div>
       <div id="resumen"></div>
       <div class="tabla-wrap" id="tabla"></div>`;
@@ -268,9 +278,9 @@
         <tbody>${rows.map((r) => `<tr data-id="${r.id}">
           ${cols.map((f) => `<td class="${esNum(f) ? 'num' : ''}">${celda(n, f, r)}</td>`).join('')}
           ${ex.map((c) => `<td class="${c.num ? 'num' : ''}">${c.html(r)}</td>`).join('')}
-          <td class="acciones">${(opts.acciones || []).map((a, i) => (a.si && !a.si(r) ? '' : `<button class="sm" data-acc="${i}">${esc(a.label)}</button> `)).join('')}
-            ${opts.sinEditar ? '' : '<button class="sm" data-acc="editar" title="Editar">✏️</button>'}
-            <button class="sm danger" data-acc="borrar" title="Eliminar">🗑️</button></td></tr>`).join('')}</tbody></table>`;
+          <td class="acciones">${acciones.map((a, i) => (a.si && !a.si(r) ? '' : `<button class="sm" data-acc="${i}">${esc(a.label)}</button> `)).join('')}
+            ${opts.sinEditar || !editable ? '' : '<button class="sm" data-acc="editar" title="Editar">✏️</button>'}
+            ${editable ? '<button class="sm danger" data-acc="borrar" title="Eliminar">🗑️</button>' : ''}</td></tr>`).join('')}</tbody></table>`;
     };
     pintar();
 
@@ -292,9 +302,9 @@
       const a = b.dataset.acc;
       if (a === 'editar') (opts.alEditar ? opts.alEditar(row, recargar) : abrirFormulario(n, row, recargar));
       else if (a === 'borrar') eliminar(n, row, recargar);
-      else opts.acciones[Number(a)].fn(row, recargar);
+      else acciones[Number(a)].fn(row, recargar);
     });
-    if (opts.alMontar) opts.alMontar(el, recargar);
+    if (opts.alMontar) opts.alMontar(el, recargar, editable);
     return { pintar, recargar };
   }
 
@@ -343,7 +353,8 @@
       ${cabeceraAuth('Sistema de gestión empresarial')}
       ${aviso ? `<div class="alerta info">${esc(aviso)}</div>` : ''}
       <form id="f-login">
-        <label>Número de empresa<input name="numero" required autocomplete="username" placeholder="NIT de la empresa"></label>
+        <label>Número de empresa<input name="numero" required autocomplete="organization" placeholder="NIT de la empresa"></label>
+        <label>Usuario<input name="usuario" autocomplete="username" placeholder="Vacío = administrador principal" autocapitalize="none" spellcheck="false"></label>
         <label>Contraseña<input name="clave" type="password" required autocomplete="current-password"></label>
         <label class="check"><input type="checkbox" id="ver"> Mostrar contraseña</label>
         <button class="primary full" type="submit">Ingresar</button>
@@ -355,14 +366,35 @@
     f.addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = $('button', f); btn.disabled = true;
-      try { await api('POST', '/api/login', { numero: f.numero.value, clave: f.clave.value }); await entrar(); } catch (err) { fallo(err); btn.disabled = false; f.clave.select(); }
+      try { await api('POST', '/api/login', { numero: f.numero.value, usuario: f.usuario.value, clave: f.clave.value }); await entrar(); } catch (err) { fallo(err); btn.disabled = false; f.clave.select(); }
     });
     setTimeout(() => f.numero.focus(), 30);
   }
 
+  function pantallaCambioObligatorio() {
+    $('#app').innerHTML = `<div class="auth"><div class="auth-card">
+      ${cabeceraAuth('Bienvenido(a), ' + S.yo.nombre)}
+      <div class="alerta info">Por seguridad, cambie la contraseña temporal que le dio el administrador. Solo usted conocerá la nueva.</div>
+      <form id="f-cc" autocomplete="off">
+        <label>Contraseña temporal<input name="actual" type="password" required autocomplete="current-password"></label>
+        <label>Nueva contraseña<input name="nueva" type="password" required autocomplete="new-password" minlength="10"></label>
+        <label>Repita la nueva contraseña<input name="nueva2" type="password" required autocomplete="new-password"></label>
+        <button class="primary full" type="submit">Guardar y entrar</button>
+        <button type="button" class="link" id="cc-salir">Cancelar y salir</button>
+      </form>
+      <div class="note">🔒 Mínimo 10 caracteres combinando letras y números.</div></div></div>`;
+    const f = $('#f-cc');
+    $('#cc-salir').addEventListener('click', () => salir());
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (f.nueva.value !== f.nueva2.value) return toast('Las contraseñas no coinciden', true);
+      try { await api('POST', '/api/cambiar-clave', { actual: f.actual.value, nueva: f.nueva.value }); toast('Contraseña actualizada'); await entrar(); } catch (err) { fallo(err); }
+    });
+  }
+
   async function salir(motivo) {
     try { await api('POST', '/api/logout', {}); } catch { /* nada */ }
-    S.cache = {};
+    S.cache = {}; S.opc = {}; S.yo = null;
     pantallaAcceso(motivo);
   }
   function vigilarInactividad() {
@@ -381,24 +413,28 @@
     ['Finanzas', [['contabilidad', '📒', 'Contabilidad'], ['facturas', '🧾', 'Facturación y cobros'], ['terceros', '🤝', 'Clientes y proveedores']]],
     ['Talento humano', [['empleados', '👥', 'Empleados'], ['nomina', '💵', 'Nómina'], ['contratos', '📝', 'Contratos']]],
     ['Negocio', [['juegos', '🎮', 'Juegos y proyectos'], ['marketing', '📣', 'Marketing'], ['documentos', '📁', 'Documentos']]],
-    ['Sistema', [['configuracion', '⚙️', 'Configuración'], ['seguridad', '🔒', 'Seguridad']]],
+    ['Sistema', [['usuarios', '👤', 'Usuarios y permisos'], ['configuracion', '⚙️', 'Configuración'], ['seguridad', '🔒', 'Mi cuenta y seguridad']]],
   ];
+  // Permiso que necesita cada ruta del menú (seguridad: todos; usuarios: solo administradores)
+  const permitida = (ruta) => (ruta === 'seguridad' ? true : ruta === 'usuarios' ? !!(S.yo && S.yo.admin) : puede(ruta));
   const VISTAS = {};
   let entrado = false;
 
   async function entrar() {
     try {
+      S.yo = await api('GET', '/api/yo');
+      if (S.yo.debe_cambiar) return pantallaCambioObligatorio();
       [S.schema, S.config] = await Promise.all([api('GET', '/api/esquema'), api('GET', '/api/config')]);
     } catch (e) { return fallo(e); }
     $('#app').innerHTML = `<div class="layout">
       <nav class="side" id="side" aria-label="Menú principal">
         <div class="brand"><img src="logo.svg" alt=""><b>${esc(S.config.razon_social || 'IMPULSO CAPITAL CIUDADANO')}</b></div>
-        ${MENU.map(([g, items]) => `<div class="grupo">${esc(g)}</div>${items.map(([k, ic, l]) => `<a href="#/${k}" data-ruta="${k}"><span class="ic">${ic}</span>${esc(l)}</a>`).join('')}`).join('')}
+        ${MENU.map(([g, items]) => [g, items.filter(([k]) => permitida(k))]).filter(([, items]) => items.length).map(([g, items]) => `<div class="grupo">${esc(g)}</div>${items.map(([k, ic, l]) => `<a href="#/${k}" data-ruta="${k}"><span class="ic">${ic}</span>${esc(l)}</a>`).join('')}`).join('')}
       </nav>
       <div class="main">
         <div class="topbar"><button class="menu-btn" id="menu-btn" aria-label="Abrir menú">☰</button>
           <div class="titulo" id="titulo"></div>
-          <span class="small muted" id="fecha-hoy">${esc(flarga(hoy()))}</span>
+          <span class="small muted quien" title="${esc(flarga(hoy()))}">👤 <b>${esc(S.yo.nombre)}</b> · ${esc(S.yo.rol)}</span>
           <button id="btn-salir">Cerrar sesión</button></div>
         <div class="content" id="contenido"></div>
       </div></div>`;
@@ -414,6 +450,12 @@
     if (!cont) return;
     const [ruta = 'panel', ...resto] = location.hash.replace(/^#\/?/, '').split('/');
     const vista = VISTAS[ruta] ? ruta : 'panel';
+    if (!permitida(vista)) {
+      $$('#side a').forEach((a) => a.classList.remove('on'));
+      $('#titulo').textContent = '🔒 Sin acceso';
+      cont.innerHTML = '<div class="card"><h2>🔒 No tiene acceso a este módulo</h2><p class="muted">Si lo necesita para su trabajo, pídale al administrador que le asigne el permiso en «Usuarios y permisos».</p></div>';
+      return;
+    }
     $$('#side a').forEach((a) => a.classList.toggle('on', a.dataset.ruta === vista));
     $('#side').classList.remove('abierta');
     const item = MENU.flatMap((g) => g[1]).find((i) => i[0] === vista);
@@ -462,9 +504,12 @@
   }
 
   VISTAS.panel = async (el) => {
-    await cargar('movimientos', 'empleados', 'facturas', 'contratos', 'campanas', 'juegos', 'documentos', 'tareas', 'terceros');
-    const nominas = await api('GET', '/api/nomina');
-    const C = S.cache, mes = mesActual(), anio = mes.slice(0, 4);
+    const vis = ['movimientos', 'empleados', 'facturas', 'contratos', 'campanas', 'juegos', 'documentos', 'tareas'].filter((n) => puede(MOD[n]));
+    await Promise.all([cargar(...vis), puede('facturas') ? cargarOpc('facturas', 'terceros') : null]);
+    const nominas = puede('nomina') ? await api('GET', '/api/nomina') : [];
+    const C = {};
+    for (const n of ['movimientos', 'empleados', 'facturas', 'contratos', 'campanas', 'juegos', 'documentos', 'tareas']) C[n] = vis.includes(n) ? S.cache[n] : [];
+    const mes = mesActual(), anio = mes.slice(0, 4);
     const movMes = C.movimientos.filter((m) => m.fecha && m.fecha.startsWith(mes));
     const movAnio = C.movimientos.filter((m) => m.fecha && m.fecha.startsWith(anio));
     const ing = (rows) => sum(rows.filter((r) => r.tipo === 'Ingreso'), 'valor');
@@ -481,34 +526,33 @@
     for (const c of C.contratos) if (c.fecha_fin && !CERRADO.includes(c.estado) && diasHasta(c.fecha_fin) <= 30) alertas.push([c.fecha_fin, `📝 Contrato «${c.titulo}» ${diasHasta(c.fecha_fin) < 0 ? 'vencido' : 'vence'} el ${fdate(c.fecha_fin)}`, '#/contratos']);
     for (const d of C.documentos) if (d.fecha_vencimiento && diasHasta(d.fecha_vencimiento) <= 30) alertas.push([d.fecha_vencimiento, `📁 Documento «${d.nombre}» vence el ${fdate(d.fecha_vencimiento)}`, '#/documentos']);
     for (const f of vencidas) alertas.push([f.vencimiento, `🧾 Cobro ${f.numero} vencido (${money(f.total)}) — ${refLabel('terceros', f.tercero_id)}`, '#/facturas']);
-    for (const t of C.tareas) if (t.estado !== 'Hecha' && t.fecha_limite && diasHasta(t.fecha_limite) <= 7) alertas.push([t.fecha_limite, `✅ ${t.titulo} — ${diasHasta(t.fecha_limite) < 0 ? 'atrasada' : 'límite'} ${fdate(t.fecha_limite)}`, '#/tareas']);
+    for (const t of C.tareas) if (t.estado !== 'Hecha' && (!S.yo.empleado_id || !t.responsable_id || t.responsable_id === S.yo.empleado_id) && t.fecha_limite && diasHasta(t.fecha_limite) <= 7) alertas.push([t.fecha_limite, `✅ ${t.titulo} — ${diasHasta(t.fecha_limite) < 0 ? 'atrasada' : 'límite'} ${fdate(t.fecha_limite)}`, '#/tareas']);
     alertas.sort((a, b) => a[0].localeCompare(b[0]));
     const cumple = activos.filter((e) => e.fecha_nacimiento && e.fecha_nacimiento.slice(5, 7) === mes.slice(5));
 
     el.innerHTML = `
-      <h1>Hola 👋</h1><p class="muted">Resumen de ${esc(S.config.razon_social)} · ${esc(fperiodo(mes))}</p>
+      <h1>Hola, ${esc(S.yo.nombre.split(' ')[0])} 👋</h1><p class="muted">Resumen de ${esc(S.config.razon_social)} · ${esc(fperiodo(mes))}</p>
       <div class="kpis">
-        ${kpi('Ingresos del mes', money(ing(movMes)), `Año: ${money(ing(movAnio))}`)}
-        ${kpi('Gastos del mes', money(gas(movMes)), `Año: ${money(gas(movAnio))}`)}
-        ${kpi('Resultado del mes', money(ing(movMes) - gas(movMes)), `Año: ${money(ing(movAnio) - gas(movAnio))}`, ing(movMes) - gas(movMes) >= 0 ? 'ok' : 'bad')}
-        ${kpi('Cuentas por cobrar', money(sum(pendientes, 'total')), `${pendientes.length} pendiente(s) · ${vencidas.length} vencida(s)`)}
-        ${kpi('Empleados activos', String(activos.length), `Salarios base: ${money(sum(activos, 'salario'))}`)}
-        ${kpi('Última nómina', ultNom ? money(ultNom.totales.costoTotal) : '—', ultNom ? `${esc(fperiodo(ultNom.periodo))} · ${esc(ultNom.estado)}` : 'Sin liquidar')}
-        ${kpi('Marketing activo', money(sum(campActivas, 'gastado')), `${campActivas.length} campaña(s) activa(s)`)}
-        ${kpi('Juegos', String(C.juegos.length), `${C.juegos.filter((j) => j.estado === 'Publicado').length} publicado(s)`)}
+        ${puede('contabilidad') ? kpi('Ingresos del mes', money(ing(movMes)), `Año: ${money(ing(movAnio))}`) + kpi('Gastos del mes', money(gas(movMes)), `Año: ${money(gas(movAnio))}`) + kpi('Resultado del mes', money(ing(movMes) - gas(movMes)), `Año: ${money(ing(movAnio) - gas(movAnio))}`, ing(movMes) - gas(movMes) >= 0 ? 'ok' : 'bad') : ''}
+        ${puede('facturas') ? kpi('Cuentas por cobrar', money(sum(pendientes, 'total')), `${pendientes.length} pendiente(s) · ${vencidas.length} vencida(s)`) : ''}
+        ${puede('empleados') ? kpi('Empleados activos', String(activos.length), `Salarios base: ${money(sum(activos, 'salario'))}`) : ''}
+        ${puede('nomina') ? kpi('Última nómina', ultNom ? money(ultNom.totales.costoTotal) : '—', ultNom ? `${esc(fperiodo(ultNom.periodo))} · ${esc(ultNom.estado)}` : 'Sin liquidar') : ''}
+        ${puede('marketing') ? kpi('Marketing activo', money(sum(campActivas, 'gastado')), `${campActivas.length} campaña(s) activa(s)`) : ''}
+        ${puede('juegos') ? kpi('Juegos', String(C.juegos.length), `${C.juegos.filter((j) => j.estado === 'Publicado').length} publicado(s)`) : ''}
+        ${puede('tareas') ? kpi(S.yo.empleado_id ? 'Mis tareas pendientes' : 'Tareas pendientes', String(C.tareas.filter((t) => t.estado !== 'Hecha' && (!S.yo.empleado_id || t.responsable_id === S.yo.empleado_id)).length)) : ''}
       </div>
       <div class="cols-2">
-        <div class="card"><h2>Ingresos y gastos · últimos 12 meses</h2>
+        ${puede('contabilidad') ? `<div class="card"><h2>Ingresos y gastos · últimos 12 meses</h2>
           ${graficoBarras(meses, [{ nombre: 'Ingresos', clase: 's1', valores: serie('Ingreso') }, { nombre: 'Gastos', clase: 's2', valores: serie('Gasto') }])}
-          <p class="small muted">Pase el cursor sobre una barra para ver el valor. El detalle por cuenta está en Contabilidad → Estado de resultados.</p></div>
+          <p class="small muted">Pase el cursor sobre una barra para ver el valor. El detalle por cuenta está en Contabilidad → Estado de resultados.</p></div>` : ''}
         <div class="card"><h2>⚠️ Alertas y vencimientos</h2>
           ${alertas.length ? `<ul class="lista">${alertas.slice(0, 12).map((a) => `<li><a href="${a[2]}">${esc(a[1])}</a></li>`).join('')}</ul>` : '<p class="muted">Todo al día. No hay vencimientos en los próximos 30 días.</p>'}
           ${cumple.length ? `<h3 style="margin-top:16px">🎂 Cumpleaños del mes</h3><ul class="lista">${cumple.map((e) => `<li><span>${esc(e.nombres)} ${esc(e.apellidos)}</span><span class="muted">${esc(new Date(e.fecha_nacimiento + 'T00:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long' }))}</span></li>`).join('')}</ul>` : ''}
         </div>
       </div>
       <div class="cols-2">
-        <div class="card"><h2>🎮 Juegos</h2>${C.juegos.length ? `<ul class="lista">${C.juegos.map((j) => `<li><span><b>${esc(j.nombre)}</b> <span class="muted small">${esc(j.plataforma || '')} ${j.version ? 'v' + esc(j.version) : ''}</span></span><span>${badge(j.estado)}</span></li>`).join('')}</ul>` : '<p class="muted">Sin juegos registrados.</p>'}</div>
-        <div class="card"><h2>📒 Últimos movimientos</h2>${C.movimientos.length ? `<ul class="lista">${C.movimientos.slice(0, 8).map((m) => `<li><span>${badge(m.tipo)} ${esc(m.descripcion)} <span class="muted small">${esc(fdate(m.fecha))}</span></span><span class="num">${money(m.valor)}</span></li>`).join('')}</ul>` : '<p class="muted">Registre ingresos y gastos en Contabilidad.</p>'}</div>
+        ${puede('juegos') ? '' : '<!--'}<div class="card"><h2>🎮 Juegos</h2>${C.juegos.length ? `<ul class="lista">${C.juegos.map((j) => `<li><span><b>${esc(j.nombre)}</b> <span class="muted small">${esc(j.plataforma || '')} ${j.version ? 'v' + esc(j.version) : ''}</span></span><span>${badge(j.estado)}</span></li>`).join('')}</ul>` : '<p class="muted">Sin juegos registrados.</p>'}</div>${puede('juegos') ? '' : '-->'}
+        ${puede('contabilidad') ? '' : '<!--'}<div class="card"><h2>📒 Últimos movimientos</h2>${C.movimientos.length ? `<ul class="lista">${C.movimientos.slice(0, 8).map((m) => `<li><span>${badge(m.tipo)} ${esc(m.descripcion)} <span class="muted small">${esc(fdate(m.fecha))}</span></span><span class="num">${money(m.valor)}</span></li>`).join('')}</ul>` : '<p class="muted">Registre ingresos y gastos en Contabilidad.</p>'}</div>${puede('contabilidad') ? '' : '-->'}
       </div>`;
   };
 
@@ -605,7 +649,7 @@
 
   // ───────────────────────── Facturación ─────────────────────────
   function docCobro(f) {
-    const c = S.config, t = (S.cache.terceros || []).find((x) => x.id === f.tercero_id) || {};
+    const c = S.config, t = (S.opc.terceros || []).find((x) => x.id === f.tercero_id) || {};
     const iva = Math.round((Number(f.subtotal) || 0) * (Number(f.iva_pct) || 0)) / 100;
     return `<div class="enc"><div><b style="font-size:16px">${esc(c.razon_social)}</b><br>NIT ${esc(c.nit)}<br>${esc(c.direccion)} ${esc(c.ciudad)}<br>${esc(c.telefono)} ${esc(c.email)}<br>${esc(c.regimen)}</div>
       <div style="text-align:right"><b style="font-size:16px">CUENTA DE COBRO</b><br>N.º <b>${esc(f.numero)}</b><br>Fecha: ${esc(flarga(f.fecha))}<br>${f.vencimiento ? `Vence: ${esc(flarga(f.vencimiento))}` : ''}</div></div>
@@ -621,7 +665,6 @@
       <p style="font-size:11px;color:#555;margin-top:30px">Documento de cobro interno. Si la operación exige factura electrónica de venta, debe expedirse a través del sistema de facturación de la DIAN o de un proveedor tecnológico autorizado.</p>`;
   }
   VISTAS.facturas = async (el) => {
-    await cargar('terceros');
     await vistaRecurso(el, 'facturas', {
       resumen: (rows) => {
         const pend = rows.filter((f) => f.estado === 'Pendiente');
@@ -632,7 +675,7 @@
       },
       acciones: [
         { label: '🖨️', fn: (f) => vistaPrevia(`Cuenta de cobro ${f.numero}`, docCobro(f)) },
-        { label: '✔ Pagada', si: (f) => f.estado === 'Pendiente', fn: async (f, re) => { try { await api('PUT', `/api/r/facturas/${f.id}`, { estado: 'Pagada', fecha_pago: hoy() }); toast('Cobro pagado y registrado en contabilidad'); re(); } catch (e) { fallo(e); } } },
+        { label: '✔ Pagada', edita: true, si: (f) => f.estado === 'Pendiente', fn: async (f, re) => { try { await api('PUT', `/api/r/facturas/${f.id}`, { estado: 'Pagada', fecha_pago: hoy() }); toast('Cobro pagado y registrado en contabilidad'); re(); } catch (e) { fallo(e); } } },
       ],
     });
   };
@@ -640,11 +683,13 @@
   VISTAS.terceros = (el) => vistaRecurso(el, 'terceros');
 
   VISTAS.tareas = (el) => vistaRecurso(el, 'tareas', {
+    toolbarExtra: S.yo.empleado_id ? '<label class="check small"><input type="checkbox" id="mias" data-refiltrar checked> Solo mis tareas</label>' : '',
+    filtrar: (rows, c) => { const m = $('#mias', c); return m && m.checked ? rows.filter((t) => t.responsable_id === S.yo.empleado_id) : rows; },
     resumen: (rows) => {
       const p = rows.filter((t) => t.estado !== 'Hecha');
       return `<div class="kpis">${kpi('Pendientes', String(p.length))}${kpi('Atrasadas', String(p.filter((t) => t.fecha_limite && diasHasta(t.fecha_limite) < 0).length), '', 'bad')}${kpi('Esta semana', String(p.filter((t) => t.fecha_limite && diasHasta(t.fecha_limite) >= 0 && diasHasta(t.fecha_limite) <= 7).length))}</div>`;
     },
-    acciones: [{ label: '✔ Hecha', si: (t) => t.estado !== 'Hecha', fn: async (t, re) => { try { await api('PUT', `/api/r/tareas/${t.id}`, { estado: 'Hecha' }); re(); } catch (e) { fallo(e); } } }],
+    acciones: [{ label: '✔ Hecha', edita: true, si: (t) => t.estado !== 'Hecha', fn: async (t, re) => { try { await api('PUT', `/api/r/tareas/${t.id}`, { estado: 'Hecha' }); re(); } catch (e) { fallo(e); } } }],
   });
 
   // ───────────────────────── Empleados ─────────────────────────
@@ -666,7 +711,8 @@
     extraCols: [{ label: 'Antigüedad', html: (e) => { if (!e.fecha_ingreso) return ''; const d = -diasHasta(e.fecha_ingreso); return d < 0 ? 'Próximo ingreso' : d < 365 ? `${Math.floor(d / 30)} mes(es)` : `${NUM.format(Math.floor(d / 36.5) / 10)} años`; } }],
     acciones: [
       { label: '📄 Certificado', fn: (e) => vistaPrevia('Certificado laboral', certificadoLaboral(e)) },
-      { label: '📝 Contrato', fn: (e) => { location.hash = '#/contratos'; setTimeout(() => abrirFormulario('contratos', null, () => router(), { tipo: e.tipo_contrato === 'Prestación de servicios' ? 'Prestación de servicios' : 'Laboral', empleado_id: e.id, titulo: `Contrato ${e.nombres} ${e.apellidos}`, contraparte: `${e.nombres} ${e.apellidos}`, fecha_inicio: e.fecha_ingreso, valor: e.salario, periodicidad: 'Mensual', estado: 'Borrador' }), 400); } },
+      { label: '👤 Usuario', si: () => S.yo.admin, fn: (e) => { location.hash = '#/usuarios'; setTimeout(() => formUsuario(null, () => router(), e), 400); } },
+      { label: '📝 Contrato', si: () => puede('contratos', 'editar'), fn: (e) => { location.hash = '#/contratos'; setTimeout(() => abrirFormulario('contratos', null, () => router(), { tipo: e.tipo_contrato === 'Prestación de servicios' ? 'Prestación de servicios' : 'Laboral', empleado_id: e.id, titulo: `Contrato ${e.nombres} ${e.apellidos}`, contraparte: `${e.nombres} ${e.apellidos}`, fecha_inicio: e.fecha_ingreso, valor: e.salario, periodicidad: 'Mensual', estado: 'Borrador' }), 400); } },
     ],
   });
 
@@ -677,26 +723,26 @@
     el.innerHTML = `
       <div class="card"><h2>Liquidar nómina</h2>
         <div class="toolbar"><label class="check">Mes <input type="month" id="per" value="${mesActual()}"></label>
-        <button class="primary" id="gen">⚙️ Generar / recalcular</button></div>
+        ${puede('nomina', 'editar') ? '<button class="primary" id="gen">⚙️ Generar / recalcular</button>' : '<span class="badge info">👁️ Solo lectura</span>'}</div>
         <p class="small muted">Incluye a los empleados activos que no son de prestación de servicios. Calcula salud y pensión (4 % + 4 %), fondo de solidaridad, auxilio de transporte, aportes del empleador, parafiscales y provisiones de prestaciones sociales con los parámetros de <a href="#/configuracion/nomina">Configuración → Parámetros de nómina</a> (SMMLV ${money(S.config.smmlv)}, auxilio ${money(S.config.aux_transporte)}).</p></div>
       <div class="card"><h2>Historial</h2>
         ${lista.length ? `<div class="tabla-wrap"><table><thead><tr><th>Periodo</th><th>Estado</th><th class="num">Empleados</th><th class="num">Neto a pagar</th><th class="num">PILA</th><th class="num">Costo total empresa</th><th></th></tr></thead>
         <tbody>${lista.map((p) => `<tr><td><b>${esc(fperiodo(p.periodo))}</b></td><td>${badge(p.estado)}</td><td class="num">${p.totales.empleados || 0}</td><td class="num">${money(p.totales.neto)}</td><td class="num">${money(p.totales.pila)}</td><td class="num">${money(p.totales.costoTotal)}</td><td class="acciones"><a class="btn" href="#/nomina/${p.id}">Ver detalle</a></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Todavía no ha liquidado ninguna nómina.</p>'}
       </div>`;
-    $('#gen', el).addEventListener('click', async () => {
+    $('#gen', el)?.addEventListener('click', async () => {
       try { const p = await api('POST', '/api/nomina', { periodo: $('#per', el).value }); toast('Nómina calculada'); location.hash = `#/nomina/${p.id}`; } catch (e) { fallo(e); }
     });
   };
 
   async function detalleNomina(el, pid) {
     const p = await api('GET', `/api/nomina/${pid}`);
-    const t = p.totales, pagada = p.estado === 'Pagada';
+    const t = p.totales, ed = puede('nomina', 'editar'), pagada = p.estado === 'Pagada' || !ed;
     const nom = (d) => `${d.empleado.nombres || ''} ${d.empleado.apellidos || ''}`;
     el.innerHTML = `
       <div class="toolbar"><a class="btn" href="#/nomina">← Volver</a><h1 style="margin:0">Nómina ${esc(fperiodo(p.periodo))}</h1>${badge(p.estado)}<span class="grow"></span>
-        ${pagada ? '<button id="reabrir">↩️ Reabrir</button>' : '<button id="recalc">🔄 Recalcular</button><button class="primary" id="pagar">✔ Marcar como pagada</button>'}
+        ${!ed ? '<span class="badge info">👁️ Solo lectura</span>' : pagada ? '<button id="reabrir">↩️ Reabrir</button>' : '<button id="recalc">🔄 Recalcular</button><button class="primary" id="pagar">✔ Marcar como pagada</button>'}
         <button id="imp">🖨️ Resumen</button><button id="exp">⬇️ Exportar</button>${pagada ? '' : '<button class="danger" id="del">🗑️</button>'}</div>
-      ${pagada ? `<div class="alerta info">Pagada el ${esc(fts(Date.parse(p.pagado)))}. Se registraron en Contabilidad el pago neto y la PILA. Reábrala para hacer cambios.</div>` : '<div class="alerta warn">Borrador: registre horas extra, comisiones, incapacidades (días) y deducciones con el botón «Novedades» de cada empleado.</div>'}
+      ${!ed ? '' : pagada ? `<div class="alerta info">Pagada el ${esc(fts(Date.parse(p.pagado)))}. Se registraron en Contabilidad el pago neto y la PILA. Reábrala para hacer cambios.</div>` : '<div class="alerta warn">Borrador: registre horas extra, comisiones, incapacidades (días) y deducciones con el botón «Novedades» de cada empleado.</div>'}
       <div class="kpis">
         ${kpi('Total devengado', money(t.devengado), `${t.empleados} empleado(s)`)}
         ${kpi('Deducciones', money(t.deducciones))}
@@ -786,8 +832,8 @@
   // ───────────────────────── Contratos ─────────────────────────
   function plantillaContrato(k) {
     const c = S.config;
-    const e = (S.cache.empleados || []).find((x) => x.id === k.empleado_id);
-    const t = (S.cache.terceros || []).find((x) => x.id === k.tercero_id);
+    const e = (S.opc.empleados || []).find((x) => x.id === k.empleado_id);
+    const t = (S.opc.terceros || []).find((x) => x.id === k.tercero_id);
     const parte = e ? { nombre: `${e.nombres} ${e.apellidos}`, doc: `${e.tipo_doc} N.º ${e.documento}`, dir: `${e.direccion || ''} ${e.ciudad || ''}`.trim() }
       : t ? { nombre: t.nombre, doc: `${t.tipo_doc || 'NIT'} N.º ${t.identificacion || '________'}`, dir: `${t.direccion || ''} ${t.ciudad || ''}`.trim() }
       : { nombre: k.contraparte || '________________', doc: 'identificación N.º ________', dir: '' };
@@ -851,8 +897,8 @@
       return `<div class="kpis">${kpi('Vigentes', String(vig.length))}${kpi('Vencen en 30 días o vencidos', String(pronto.length), '', pronto.length ? 'bad' : '')}${kpi('Valor contratos vigentes', money(sum(vig, 'valor')))}</div>`;
     },
     acciones: [
-      { label: '📄 Borrador', fn: async (k) => { await cargar('empleados', 'terceros'); vistaPrevia(k.titulo, plantillaContrato(k) + '<p style="font-size:11px;color:#777;margin-top:30px">[Borrador generado automáticamente. Revíselo con un abogado antes de firmar y elimine esta nota.]</p>'); } },
-      { label: '📎', si: (k) => k.documento_id, fn: (k) => { window.location.href = `/api/documentos/${k.documento_id}/descargar`; } },
+      { label: '📄 Borrador', fn: async (k) => { vistaPrevia(k.titulo, plantillaContrato(k) + '<p style="font-size:11px;color:#777;margin-top:30px">[Borrador generado automáticamente. Revíselo con un abogado antes de firmar y elimine esta nota.]</p>'); } },
+      { label: '📎', si: (k) => k.documento_id && puede('documentos'), fn: (k) => { window.location.href = `/api/documentos/${k.documento_id}/descargar`; } },
     ],
   });
 
@@ -862,7 +908,7 @@
     const d = def('documentos');
     const cat = d.fields.find((f) => f.k === 'categoria');
     const m = modal('Subir documento', `<form class="form-grid" id="fd">
-      <label class="wide">Archivo (máx. 15 MB) <span class="req">*</span><input type="file" name="archivo" required></label>
+      <label class="wide"><span>Archivo (máx. 15 MB) <span class="req">*</span></span><input type="file" name="archivo" required></label>
       <label>Nombre<input name="nombre" maxlength="300" placeholder="Si lo deja vacío se usa el nombre del archivo"></label>
       <label>Categoría<select name="categoria">${cat.options.map((o) => `<option>${esc(o)}</option>`).join('')}</select></label>
       <label>Vence / renovar el<input type="date" name="fecha_vencimiento"></label>
@@ -882,11 +928,11 @@
     });
   }
   VISTAS.documentos = (el) => vistaRecurso(el, 'documentos', {
-    toolbarExtra: '<button class="primary" id="subir">⬆️ Subir documento</button>',
+    toolbarExtra: puede('documentos', 'editar') ? '<button class="primary" id="subir">⬆️ Subir documento</button>' : '',
     extraCols: [{ label: 'Tamaño', num: true, html: (d) => (d.archivo_tamano ? tamano(d.archivo_tamano) : '') }],
     resumen: (rows) => `<div class="kpis">${kpi('Documentos', String(rows.length))}${kpi('Espacio usado', tamano(sum(rows, 'archivo_tamano')))}${kpi('Por vencer (30 días)', String(rows.filter((d) => d.fecha_vencimiento && diasHasta(d.fecha_vencimiento) <= 30).length))}</div>`,
     acciones: [{ label: '⬇️ Descargar', fn: (d) => { window.location.href = `/api/documentos/${d.id}/descargar`; } }],
-    alMontar: (c, recargar) => $('#subir', c).addEventListener('click', () => subirDocumento(recargar)),
+    alMontar: (c, recargar) => $('#subir', c)?.addEventListener('click', () => subirDocumento(recargar)),
   });
 
   // ───────────────────────── Juegos ─────────────────────────
@@ -904,7 +950,7 @@
         toolbarExtra: '<label class="check small"><input type="checkbox" id="prox" data-refiltrar checked> Solo próximas y sin publicar</label>',
         filtrar: (rows, c) => ($('#prox', c).checked ? rows.filter((p) => p.estado !== 'Publicada' || (p.fecha && diasHasta(p.fecha) >= 0)) : rows),
         resumen: (rows) => `<div class="kpis">${kpi('Esta semana', String(rows.filter((p) => p.fecha && diasHasta(p.fecha) >= 0 && diasHasta(p.fecha) <= 7).length))}${kpi('Programadas', String(rows.filter((p) => p.estado === 'Programada').length))}${kpi('Ideas pendientes', String(rows.filter((p) => p.estado === 'Idea').length))}</div>`,
-        acciones: [{ label: '✔ Publicada', si: (p) => p.estado !== 'Publicada', fn: async (p, re) => { try { await api('PUT', `/api/r/publicaciones/${p.id}`, { estado: 'Publicada' }); re(); } catch (e) { fallo(e); } } }],
+        acciones: [{ label: '✔ Publicada', edita: true, si: (p) => p.estado !== 'Publicada', fn: async (p, re) => { try { await api('PUT', `/api/r/publicaciones/${p.id}`, { estado: 'Publicada' }); re(); } catch (e) { fallo(e); } } }],
       });
     }
     const div = (a, b) => (b ? a / b : NaN);
@@ -926,7 +972,9 @@
   VISTAS.configuracion = async (el, [sub = 'empresa']) => {
     S.config = await api('GET', '/api/config');
     const c = S.config;
-    el.innerHTML = tabs(el, 'configuracion', [['empresa', 'Datos de la empresa'], ['nomina', 'Parámetros de nómina'], ['respaldo', 'Respaldo de datos']], sub) + '<div id="cf"></div>';
+    el.innerHTML = tabs(el, 'configuracion', [['empresa', 'Datos de la empresa'], ['nomina', 'Parámetros de nómina'], ...(S.yo.admin ? [['respaldo', 'Respaldo de datos']] : [])], sub) + '<div id="cf"></div>';
+    if (sub === 'respaldo' && !S.yo.admin) sub = 'empresa';
+    const edCfg = puede('configuracion', 'editar');
     const cf = $('#cf', el);
     const inp = (k, l, t = 'text', extra = '') => `<label>${esc(l)}<input type="${t}" name="${k}" value="${esc(c[k])}" ${extra}></label>`;
     const guardar = async (form) => {
@@ -948,7 +996,7 @@
         ${inp('horas_mes', 'Horas laborales al mes (jornada 42 h/sem = 210)', 'number')}${inp('recargo_dominical', 'Recargo dominical / festivo (0,90 = 90 %)', 'number', 'step="0.05"')}
         <label class="check wide"><input type="checkbox" name="exoneracion_aportes" ${c.exoneracion_aportes === '1' ? 'checked' : ''}> Exoneración de salud (8,5 %), ICBF y SENA para empleados que ganan menos de 10 SMMLV (art. 114-1 Estatuto Tributario — aplica a sociedades como las S.A.S.)</label>
         <div class="wide"><button class="primary" type="submit">Guardar</button></div></form></div>`;
-    } else {
+    } else if (sub === 'respaldo') {
       cf.innerHTML = `<div class="card"><h2>💾 Respaldo de datos</h2>
         <p>Descargue una copia de toda la información (excepto los archivos de Documentos y las credenciales) en formato JSON. Guárdela en un lugar seguro.</p>
         <button class="primary" id="resp">⬇️ Descargar respaldo</button>
@@ -956,46 +1004,201 @@
       $('#resp', cf).addEventListener('click', () => { window.location.href = '/api/respaldo'; });
       return;
     }
-    $('#fc', cf).addEventListener('submit', (e) => { e.preventDefault(); guardar(e.target); });
+    if (!edCfg) {
+      $$('#fc input, #fc select', cf).forEach((x) => { x.disabled = true; });
+      $('#fc button[type=submit]', cf).replaceWith(Object.assign(document.createElement('span'), { className: 'badge info', textContent: '👁️ Solo lectura' }));
+    }
+    $('#fc', cf).addEventListener('submit', (e) => { e.preventDefault(); if (edCfg) guardar(e.target); });
   };
+
+  // ───────────────────────── Mi cuenta y seguridad ─────────────────────────
+  const ETQ_BITACORA = { acceso: '✅ Acceso', acceso_fallido: '⛔ Acceso fallido', instalacion: '🛠️ Instalación', cambio_clave: '🔑 Cambio de clave', cambio_clave_fallido: '⛔ Cambio de clave fallido', restablecer_clave: '🔑 Restablecimiento', crear: '➕ Crear', editar: '✏️ Editar', eliminar: '🗑️ Eliminar', nomina: '💵 Nómina', configuracion: '⚙️ Configuración', respaldo: '💾 Respaldo', sesiones: '🔒 Sesiones', usuarios: '👤 Usuarios' };
 
   VISTAS.seguridad = async (el) => {
     const s = await api('GET', '/api/seguridad');
-    const ETQ = { acceso: '✅ Acceso', acceso_fallido: '⛔ Acceso fallido', instalacion: '🛠️ Instalación', cambio_clave: '🔑 Cambio de clave', cambio_clave_fallido: '⛔ Cambio de clave fallido', restablecer_clave: '🔑 Restablecimiento', crear: '➕ Crear', editar: '✏️ Editar', eliminar: '🗑️ Eliminar', nomina: '💵 Nómina', configuracion: '⚙️ Configuración', respaldo: '💾 Respaldo', sesiones: '🔒 Sesiones' };
     const fallidos = s.bitacora.filter((b) => b.accion === 'acceso_fallido' && Date.now() - Date.parse(b.fecha) < 7 * 864e5).length;
+    const propias = s.sesiones.filter((x) => x.usuario === S.yo.usuario).length;
     el.innerHTML = `
-      <div class="kpis">${kpi('Número de empresa', esc(s.cuenta.numero))}${kpi('Contraseña cambiada', esc(fts(Date.parse(s.cuenta.clave_cambiada))))}${kpi('Sesiones abiertas', String(s.sesiones.length))}${kpi('Accesos fallidos (7 días)', String(fallidos), '', fallidos ? 'bad' : 'ok')}</div>
+      <div class="kpis">
+        ${kpi('Usuario', esc(S.yo.principal ? 'admin (principal)' : S.yo.usuario), esc(S.yo.rol))}
+        ${s.principal ? kpi('Número de empresa', esc(s.cuenta.numero)) : ''}
+        ${kpi('Contraseña cambiada', s.cuenta.clave_cambiada ? esc(fts(Date.parse(s.cuenta.clave_cambiada))) : '—')}
+        ${kpi(s.admin ? 'Sesiones abiertas (todos)' : 'Mis sesiones abiertas', String(s.admin ? s.sesiones.length : propias))}
+        ${s.admin ? kpi('Accesos fallidos (7 días)', String(fallidos), '', fallidos ? 'bad' : 'ok') : ''}
+      </div>
       <div class="cols-2">
-        <div class="card"><h2>🔑 Cambiar credenciales</h2>
+        <div class="card"><h2>🔑 ${s.principal ? 'Cambiar credenciales' : 'Cambiar mi contraseña'}</h2>
           <form class="grid" id="fk" autocomplete="off">
-            <label>Contraseña actual <span class="req">*</span><input type="password" name="actual" required autocomplete="current-password"></label>
-            <label>Nuevo número de empresa (opcional)<input name="numero" placeholder="${esc(s.cuenta.numero)}"></label>
-            <label>Nueva contraseña (opcional)<input type="password" name="nueva" autocomplete="new-password" minlength="10"></label>
+            <label><span>Contraseña actual <span class="req">*</span></span><input type="password" name="actual" required autocomplete="current-password"></label>
+            ${s.principal ? `<label>Nuevo número de empresa (opcional)<input name="numero" placeholder="${esc(s.cuenta.numero)}"></label>` : ''}
+            <label>Nueva contraseña${s.principal ? ' (opcional)' : ''}<input type="password" name="nueva" autocomplete="new-password" minlength="10"></label>
             <label>Repita la nueva contraseña<input type="password" name="nueva2" autocomplete="new-password"></label>
             <button class="primary" type="submit">Actualizar</button></form>
-          <p class="small muted">Al cambiar la contraseña se cierran todas las demás sesiones. Si la olvida, ejecute <code>npm run restablecer-clave</code> en la computadora donde está instalado el sistema.</p></div>
-        <div class="card"><h2>💻 Sesiones abiertas</h2>
-          <ul class="lista">${s.sesiones.map((x) => `<li><span>${x.actual ? '<b>Esta sesión</b>' : 'Otra sesión'} · ${esc(x.ip)}<br><span class="small muted">${esc(x.agente.slice(0, 70))}</span></span><span class="small muted">${esc(fts(x.ultimo))}</span></li>`).join('')}</ul>
-          ${s.sesiones.length > 1 ? '<button class="danger" id="cerrar-otras">Cerrar las demás sesiones</button>' : ''}
+          <p class="small muted">Al cambiar la contraseña se cierran sus demás sesiones. ${s.principal ? 'Si la olvida, ejecute <code>npm run restablecer-clave</code> en la computadora donde está instalado el sistema.' : 'Si la olvida, pídale al administrador que se la restablezca.'}</p></div>
+        <div class="card"><h2>💻 ${s.admin ? 'Sesiones abiertas' : 'Mis sesiones'}</h2>
+          <ul class="lista">${s.sesiones.map((x) => `<li><span>${x.actual ? '<b>Esta sesión</b>' : 'Otra sesión'}${s.admin ? ` · 👤 ${esc(x.usuario)}` : ''} · ${esc(x.ip)}<br><span class="small muted">${esc(x.agente.slice(0, 70))}</span></span><span class="small muted">${esc(fts(x.ultimo))}</span></li>`).join('')}</ul>
+          ${s.sesiones.length > 1 ? `<button class="danger" id="cerrar-otras">${s.admin ? 'Cerrar todas las demás sesiones' : 'Cerrar mis demás sesiones'}</button>` : ''}
           <h3 style="margin-top:18px">Medidas de seguridad activas</h3>
           <ul class="small">
-            <li>Contraseña cifrada con scrypt y sal aleatoria (no reversible).</li>
-            <li>Bloqueo de 15 min tras ${5} intentos fallidos por equipo y por número de empresa.</li>
+            <li>Contraseñas cifradas con scrypt y sal aleatoria (no reversibles).</li>
+            <li>Cada persona entra con su propio usuario y solo ve los módulos que el administrador le permite.</li>
+            <li>Bloqueo de 15 min tras 5 intentos fallidos por equipo y por usuario.</li>
             <li>Cierre automático tras ${esc(S.config.sesion_minutos)} min sin uso y máximo 12 h por sesión.</li>
             <li>Cookies HttpOnly + SameSite=Strict y protección contra CSRF y XSS (CSP).</li>
-            <li>Bitácora de todas las acciones y accesos.</li></ul></div>
+            <li>Bitácora de todas las acciones, con el usuario que las hizo.</li></ul></div>
       </div>
-      <div class="card"><h2>📜 Bitácora de seguridad y actividad</h2>
-        <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Evento</th><th>Detalle</th><th>IP</th></tr></thead>
-        <tbody>${s.bitacora.map((b) => `<tr><td class="small">${esc(fts(Date.parse(b.fecha)))}</td><td>${esc(ETQ[b.accion] || b.accion)}</td><td>${esc(b.detalle)}</td><td class="small muted">${esc(b.ip)}</td></tr>`).join('')}</tbody></table></div></div>`;
+      <div class="card"><h2>📜 ${s.admin ? 'Bitácora de seguridad y actividad' : 'Mi actividad reciente'}</h2>
+        <div class="toolbar"><input type="search" id="qb" placeholder="Filtrar por usuario, evento o detalle…"></div>
+        <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Evento</th><th>Detalle</th><th>IP</th></tr></thead>
+        <tbody id="tb-bit">${s.bitacora.map((b) => `<tr><td class="small">${esc(fts(Date.parse(b.fecha)))}</td><td>${esc(b.usuario || '')}</td><td>${esc(ETQ_BITACORA[b.accion] || b.accion)}</td><td>${esc(b.detalle)}</td><td class="small muted">${esc(b.ip)}</td></tr>`).join('')}</tbody></table></div></div>`;
+    $('#qb', el).addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      $$('#tb-bit tr', el).forEach((tr) => { tr.hidden = q && !tr.textContent.toLowerCase().includes(q); });
+    });
     $('#fk', el).addEventListener('submit', async (e) => {
       e.preventDefault();
       const f = e.target;
       if (f.nueva.value !== f.nueva2.value) return toast('Las contraseñas nuevas no coinciden', true);
-      if (!f.nueva.value && !f.numero.value) return toast('Escriba un nuevo número o una nueva contraseña', true);
-      try { await api('POST', '/api/cambiar-clave', { actual: f.actual.value, numero: f.numero.value || null, nueva: f.nueva.value || null }); toast('Credenciales actualizadas'); router(); } catch (err) { fallo(err); }
+      if (!f.nueva.value && !(f.numero && f.numero.value)) return toast(s.principal ? 'Escriba un nuevo número o una nueva contraseña' : 'Escriba la nueva contraseña', true);
+      try { await api('POST', '/api/cambiar-clave', { actual: f.actual.value, numero: (f.numero && f.numero.value) || null, nueva: f.nueva.value || null }); toast('Credenciales actualizadas'); router(); } catch (err) { fallo(err); }
     });
     $('#cerrar-otras', el)?.addEventListener('click', async () => { try { await api('POST', '/api/cerrar-otras', {}); toast('Sesiones cerradas'); router(); } catch (e) { fallo(e); } });
+  };
+
+  // ───────────────────────── Usuarios y permisos ─────────────────────────
+  const NIV_TXT = { no: '—', ver: '👁️ Ver', editar: '✏️ Editar' };
+  function claveAleatoria() {
+    const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
+    const dig = '23456789';
+    const todos = abc + dig;
+    const r = new Uint32Array(12);
+    crypto.getRandomValues(r);
+    let c = [...r].map((x) => todos[x % todos.length]).join('');
+    // garantiza letras y números
+    c = abc[r[0] % abc.length] + dig[r[1] % dig.length] + c.slice(2);
+    return c;
+  }
+  const sugerirUsuario = (nombre) => {
+    const p = String(nombre || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z\s]/g, '').trim().split(/\s+/).filter(Boolean);
+    return p.length > 1 ? `${p[0]}.${p[p.length > 2 ? 2 : 1]}` : p[0] || '';
+  };
+  function mostrarCredenciales(u, clave) {
+    const m = modal('Datos de acceso', `<p>Entregue estos datos a <b>${esc(u.nombre)}</b> en persona o por un medio privado. Al entrar por primera vez el sistema le pedirá crear su propia contraseña.</p>
+      <div class="tabla-wrap"><table><tbody>
+        <tr><th>Número de empresa</th><td><b>${esc(S.config.nit || '(el NIT de la empresa)')}</b></td></tr>
+        <tr><th>Usuario</th><td><b>${esc(u.usuario)}</b></td></tr>
+        <tr><th>Contraseña temporal</th><td><b><code id="cred-clave">${esc(clave)}</code></b></td></tr>
+      </tbody></table></div>
+      <p class="small muted">Por seguridad, esta contraseña no se volverá a mostrar.</p>`,
+      { tam: 'sm', pie: '<button id="cred-copiar">📋 Copiar</button><button class="primary" data-cerrar>Listo</button>' });
+    $('#cred-copiar', m.el).addEventListener('click', async () => {
+      const txt = `Sistema de gestión ${S.config.razon_social}\nNúmero de empresa: ${S.config.nit}\nUsuario: ${u.usuario}\nContraseña temporal: ${clave}`;
+      try { await navigator.clipboard.writeText(txt); toast('Copiado'); } catch { toast('No se pudo copiar; selecciónelo manualmente', true); }
+    });
+  }
+
+  async function formUsuario(u, re, empleado) {
+    try { await cargarOpc('usuarios', 'empleados'); } catch (e) { return fallo(e); }
+    const roles = S.yo.roles, mods = S.yo.modulos;
+    const d = u ? { ...u } : { nombre: empleado ? `${empleado.nombres} ${empleado.apellidos}` : '', empleado_id: empleado ? empleado.id : null, rol: 'Consulta', activo: 1 };
+    if (!u) d.usuario = sugerirUsuario(d.nombre);
+    const permisos = { ...(u ? u.permisos : roles[d.rol].permisos) };
+    const m = modal(u ? `Editar usuario · ${u.usuario}` : 'Nuevo usuario', `<form class="form-grid" id="fu" autocomplete="off">
+      <label><span>Nombre completo <span class="req">*</span></span><input name="nombre" value="${esc(d.nombre)}" required maxlength="120"></label>
+      <label><span>Usuario para entrar <span class="req">*</span></span><input name="usuario" value="${esc(d.usuario)}" required maxlength="40" autocapitalize="none" spellcheck="false" placeholder="ej.: laura.martinez"></label>
+      <label>Empleado vinculado<select name="empleado_id"><option value="">— Ninguno (externo) —</option>${(S.opc.empleados || []).map((e) => `<option value="${e.id}" ${e.id === d.empleado_id ? 'selected' : ''}>${esc(titulo('empleados', e))}</option>`).join('')}</select></label>
+      <label><span>Rol <span class="req">*</span></span><select name="rol">${Object.keys(roles).map((r) => `<option ${r === d.rol ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select></label>
+      <p class="wide small muted" id="rol-desc"></p>
+      <div class="wide"><b class="small">Permisos por módulo</b>
+        <div class="tabla-wrap" style="margin-top:6px"><table><thead><tr><th>Módulo</th><th>Sin acceso</th><th>Ver</th><th>Editar</th></tr></thead>
+        <tbody id="matriz">${Object.entries(mods).map(([k, l]) => `<tr><td>${esc(l)}</td>${['no', 'ver', 'editar'].map((n) => `<td><input type="radio" name="p_${k}" value="${n}" aria-label="${esc(l)}: ${n}"></td>`).join('')}</tr>`).join('')}</tbody></table></div>
+        <p class="small muted">«Ver» permite consultar e imprimir; «Editar» además crear, modificar y eliminar. Para elegir los permisos uno a uno, use el rol «Personalizado».</p></div>
+      <label><span>${u ? 'Nueva contraseña temporal (opcional)' : 'Contraseña temporal <span class="req">*</span></span>'}<input name="clave" value="${u ? '' : esc(claveAleatoria())}" maxlength="200" autocomplete="off"></label>
+      <div style="align-self:end"><button type="button" id="gen-clave">🎲 Generar contraseña</button></div>
+      ${u ? `<label class="check wide"><input type="checkbox" name="activo" ${u.activo ? 'checked' : ''}> Usuario activo (puede entrar al sistema)</label>` : ''}
+    </form>`, { pie: '<button data-cerrar>Cancelar</button><button class="primary" id="fu-ok">Guardar</button>' });
+    const f = $('#fu', m.el);
+    const pintarMatriz = () => {
+      const rol = f.rol.value, pers = rol === 'Personalizado';
+      $('#rol-desc', m.el).textContent = roles[rol].descripcion;
+      const base = pers ? permisos : roles[rol].permisos;
+      for (const k of Object.keys(mods)) {
+        for (const r of f.querySelectorAll(`[name=p_${k}]`)) { r.checked = r.value === (base[k] || 'no'); r.disabled = !pers; }
+      }
+    };
+    f.rol.addEventListener('change', () => {
+      if (f.rol.value === 'Personalizado') {
+        // parte de lo que estaba marcado para no empezar de cero
+        for (const k of Object.keys(mods)) { const sel = f.querySelector(`[name=p_${k}]:checked`); permisos[k] = sel ? sel.value : 'no'; }
+      }
+      pintarMatriz();
+    });
+    f.addEventListener('change', (e) => { if (e.target.name && e.target.name.startsWith('p_')) permisos[e.target.name.slice(2)] = e.target.value; });
+    pintarMatriz();
+    f.empleado_id.addEventListener('change', () => {
+      const e = (S.opc.empleados || []).find((x) => x.id === Number(f.empleado_id.value));
+      if (e && !f.nombre.value) f.nombre.value = titulo('empleados', e);
+      if (e && !u && !f.usuario.dataset.tocado) f.usuario.value = sugerirUsuario(titulo('empleados', e));
+    });
+    f.nombre.addEventListener('input', () => { if (!u && !f.usuario.dataset.tocado) f.usuario.value = sugerirUsuario(f.nombre.value); });
+    f.usuario.addEventListener('input', () => { f.usuario.dataset.tocado = '1'; });
+    $('#gen-clave', m.el).addEventListener('click', () => { f.clave.value = claveAleatoria(); });
+    $('#fu-ok', m.el).addEventListener('click', async () => {
+      const body = { nombre: f.nombre.value, usuario: f.usuario.value, empleado_id: f.empleado_id.value || null, rol: f.rol.value, permisos };
+      if (f.clave.value) body.clave = f.clave.value;
+      if (u) body.activo = f.activo.checked;
+      const btn = $('#fu-ok', m.el); btn.disabled = true;
+      try {
+        const r = u ? await api('PUT', `/api/usuarios/${u.id}`, body) : await api('POST', '/api/usuarios', body);
+        m.cerrar(); toast('Usuario guardado'); re && re();
+        if (body.clave) mostrarCredenciales(r, body.clave);
+      } catch (e) { fallo(e); btn.disabled = false; }
+    });
+  }
+
+  VISTAS.usuarios = async (el) => {
+    const [lista] = await Promise.all([api('GET', '/api/usuarios'), cargarOpc('usuarios', 'empleados')]);
+    const mods = S.yo.modulos;
+    const re = () => VISTAS.usuarios(el);
+    el.innerHTML = `
+      <div class="toolbar"><input type="search" id="q" placeholder="Buscar usuario…"><span class="grow"></span><button class="primary" id="nuevo">＋ Nuevo usuario</button></div>
+      <div class="alerta info">El <b>administrador principal</b> entra con el número de empresa y la contraseña maestra, dejando el campo «Usuario» vacío (o escribiendo <code>admin</code>). Cada empleado entra con el número de empresa + su propio usuario y contraseña, y solo ve los módulos que usted le permita.</div>
+      <div class="kpis">${kpi('Usuarios activos', String(lista.filter((u) => u.activo).length))}${kpi('Administradores', String(lista.filter((u) => u.activo && u.rol === 'Administrador').length + 1), 'Incluye al principal')}${kpi('Con contraseña temporal', String(lista.filter((u) => u.debe_cambiar && u.activo).length), 'Aún no han entrado')}</div>
+      <div class="tabla-wrap" id="tabla">${lista.length ? `<table><thead><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Empleado</th><th>Acceso a</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead><tbody>
+        ${lista.map((u) => `<tr data-id="${u.id}"><td><b>${esc(u.nombre)}</b></td><td><code>${esc(u.usuario)}</code></td><td><span class="badge ${u.rol === 'Administrador' ? 'bad' : 'info'}">${esc(u.rol)}</span></td>
+          <td>${esc(refLabel('empleados', u.empleado_id))}</td>
+          <td class="small">${u.rol === 'Administrador' ? 'Todo' : Object.entries(u.permisos).filter(([, n]) => n !== 'no').map(([k, n]) => `<span title="${n === 'editar' ? 'Puede editar' : 'Solo ver'}">${n === 'editar' ? '✏️' : '👁️'} ${esc(mods[k])}</span>`).join(' · ') || '<span class="muted">Ningún módulo</span>'}</td>
+          <td>${u.activo ? (u.debe_cambiar ? '<span class="badge warn">Clave temporal</span>' : '<span class="badge ok">Activo</span>') : '<span class="badge">Desactivado</span>'}</td>
+          <td class="small muted">${u.ultimo_acceso ? esc(fts(Date.parse(u.ultimo_acceso))) : 'Nunca'}</td>
+          <td class="acciones"><button class="sm" data-a="editar">✏️ Editar</button> <button class="sm" data-a="clave" title="Restablecer contraseña">🔑</button> <button class="sm" data-a="activo">${u.activo ? '⏸️ Desactivar' : '▶️ Activar'}</button> <button class="sm danger" data-a="borrar" title="Eliminar">🗑️</button></td></tr>`).join('')}
+        </tbody></table>` : '<div class="vacio">Aún no hay usuarios. Cree uno para cada persona que vaya a usar el sistema; también puede hacerlo desde Empleados con el botón «👤 Usuario».</div>'}</div>
+      <div class="card" style="margin-top:18px"><h2>Roles disponibles</h2><div class="tabla-wrap"><table><thead><tr><th>Rol</th><th>Para quién</th>${Object.values(mods).map((l) => `<th class="small">${esc(l)}</th>`).join('')}</tr></thead><tbody>
+        ${Object.entries(S.yo.roles).filter(([r]) => r !== 'Personalizado').map(([r, x]) => `<tr><td><b>${esc(r)}</b></td><td class="small">${esc(x.descripcion)}</td>${Object.keys(mods).map((k) => `<td class="small">${NIV_TXT[x.permisos[k]]}</td>`).join('')}</tr>`).join('')}
+      </tbody></table></div></div>`;
+    $('#nuevo', el).addEventListener('click', () => formUsuario(null, re));
+    $('#q', el).addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      $$('#tabla tbody tr', el).forEach((tr) => { tr.hidden = q && !tr.textContent.toLowerCase().includes(q); });
+    });
+    $('#tabla', el).addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-a]'); if (!b) return;
+      const u = lista.find((x) => x.id === Number(b.closest('tr').dataset.id));
+      try {
+        if (b.dataset.a === 'editar') formUsuario(u, re);
+        else if (b.dataset.a === 'clave') {
+          if (!(await confirmar(`¿Restablecer la contraseña de ${u.nombre}? Se cerrarán sus sesiones y deberá crear una nueva al entrar.`, { ok: 'Restablecer', peligro: false }))) return;
+          const clave = claveAleatoria();
+          const r = await api('PUT', `/api/usuarios/${u.id}`, { clave });
+          mostrarCredenciales(r, clave); re();
+        } else if (b.dataset.a === 'activo') {
+          await api('PUT', `/api/usuarios/${u.id}`, { activo: !u.activo });
+          toast(u.activo ? 'Usuario desactivado y sus sesiones cerradas' : 'Usuario activado'); re();
+        } else if (b.dataset.a === 'borrar') {
+          if (!(await confirmar(`¿Eliminar el usuario «${u.usuario}»? Si solo quiere quitarle el acceso por un tiempo, es mejor desactivarlo.`))) return;
+          await api('DELETE', `/api/usuarios/${u.id}`); toast('Usuario eliminado'); re();
+        }
+      } catch (err) { fallo(err); }
+    });
   };
 
   iniciar();

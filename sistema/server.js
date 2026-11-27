@@ -43,6 +43,43 @@ db.exec(`
     empleado TEXT, novedades TEXT, calculo TEXT, UNIQUE (periodo_id, empleado_id));
 `);
 
+db.exec(`CREATE TABLE IF NOT EXISTS usuarios (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario TEXT UNIQUE NOT NULL,
+  nombre TEXT, empleado_id INTEGER, rol TEXT, permisos TEXT, hash TEXT NOT NULL, sal TEXT NOT NULL, activo INTEGER DEFAULT 1,
+  debe_cambiar INTEGER DEFAULT 1, creado TEXT, ultimo_acceso TEXT, clave_cambiada TEXT)`);
+function agregarColumna(tabla, col, tipo) {
+  if (!db.prepare(`PRAGMA table_info(${tabla})`).all().some((c) => c.name === col)) db.exec(`ALTER TABLE ${tabla} ADD COLUMN ${col} ${tipo}`);
+}
+agregarColumna('sesiones', 'usuario_id', 'INTEGER');
+agregarColumna('bitacora', 'usuario', 'TEXT');
+
+// ─── Usuarios y permisos ───
+// Niveles por módulo: 'no' (sin acceso), 'ver' (solo lectura), 'editar' (crear, modificar, eliminar).
+const MODULOS = {
+  panel: 'Panel principal', contabilidad: 'Contabilidad', facturas: 'Facturación y cobros', terceros: 'Clientes y proveedores',
+  empleados: 'Empleados', nomina: 'Nómina', contratos: 'Contratos', documentos: 'Documentos', juegos: 'Juegos y proyectos',
+  marketing: 'Marketing', tareas: 'Tareas y obligaciones', configuracion: 'Configuración de la empresa',
+};
+const MOD_RECURSO = { movimientos: 'contabilidad', facturas: 'facturas', terceros: 'terceros', empleados: 'empleados', contratos: 'contratos', documentos: 'documentos', juegos: 'juegos', campanas: 'marketing', publicaciones: 'marketing', tareas: 'tareas' };
+const NIVEL = { no: 0, ver: 1, editar: 2 };
+const todos = (n) => Object.fromEntries(Object.keys(MODULOS).map((k) => [k, n]));
+const ROLES = {
+  Administrador: { descripcion: 'Acceso total, incluida la gestión de usuarios, la bitácora y los respaldos.', permisos: todos('editar') },
+  Contador: { descripcion: 'Finanzas, nómina e impuestos.', permisos: { ...todos('no'), panel: 'ver', contabilidad: 'editar', facturas: 'editar', terceros: 'editar', empleados: 'ver', nomina: 'editar', contratos: 'ver', documentos: 'editar', tareas: 'editar', configuracion: 'ver' } },
+  'Recursos humanos': { descripcion: 'Empleados, nómina y contratos.', permisos: { ...todos('no'), panel: 'ver', empleados: 'editar', nomina: 'editar', contratos: 'editar', documentos: 'editar', tareas: 'editar' } },
+  Marketing: { descripcion: 'Campañas, calendario de contenido y juegos.', permisos: { ...todos('no'), panel: 'ver', marketing: 'editar', juegos: 'editar', terceros: 'ver', documentos: 'ver', tareas: 'editar' } },
+  Desarrollo: { descripcion: 'Juegos, tareas y documentos de proyecto.', permisos: { ...todos('no'), panel: 'ver', juegos: 'editar', marketing: 'ver', documentos: 'ver', tareas: 'editar' } },
+  Consulta: { descripcion: 'Solo lectura de la operación, sin nómina ni configuración.', permisos: { ...todos('ver'), nomina: 'no', configuracion: 'no' } },
+  Personalizado: { descripcion: 'Permisos elegidos uno a uno.', permisos: todos('no') },
+};
+function normPermisos(rol, p) {
+  const base = (ROLES[rol] || ROLES.Personalizado).permisos;
+  if (rol !== 'Personalizado') return { ...base };
+  const out = {};
+  for (const k of Object.keys(MODULOS)) out[k] = NIVEL[p && p[k]] !== undefined ? p[k] : 'no';
+  return out;
+}
+const normUsuario = (s) => String(s || '').trim().toLowerCase().slice(0, 40);
+
 const colType = (t) => (t === 'money' || t === 'number' ? 'REAL' : t === 'int' || t === 'bool' || t === 'ref' ? 'INTEGER' : 'TEXT');
 for (const [name, def] of Object.entries(RESOURCES)) {
   db.exec(`CREATE TABLE IF NOT EXISTS ${name} (id INTEGER PRIMARY KEY AUTOINCREMENT, creado TEXT, actualizado TEXT)`);
@@ -75,8 +112,8 @@ function getConfig() {
   for (const r of db.prepare('SELECT clave, valor FROM config').all()) o[r.clave] = r.valor;
   return o;
 }
-function log(accion, detalle, ip) {
-  db.prepare('INSERT INTO bitacora (fecha, accion, detalle, ip) VALUES (?, ?, ?, ?)').run(ahora(), accion, String(detalle || '').slice(0, 500), ip || '');
+function log(accion, detalle, ip, usuario) {
+  db.prepare('INSERT INTO bitacora (fecha, accion, detalle, ip, usuario) VALUES (?, ?, ?, ?, ?)').run(ahora(), accion, String(detalle || '').slice(0, 500), ip || '', usuario || '');
 }
 function tx(fn) {
   db.exec('BEGIN');
@@ -114,10 +151,10 @@ function registrarFallo(clave) {
     .run(clave, hasta ? 0 : fallos, hasta);
   return hasta;
 }
-function crearSesion(res, req) {
+function crearSesion(res, req, uid = null) {
   const token = crypto.randomBytes(32).toString('hex');
-  db.prepare('INSERT INTO sesiones (token, creado, ultimo, ip, agente) VALUES (?, ?, ?, ?, ?)')
-    .run(sha256(token), Date.now(), Date.now(), ipDe(req), String(req.headers['user-agent'] || '').slice(0, 200));
+  db.prepare('INSERT INTO sesiones (token, creado, ultimo, ip, agente, usuario_id) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(sha256(token), Date.now(), Date.now(), ipDe(req), String(req.headers['user-agent'] || '').slice(0, 200), uid);
   res.setHeader('Set-Cookie', `${COOKIE}=${token}; Path=/; HttpOnly; SameSite=Strict${COOKIE_SECURE ? '; Secure' : ''}`);
 }
 function sesionActual(req) {
@@ -132,7 +169,27 @@ function sesionActual(req) {
     return null;
   }
   db.prepare('UPDATE sesiones SET ultimo = ? WHERE token = ?').run(Date.now(), token);
-  return { token };
+  return { token, uid: s.usuario_id || null };
+}
+// Quién hace la solicitud y qué puede hacer
+function actorDe(ses) {
+  if (!ses.uid) return { principal: true, admin: true, uid: null, usuario: 'admin', nombre: 'Administrador principal', rol: 'Administrador', permisos: todos('editar'), debe_cambiar: false, empleado_id: null };
+  const u = db.prepare('SELECT * FROM usuarios WHERE id = ?').get(ses.uid);
+  if (!u || !u.activo) return null;
+  const admin = u.rol === 'Administrador';
+  return { principal: false, admin, uid: u.id, usuario: u.usuario, nombre: u.nombre, rol: u.rol, empleado_id: u.empleado_id,
+    permisos: admin ? todos('editar') : normPermisos(u.rol, JSON.parse(u.permisos || '{}')), debe_cambiar: !!u.debe_cambiar };
+}
+function exigir(a, mod, nivel) {
+  if (a.admin) return;
+  if ((NIVEL[a.permisos[mod]] || 0) < NIVEL[nivel]) {
+    throw new HttpError(403, `No tiene permiso para ${nivel === 'editar' ? 'modificar' : 'ver'} «${MODULOS[mod]}». Pídaselo al administrador.`);
+  }
+}
+function exigirAdmin(a) { if (!a.admin) throw new HttpError(403, 'Solo un administrador puede hacer esto.'); }
+function usuarioPublico(u) {
+  return { id: u.id, usuario: u.usuario, nombre: u.nombre, empleado_id: u.empleado_id, rol: u.rol, activo: u.activo,
+    debe_cambiar: u.debe_cambiar, creado: u.creado, ultimo_acceso: u.ultimo_acceso, permisos: normPermisos(u.rol, JSON.parse(u.permisos || '{}')) };
 }
 function ipDe(req) { return String(req.socket.remoteAddress || '').replace(/^::ffff:/, ''); }
 
@@ -364,25 +421,31 @@ async function api(req, res, url) {
   if (p === '/api/login' && method === 'POST') {
     const b = await readBody(req, 10000);
     const numero = normNumero(b.numero);
-    const claves = ['ip:' + ip, 'num:' + numero];
+    const usuario = normUsuario(b.usuario) || 'admin';
+    const claves = ['ip:' + ip, `num:${numero}:${usuario}`];
     const hasta = Math.max(...claves.map(bloqueo));
     if (hasta) {
       const min = Math.ceil((hasta - Date.now()) / 60000);
       throw new HttpError(429, `Acceso bloqueado temporalmente por intentos fallidos. Intente de nuevo en ${min} min.`);
     }
     const c = db.prepare('SELECT * FROM cuenta WHERE id = 1').get();
-    const sal = c ? c.sal : '00'.repeat(16);
-    const calc = Buffer.from(hashClave(String(b.clave || ''), sal), 'hex');
-    const ok = !!c && c.numero === numero && crypto.timingSafeEqual(calc, Buffer.from(c.hash, 'hex'));
+    const u = usuario === 'admin' ? null : db.prepare('SELECT * FROM usuarios WHERE usuario = ?').get(usuario);
+    const ref = usuario === 'admin' ? c : u;
+    // Siempre se calcula un hash (aunque el usuario no exista) para no revelar qué usuarios existen por el tiempo de respuesta.
+    const calc = Buffer.from(hashClave(String(b.clave || ''), ref ? ref.sal : '00'.repeat(16)), 'hex');
+    const claveOk = !!ref && crypto.timingSafeEqual(calc, Buffer.from(ref.hash, 'hex'));
+    const ok = !!c && c.numero === numero && claveOk && (usuario === 'admin' || u.activo);
     if (!ok) {
       const bloq = claves.map(registrarFallo).some(Boolean);
-      log('acceso_fallido', `Número: ${numero.slice(0, 20)}${bloq ? ' — BLOQUEADO 15 min' : ''}`, ip);
-      throw new HttpError(401, 'Número de empresa o contraseña incorrectos.');
+      const inactivo = claveOk && u && !u.activo;
+      log('acceso_fallido', `Número: ${numero.slice(0, 20)} · usuario: ${usuario}${inactivo ? ' (usuario desactivado)' : ''}${bloq ? ' — BLOQUEADO 15 min' : ''}`, ip, usuario);
+      throw new HttpError(401, inactivo ? 'Este usuario está desactivado. Hable con el administrador.' : 'Número de empresa, usuario o contraseña incorrectos.');
     }
     for (const k of claves) db.prepare('DELETE FROM intentos WHERE clave = ?').run(k);
-    crearSesion(res, req);
-    log('acceso', 'Inicio de sesión correcto', ip);
-    return json(res, 200, { ok: true });
+    crearSesion(res, req, u ? u.id : null);
+    if (u) db.prepare('UPDATE usuarios SET ultimo_acceso = ? WHERE id = ?').run(ahora(), u.id);
+    log('acceso', 'Inicio de sesión correcto', ip, usuario);
+    return json(res, 200, { ok: true, debe_cambiar: !!(u && u.debe_cambiar) });
   }
 
   if (p === '/api/logout' && method === 'POST') {
@@ -395,6 +458,103 @@ async function api(req, res, url) {
   // ─── A partir de aquí, todo requiere sesión ───
   const ses = sesionActual(req);
   if (!ses) throw new HttpError(401, 'Sesión expirada. Inicie sesión de nuevo.');
+  const yo = actorDe(ses);
+  if (!yo) {
+    db.prepare('DELETE FROM sesiones WHERE token = ?').run(ses.token);
+    throw new HttpError(401, 'Su usuario fue desactivado o eliminado.');
+  }
+  const quien = yo.usuario;
+
+  if (p === '/api/yo' && method === 'GET') {
+    const c = getConfig();
+    return json(res, 200, { ...yo, empresa: c.razon_social, modulos: MODULOS, roles: ROLES });
+  }
+  // Un usuario con contraseña temporal solo puede cambiarla.
+  if (yo.debe_cambiar && p !== '/api/cambiar-clave') throw new HttpError(403, 'Debe cambiar su contraseña temporal antes de continuar.');
+
+  // Listas cortas (id + nombre) para los selectores de los formularios, sin datos sensibles.
+  let mo = p.match(/^\/api\/opciones\/([a-z_]+)$/);
+  if (mo && method === 'GET' && RESOURCES[mo[1]]) {
+    const d = RESOURCES[mo[1]];
+    // ?para=contratos añade datos que ese módulo necesita (p. ej. cédula para redactar el contrato), solo si el usuario tiene acceso a él.
+    const para = url.searchParams.get('para');
+    const extra = (para && RESOURCES[para] && RESOURCES[para].refsExtra && RESOURCES[para].refsExtra[mo[1]]) || [];
+    if (extra.length) exigir(yo, MOD_RECURSO[para], 'ver');
+    const cols = ['id', ...new Set([...d.title, ...extra])];
+    return json(res, 200, db.prepare(`SELECT ${cols.join(', ')} FROM ${mo[1]} ORDER BY ${d.order || 'id DESC'}`).all());
+  }
+
+  // ─── Gestión de usuarios (solo administradores) ───
+  mo = p.match(/^\/api\/usuarios(?:\/(\d+))?$/);
+  if (mo) {
+    exigirAdmin(yo);
+    const id = mo[1] ? Number(mo[1]) : null;
+    if (method === 'GET' && !id) return json(res, 200, db.prepare('SELECT * FROM usuarios ORDER BY activo DESC, nombre').all().map(usuarioPublico));
+    const leer = (b, previo) => {
+      const d = {};
+      if (b.usuario !== undefined || !previo) {
+        d.usuario = normUsuario(b.usuario);
+        if (!/^[a-z0-9._-]{3,40}$/.test(d.usuario)) throw new HttpError(400, 'El usuario debe tener de 3 a 40 caracteres: letras minúsculas, números, punto, guion o guion bajo (sin espacios ni tildes).');
+        if (d.usuario === 'admin') throw new HttpError(400, 'El usuario «admin» está reservado para el administrador principal.');
+        const otro = db.prepare('SELECT id FROM usuarios WHERE usuario = ?').get(d.usuario);
+        if (otro && otro.id !== id) throw new HttpError(409, 'Ese nombre de usuario ya existe.');
+      }
+      if (b.nombre !== undefined || !previo) {
+        d.nombre = String(b.nombre || '').trim().slice(0, 120);
+        if (!d.nombre) throw new HttpError(400, 'Escriba el nombre de la persona.');
+      }
+      if (b.empleado_id !== undefined) {
+        d.empleado_id = b.empleado_id ? Number(b.empleado_id) : null;
+        if (d.empleado_id && !obtener('empleados', d.empleado_id)) throw new HttpError(400, 'El empleado elegido no existe.');
+      }
+      if (b.rol !== undefined || !previo) {
+        if (!ROLES[b.rol]) throw new HttpError(400, 'Rol no válido.');
+        d.rol = b.rol;
+        d.permisos = JSON.stringify(normPermisos(b.rol, b.permisos));
+      } else if (b.permisos !== undefined) d.permisos = JSON.stringify(normPermisos(previo.rol, b.permisos));
+      if (b.activo !== undefined) d.activo = b.activo ? 1 : 0;
+      if (b.clave) {
+        const err = validarClave(b.clave); if (err) throw new HttpError(400, err);
+        d.sal = crypto.randomBytes(16).toString('hex');
+        d.hash = hashClave(b.clave, d.sal);
+        d.debe_cambiar = 1;
+        d.clave_cambiada = ahora();
+      } else if (!previo) throw new HttpError(400, 'Asigne una contraseña temporal.');
+      return d;
+    };
+    const guardar = (d, uid) => {
+      const k = Object.keys(d);
+      if (uid) db.prepare(`UPDATE usuarios SET ${k.map((x) => `${x} = ?`).join(', ')} WHERE id = ?`).run(...k.map((x) => d[x]), uid);
+      else return Number(db.prepare(`INSERT INTO usuarios (${k.join(', ')}, creado) VALUES (${k.map(() => '?').join(', ')}, ?)`).run(...k.map((x) => d[x]), ahora()).lastInsertRowid);
+    };
+    if (method === 'POST' && !id) {
+      const b = await readBody(req, 20000);
+      const nid = guardar(leer(b, null));
+      const u = db.prepare('SELECT * FROM usuarios WHERE id = ?').get(nid);
+      log('usuarios', `Usuario creado: ${u.usuario} (${u.rol})`, ip, quien);
+      return json(res, 200, usuarioPublico(u));
+    }
+    const previo = id && db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id);
+    if (!previo) throw new HttpError(404, 'Usuario no encontrado.');
+    if (method === 'PUT') {
+      const b = await readBody(req, 20000);
+      if (id === yo.uid && (b.activo === false || (b.rol && b.rol !== 'Administrador'))) throw new HttpError(400, 'No puede quitarse a sí mismo el acceso de administrador.');
+      const d = leer(b, previo);
+      tx(() => {
+        guardar(d, id);
+        if (d.hash || d.activo === 0) db.prepare('DELETE FROM sesiones WHERE usuario_id = ?').run(id);
+      });
+      const cambios = [d.rol && d.rol !== previo.rol ? `rol ${d.rol}` : '', d.permisos && d.permisos !== previo.permisos ? 'permisos' : '', d.hash ? 'contraseña restablecida' : '', d.activo === 0 && previo.activo ? 'desactivado' : '', d.activo === 1 && !previo.activo ? 'activado' : ''].filter(Boolean).join(', ');
+      log('usuarios', `Usuario ${previo.usuario} modificado${cambios ? ': ' + cambios : ''}`, ip, quien);
+      return json(res, 200, usuarioPublico(db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id)));
+    }
+    if (method === 'DELETE') {
+      if (id === yo.uid) throw new HttpError(400, 'No puede eliminar su propio usuario.');
+      tx(() => { db.prepare('DELETE FROM sesiones WHERE usuario_id = ?').run(id); db.prepare('DELETE FROM usuarios WHERE id = ?').run(id); });
+      log('usuarios', `Usuario eliminado: ${previo.usuario}`, ip, quien);
+      return json(res, 200, { ok: true });
+    }
+  }
 
   if (p === '/api/esquema' && method === 'GET') {
     const out = {};
@@ -405,57 +565,79 @@ async function api(req, res, url) {
   if (p === '/api/config') {
     if (method === 'GET') return json(res, 200, getConfig());
     if (method === 'PUT') {
+      exigir(yo, 'configuracion', 'editar');
       const b = await readBody(req, 20000);
       const up = db.prepare('UPDATE config SET valor = ? WHERE clave = ?');
       tx(() => { for (const k of Object.keys(CONFIG_DEFAULT)) if (b[k] !== undefined) up.run(String(b[k]).slice(0, 300), k); });
-      log('configuracion', 'Datos de empresa / parámetros actualizados', ip);
+      log('configuracion', 'Datos de empresa / parámetros actualizados', ip, quien);
       return json(res, 200, getConfig());
     }
   }
 
   if (p === '/api/seguridad' && method === 'GET') {
     const c = db.prepare('SELECT numero, creado, clave_cambiada FROM cuenta WHERE id = 1').get();
-    const sesiones = db.prepare('SELECT creado, ultimo, ip, agente, token FROM sesiones ORDER BY ultimo DESC').all()
-      .map((s) => ({ creado: s.creado, ultimo: s.ultimo, ip: s.ip, agente: s.agente, actual: s.token === ses.token ? 1 : 0 }));
-    const bitacora = db.prepare('SELECT fecha, accion, detalle, ip FROM bitacora ORDER BY id DESC LIMIT 300').all();
-    return json(res, 200, { cuenta: c, sesiones, bitacora });
+    if (!yo.principal) c.clave_cambiada = db.prepare('SELECT clave_cambiada FROM usuarios WHERE id = ?').get(yo.uid).clave_cambiada;
+    const nombres = Object.fromEntries(db.prepare('SELECT id, usuario FROM usuarios').all().map((u) => [u.id, u.usuario]));
+    const sesiones = (yo.admin ? db.prepare('SELECT * FROM sesiones ORDER BY ultimo DESC').all()
+      : db.prepare('SELECT * FROM sesiones WHERE usuario_id IS ? ORDER BY ultimo DESC').all(yo.uid))
+      .map((x) => ({ creado: x.creado, ultimo: x.ultimo, ip: x.ip, agente: x.agente, usuario: x.usuario_id ? nombres[x.usuario_id] || '?' : 'admin', actual: x.token === ses.token ? 1 : 0 }));
+    const bitacora = yo.admin ? db.prepare('SELECT fecha, accion, detalle, ip, usuario FROM bitacora ORDER BY id DESC LIMIT 500').all()
+      : db.prepare('SELECT fecha, accion, detalle, ip, usuario FROM bitacora WHERE usuario = ? ORDER BY id DESC LIMIT 100').all(yo.usuario);
+    return json(res, 200, { cuenta: c, sesiones, bitacora, admin: yo.admin, principal: yo.principal });
   }
 
   if (p === '/api/cambiar-clave' && method === 'POST') {
     const b = await readBody(req, 10000);
-    const c = db.prepare('SELECT * FROM cuenta WHERE id = 1').get();
+    const ref = yo.principal ? db.prepare('SELECT * FROM cuenta WHERE id = 1').get() : db.prepare('SELECT * FROM usuarios WHERE id = ?').get(yo.uid);
     if (bloqueo('cambio:' + ip)) throw new HttpError(429, 'Demasiados intentos. Espere 15 minutos.');
-    const calc = Buffer.from(hashClave(String(b.actual || ''), c.sal), 'hex');
-    if (!crypto.timingSafeEqual(calc, Buffer.from(c.hash, 'hex'))) {
+    const calc = Buffer.from(hashClave(String(b.actual || ''), ref.sal), 'hex');
+    if (!crypto.timingSafeEqual(calc, Buffer.from(ref.hash, 'hex'))) {
       registrarFallo('cambio:' + ip);
-      log('cambio_clave_fallido', 'Contraseña actual incorrecta', ip);
+      log('cambio_clave_fallido', 'Contraseña actual incorrecta', ip, quien);
       throw new HttpError(400, 'La contraseña actual no es correcta.');
     }
-    const numero = b.numero ? normNumero(b.numero) : c.numero;
-    if (numero.length < 4) throw new HttpError(400, 'El número de empresa debe tener al menos 4 caracteres.');
     const nueva = b.nueva ? String(b.nueva) : null;
-    if (nueva) { const err = validarClave(nueva); if (err) throw new HttpError(400, err); }
-    tx(() => {
-      if (nueva) guardarClave(numero, nueva, false);
-      else db.prepare('UPDATE cuenta SET numero = ? WHERE id = 1').run(numero);
-      db.prepare('DELETE FROM sesiones WHERE token <> ?').run(ses.token);
-    });
-    log('cambio_clave', nueva ? 'Contraseña cambiada; otras sesiones cerradas' : 'Número de empresa cambiado', ip);
+    if (nueva) {
+      const err = validarClave(nueva); if (err) throw new HttpError(400, err);
+      if (nueva === String(b.actual)) throw new HttpError(400, 'La nueva contraseña debe ser diferente de la actual.');
+    }
+    if (yo.principal) {
+      const numero = b.numero ? normNumero(b.numero) : ref.numero;
+      if (numero.length < 4) throw new HttpError(400, 'El número de empresa debe tener al menos 4 caracteres.');
+      tx(() => {
+        if (nueva) guardarClave(numero, nueva, false);
+        else db.prepare('UPDATE cuenta SET numero = ? WHERE id = 1').run(numero);
+        db.prepare('DELETE FROM sesiones WHERE usuario_id IS NULL AND token <> ?').run(ses.token);
+      });
+      log('cambio_clave', nueva ? 'Contraseña cambiada; otras sesiones cerradas' : 'Número de empresa cambiado', ip, quien);
+    } else {
+      if (b.numero) throw new HttpError(403, 'Solo el administrador principal puede cambiar el número de empresa.');
+      if (!nueva) throw new HttpError(400, 'Escriba la nueva contraseña.');
+      const sal = crypto.randomBytes(16).toString('hex');
+      tx(() => {
+        db.prepare('UPDATE usuarios SET hash = ?, sal = ?, debe_cambiar = 0, clave_cambiada = ? WHERE id = ?').run(hashClave(nueva, sal), sal, ahora(), yo.uid);
+        db.prepare('DELETE FROM sesiones WHERE usuario_id = ? AND token <> ?').run(yo.uid, ses.token);
+      });
+      log('cambio_clave', 'Contraseña cambiada; otras sesiones cerradas', ip, quien);
+    }
     return json(res, 200, { ok: true });
   }
 
   if (p === '/api/cerrar-otras' && method === 'POST') {
-    db.prepare('DELETE FROM sesiones WHERE token <> ?').run(ses.token);
-    log('sesiones', 'Se cerraron las demás sesiones', ip);
+    if (yo.admin) db.prepare('DELETE FROM sesiones WHERE token <> ?').run(ses.token);
+    else db.prepare('DELETE FROM sesiones WHERE usuario_id = ? AND token <> ?').run(yo.uid, ses.token);
+    log('sesiones', yo.admin ? 'Se cerraron todas las demás sesiones' : 'Se cerraron sus demás sesiones', ip, quien);
     return json(res, 200, { ok: true });
   }
 
   if (p === '/api/respaldo' && method === 'GET') {
+    exigirAdmin(yo);
     const out = { sistema: 'ICC-gestion', fecha: ahora(), config: getConfig(), datos: {} };
     for (const n of Object.keys(RESOURCES)) out.datos[n] = db.prepare(`SELECT * FROM ${n}`).all().map((r) => publico(n, r));
     out.datos.nomina_periodos = db.prepare('SELECT * FROM nomina_periodos').all();
     out.datos.nomina_detalle = db.prepare('SELECT * FROM nomina_detalle').all();
-    log('respaldo', 'Se descargó un respaldo de datos', ip);
+    out.datos.usuarios = db.prepare('SELECT * FROM usuarios').all().map(usuarioPublico);
+    log('respaldo', 'Se descargó un respaldo de datos', ip, quien);
     res.writeHead(200, { ...SEC_HEADERS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store',
       'Content-Disposition': `attachment; filename="respaldo-icc-${hoy()}.json"` });
     return res.end(JSON.stringify(out, null, 1));
@@ -463,6 +645,7 @@ async function api(req, res, url) {
 
   // ─── Documentos (subida/descarga) ───
   if (p === '/api/documentos/subir' && method === 'POST') {
+    exigir(yo, 'documentos', 'editar');
     const b = await readBody(req, Math.ceil(MAX_ARCHIVO * 1.4) + 20000);
     const a = b.archivo || {};
     const buf = Buffer.from(String(a.datos || ''), 'base64');
@@ -476,11 +659,12 @@ async function api(req, res, url) {
     data.archivo_tamano = buf.length;
     data.archivo_ruta = ruta;
     const id = insertar('documentos', data);
-    log('crear', `documentos #${id}: ${data.nombre}`, ip);
+    log('crear', `documentos #${id}: ${data.nombre}`, ip, quien);
     return json(res, 200, publico('documentos', obtener('documentos', id)));
   }
   let m = p.match(/^\/api\/documentos\/(\d+)\/descargar$/);
   if (m && method === 'GET') {
+    exigir(yo, 'documentos', 'ver');
     const d = obtener('documentos', Number(m[1]));
     if (!d || !/^[a-f0-9]{32}$/.test(d.archivo_ruta || '')) throw new HttpError(404, 'Documento no encontrado.');
     const file = path.join(FILES_DIR, d.archivo_ruta);
@@ -492,6 +676,7 @@ async function api(req, res, url) {
   }
 
   // ─── Nómina ───
+  if (p.startsWith('/api/nomina')) exigir(yo, 'nomina', method === 'GET' ? 'ver' : 'editar');
   if (p === '/api/nomina' && method === 'GET') {
     const rows = db.prepare('SELECT * FROM nomina_periodos ORDER BY periodo DESC').all();
     return json(res, 200, rows.map((r) => ({ ...r, totales: JSON.parse(r.totales || '{}'), movimientos: undefined })));
@@ -514,7 +699,7 @@ async function api(req, res, url) {
       recalcularPeriodo(per.id);
       return per.id;
     });
-    log('nomina', `Nómina ${periodo} generada / recalculada`, ip);
+    log('nomina', `Nómina ${periodo} generada / recalculada`, ip, quien);
     return json(res, 200, periodoCompleto(pid));
   }
   m = p.match(/^\/api\/nomina\/(\d+)(?:\/(pagar|reabrir|detalle\/(\d+)))?$/);
@@ -526,7 +711,7 @@ async function api(req, res, url) {
     if (!m[2] && method === 'DELETE') {
       if (per.estado === 'Pagada') throw new HttpError(409, 'Reabra la nómina antes de eliminarla.');
       db.prepare('DELETE FROM nomina_periodos WHERE id = ?').run(pid);
-      log('nomina', `Nómina ${per.periodo} eliminada`, ip);
+      log('nomina', `Nómina ${per.periodo} eliminada`, ip, quien);
       return json(res, 200, { ok: true });
     }
     if (m[3] && (method === 'PUT' || method === 'DELETE')) {
@@ -551,7 +736,7 @@ async function api(req, res, url) {
         if (t.pila) ids.push(insertar('movimientos', { fecha, tipo: 'Gasto', categoria: '5105 Gastos de personal (nómina)', descripcion: `Seguridad social y parafiscales (PILA) ${per.periodo}`, valor: t.pila, medio_pago: 'PSE', comprobante: `PILA-${per.periodo}`, origen: 'nomina' }));
         db.prepare("UPDATE nomina_periodos SET estado = 'Pagada', pagado = ?, movimientos = ? WHERE id = ?").run(ahora(), JSON.stringify(ids), pid);
       });
-      log('nomina', `Nómina ${per.periodo} marcada como pagada`, ip);
+      log('nomina', `Nómina ${per.periodo} marcada como pagada`, ip, quien);
       return json(res, 200, periodoCompleto(pid));
     }
     if (m[2] === 'reabrir' && method === 'POST') {
@@ -559,7 +744,7 @@ async function api(req, res, url) {
         for (const id of JSON.parse(per.movimientos || '[]')) db.prepare("DELETE FROM movimientos WHERE id = ? AND origen = 'nomina'").run(id);
         db.prepare("UPDATE nomina_periodos SET estado = 'Borrador', pagado = NULL, movimientos = NULL WHERE id = ?").run(pid);
       });
-      log('nomina', `Nómina ${per.periodo} reabierta`, ip);
+      log('nomina', `Nómina ${per.periodo} reabierta`, ip, quien);
       return json(res, 200, periodoCompleto(pid));
     }
   }
@@ -569,6 +754,7 @@ async function api(req, res, url) {
   if (m && RESOURCES[m[1]]) {
     const name = m[1], def = RESOURCES[name], hook = HOOKS[name] || {};
     const id = m[2] ? Number(m[2]) : null;
+    exigir(yo, MOD_RECURSO[name], method === 'GET' ? 'ver' : 'editar');
     if (method === 'GET' && !id) return json(res, 200, db.prepare(`SELECT * FROM ${name} ORDER BY ${def.order || 'id DESC'}`).all().map((r) => publico(name, r)));
     if (method === 'GET' && id) { const r = obtener(name, id); if (!r) throw new HttpError(404, 'No encontrado.'); return json(res, 200, publico(name, r)); }
     if (method === 'POST' && !id) {
@@ -581,7 +767,7 @@ async function api(req, res, url) {
         hook.after && hook.after(nid);
         return nid;
       });
-      log('crear', `${name} #${nid}`, ip);
+      log('crear', `${name} #${nid}`, ip, quien);
       return json(res, 200, publico(name, obtener(name, nid)));
     }
     if (method === 'PUT' && id) {
@@ -594,7 +780,7 @@ async function api(req, res, url) {
         actualizar(name, id, data);
         hook.after && hook.after(id);
       });
-      log('editar', `${name} #${id}`, ip);
+      log('editar', `${name} #${id}`, ip, quien);
       return json(res, 200, publico(name, obtener(name, id)));
     }
     if (method === 'DELETE' && id) {
@@ -606,7 +792,7 @@ async function api(req, res, url) {
         if (name === 'movimientos') db.prepare('UPDATE facturas SET movimiento_id = NULL WHERE movimiento_id = ?').run(id);
       });
       hook.remove && hook.remove(previo);
-      log('eliminar', `${name} #${id}`, ip);
+      log('eliminar', `${name} #${id}`, ip, quien);
       return json(res, 200, { ok: true });
     }
   }
