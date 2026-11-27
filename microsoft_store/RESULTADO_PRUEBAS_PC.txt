@@ -1,0 +1,11 @@
+OK   manifest válido con iconos (incluido maskable) y edición PC activa {"pc":true,"name":"Último Refugio","icons":10,"mask":true,"start":"./","disp":"fullscreen"}
+OK   el service worker se registra y queda activo
+OK   menú y ayuda sin tienda ni anuncios; nunca hay intersticial {"shop":"★CAJAS¡CAJA GRATIS!","shopP":"★CAJAS","inter":false,"help":"Edición PC: gratis, sin anuncios y sin compras. El juego completo está incluido.Cajas: una caja diaria y hasta 3 cajas extra al día (Pausa → Cajas). Traen comida, medicina y munición.Revivir: al morir puedes volver una vez por partida con un poco de vida y protección breve.Trajes: los trajes premium (solo estética) vienen incluidos."}
+OK   empieza la partida "play"
+OK   la tienda es «Cajas y trajes»: sin compras, sin anuncios, trajes premium incluidos {"head":"CAJAS Y TRAJESEDICIÓN PCCerrar","prods":false,"restore":false,"funda":false,"anuncio":false,"locked":0,"crate":1,"ov":false,"msg":"¡Recibiste 1 caja de suministros!","wait":"Espera 60 s para la siguiente recompensa"}
+OK   caja extra al momento (sin anuncio simulado) y con el mismo tiempo de espera {"head":"CAJAS Y TRAJESEDICIÓN PCCerrar","prods":false,"restore":false,"funda":false,"anuncio":false,"locked":0,"crate":1,"ov":false,"msg":"¡Recibiste 1 caja de suministros!","wait":"Espera 60 s para la siguiente recompensa"}
+OK   Privacidad abre la política pública "https://edermichell.github.io/privacidad/"
+OK   al morir: «Revivir (una vez por partida)» sin anuncio {"lab":"♥REVIVIR (UNA VEZ POR PARTIDA)","st":"play","ov":false,"hp":70.09164125784362}
+OK   sin conexión el juego abre igual (copia en caché) {"t":"Último Refugio","pc":true,"menu":true}
+OK   sin errores de página []
+fallos: 0
