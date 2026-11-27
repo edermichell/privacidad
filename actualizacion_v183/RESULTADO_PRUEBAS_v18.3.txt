@@ -1,0 +1,108 @@
+RESULTADOS DE LA BATERÍA COMPLETA · v18.3 (cliente 18.3 + servidor) · 2026-11-27
+Cada bloque muestra solo las líneas de resumen (fallos: N) y cualquier FAIL.
+
+######## 18.3 cliente
+== notas
+fallos: 0
+== escenas/guardado
+fallos: 0
+== 13.5 -> 13.6
+OK   partida de la v105 cargada en la v106: imagen idéntica | zombis idénticos | autos 300 300 | escenas en v106: 1 | errores 0
+== 2 jugadores
+host {"st":"playing","rp":true} | invitado {"st":"playing","state":"play","z":0,"npcs":157,"rp":true}
+== 4 jugadores
+fallos: 0
+== soak
+d4 23s {"Z":1531,"NPCS":40,"parts":229,"texts":0,"cars":342,"chunks":38,"HC2":1434,"SPR":35,"EVS":6,"JL":15,"buildings":256,"TRAPS":0,"day":5,"ls":149575,"mem":null,"aliv
+ERRS_FOUND []
+FIN
+== mono
+== small: teclas 131, toques 89 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== colossal: teclas 124, toques 96 (38 controles distintos) | tragadas 0 | E80 0  | errores de página 0 | estado final play
+== ritmo
+fallos: 0
+== gama baja
+fallos: 0
+== novedades
+fallos: 0
+== suelo
+fallos: 0
+FIN2
+== 18.2 agarrón: botones, paneles y forcejeo fácil
+fallos: 0
+== 18.1 animaciones
+fallos: 0
+== 18.0 agarrón, silueta y guardado
+fallos: 0
+== 17.4-17.6
+fallos: 0
+OK   alejarse durante la preparación hace que falle {"had":true,"w0":0,"golpes":0,"fallos":1,"hp":100}
+fallos: 0
+fallos: 0
+fallos: 0
+== funciones optimizadas
+fallos: 0
+== arranque rápido
+fallos: 0
+== clave de sala
+fallos: 0
+== chat de voz
+fallos: 0
+== guardado 17.1
+TODO OK
+######## 17.0 zona roja
+FAIL D3: vigiladas por saqueadores armados (y un jefe en la primera) [["gunman","bandit","gunman","bandit","boss"],[],["gunman","bandit","gunman","bandit"]]
+fallos: 1
+TODO OK
+######## fase 5
+fallos: 0
+fallos: 0
+######## fase 6
+fallos: 0
+######## nombres y aparición
+fallos: 0
+######## visibilidad y acciones
+fallos: 0
+fallos: 0
+######## alianzas y misiones
+fallos: 0
+fallos: 0
+######## 17.8 PvP: posición validada, cortes y teletransporte
+fallos: 0
+######## 17.9 el cuerpo se queda
+fallos: 0
+######## 18.0 agarrón en sala
+fallos: 0
+######## 18.3 en compañía se ve todo
+fallos: 0
+######## 17.7 reconexión a la sala
+fallos: 0
+######## 17.7 uniones cooperativo (6 x 3 invitados)
+FALLOS 0 de 6
+== prueba dura
+SALA1: 29.8 pasos/s (objetivo 30) · zombis vivos 174 · bajas 216 · errores del juego 0
+SALA2: 29.8 pasos/s (objetivo 30) · zombis vivos 206 · bajas 286 · errores del juego 0
+SALA3: 29.8 pasos/s (objetivo 30) · zombis vivos 182 · bajas 278 · errores del juego 0
+Jugadores simulados conectados: 30 de 30 · caídos durante la prueba: 0 · golpes enviados: 3898
+VEREDICTO: APROBADO: el PC aguanta 3 sala(s) con 10 jugadores peleando.
+TODO_FIN
+EXIT=0
+
+######## NOTA SOBRE EL «FAIL» D3 (zona roja)
+D3 cuenta los guardias vivos de cada Zona Roja varios minutos después de abrir la sala; los zombis pueden matar a alguno y reaparecen con el tiempo.
+D7 lee los 6 últimos mensajes de la pantalla. La 18.3 no toca guardias, zombis del servidor ni mensajes (solo datos visuales que se envían a los teléfonos).
+Repeticiones de la prueba de zona roja (t170) por separado:
+- 18.3: 3 pasadas → 1 con FAIL (D3: una zona con 3 guardias en vez de 4; D7: el cartel era «Almacén»), 2 TODO OK.
+- 18.2 (para comparar): 3 pasadas → 3 TODO OK.
+  == 18.3 zona roja pasada extra 1
+  TODO OK
+  == 18.3 zona roja pasada extra 2
+  TODO OK
+  == 18.3 zona roja pasada extra 3
+  TODO OK
+  == 18.3 zona roja pasada extra 4
+  TODO OK
+  FIN
+Total 18.3: 6 de 8 bien (los dos fallos, seguidos y al principio). Se trata como prueba intermitente; si se repite en otra versión, revisarla.
+
+######## Compilación Android (bundleRelease, sin firmar): exit=0 (con --offline: Maven Central respondió «429 Too Many Requests» al buscar una dependencia de Unity Ads), app-release.aab (versionCode 173, versionName 18.3).

@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v18.3:
+• En compañía: ves cuándo un zombi agarra a un compañero, y los golpes de los demás hacen retroceder a los zombis.
+• Nuevo ajuste «Forcejeo fácil»: suéltate de un agarrón manteniendo el dedo en la pantalla.
+• Animaciones con más peso: los zombis retroceden al recibir un golpe, caen con impacto y se levantan poco a poco.
+• Sala PvP: si te desconectas en combate, tu cuerpo se queda dormido 30 s.
+
+--- English (optional) ---
+What's new in v18.3:
+• Co-op: see when a zombie grabs a teammate, and other players' hits knock zombies back on your screen too.
+• New "Easy struggle" setting: break free from a grab by holding your finger on the screen.
+• Weightier animations: zombies recoil when hit, fall with impact and get back up gradually.
+• PvP room: if you disconnect mid-fight, your body stays asleep for 30 s.

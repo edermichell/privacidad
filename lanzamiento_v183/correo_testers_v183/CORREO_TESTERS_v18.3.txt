@@ -1,0 +1,27 @@
+Asunto: Último Refugio v18.3 «En compañía se ve todo» — prueba de 15 minutos (mejor de dos en dos)
+
+Hola equipo:
+
+La v18.1 cambia cómo se pelea cuerpo a cuerpo y cómo se ve. Necesito sus impresiones.
+
+LO NUEVO
+- En compañía: si a un compañero le agarra un zombi, lo verán temblar con un aro rojo a los pies (golpeen al zombi para soltarlo). Y los zombis que golpea otro jugador también retroceden en su pantalla.
+- Nuevo ajuste «Forcejeo fácil» (Ajustes): para soltarte de un agarrón basta con mantener el dedo en la pantalla. Pensado para quien le cuesta tocar muy rápido.
+- Arreglos del agarrón: los toques para soltarte ya no pulsan botones sin querer (antes se podía tirar cosas de la mochila) y no se puede usar nada mientras te sujetan.
+- Animaciones con más peso: los zombis retroceden al recibir un golpe, caen con impacto contra el suelo (ya no «se dan la vuelta» al final de la caída) y, si los derriban, se levantan poco a poco.
+- Agarrones: a veces un zombi no te golpea, TE AGARRA. Sale «¡TE AGARRA!» con una barra: toquen la pantalla muy rápido (en cualquier sitio) para soltarse y empujarlo. Si no, a los 2 segundos muerde. Pasa más sin aliento y con los corredores. Rodar a tiempo lo evita.
+- En una multitud se siguen viendo: si un zombi queda delante, aparece su contorno claro y un aro a sus pies.
+- Sala PvP: si alguien se desconecta en plena pelea, su cuerpo se queda dormido 30 s y se le puede atacar. Si vuelve a tiempo, despierta en él.
+
+QUÉ NECESITO QUE PRUEBEN
+000. De dos en dos en una sala: ¿se ve cuándo agarran al otro? ¿Llegan a soltarlo a tiempo?
+00. Si les cuesta tocar rápido, prueben «Forcejeo fácil» en Ajustes y díganme si es demasiado fácil o justo.
+0. En una pelea con muchos zombis: ¿el juego va igual de fluido que antes en su teléfono? ¿Se notan mejor los golpes y las caídas?
+1. Peleen cuerpo a cuerpo contra varios zombis hasta que los agarren 3 o 4 veces. ¿Pasa muy seguido o muy poco? ¿Les da tiempo a soltarse tocando?
+2. Métanse en un grupo de zombis: ¿se ven bien a ustedes mismos? ¿El contorno molesta?
+3. Juegan 10 minutos, salen con «Guardar y salir» y vuelven con CONTINUAR: ¿todo igual?
+4. (Sala PvP, dos personas) Peleen, y que uno cierre la app. El otro: ¿ve el cuerpo tumbado «(desconectado)»? ¿Puede atacarlo? El que salió: vuelva antes de 30 s. ¿Despierta en su cuerpo?
+
+Si algo se ve raro, manden una captura y el modelo del teléfono. ¡Gracias!
+
+[PEGAR AQUÍ el enlace de la prueba cerrada]

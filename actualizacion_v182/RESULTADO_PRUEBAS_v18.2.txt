@@ -79,7 +79,7 @@ fallos: 0
 
 ######## NOTAS
 1) El proceso de pruebas se reinició a mitad de la sección «uniones cooperativo»; esa sección y la prueba dura se repitieron después (abajo).
-2) «13.5 -> 13.6», «2 jugadores» y «soak» no imprimieron resultado en esta pasada; repetidas por separado (abajo): todas bien.
+2) Corrección: «13.5 -> 13.6», «2 jugadores» y «soak» SÍ dieron resultado (bien) en esta pasada (líneas de arriba); al revisarlo los filtré mal y creí que faltaban. Se repitieron igualmente (abajo): bien.
 3) FAIL «con la mochila abierta 20 s la calidad automática no se mueve» (prueba de la 17.6): esa prueba deja un zombi persiguiendo al jugador con la mochila abierta.
    Con la 18.2 el zombi lo agarra y la mochila se cierra a propósito, así que la prueba dejaba de medir lo que quería. Ahora apaga los agarrones (como las de la 17.4 y la 17.5).
 
