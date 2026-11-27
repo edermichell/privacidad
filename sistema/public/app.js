@@ -8,6 +8,8 @@
   const COP = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
   const NUM = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 2 });
   const money = (v) => COP.format(Number(v) || 0);
+  const USD = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const usd = (v) => USD.format(Number(v) || 0).replace('US$', 'US$ ');
   const numf = (v) => (v === null || v === undefined || v === '' ? '' : NUM.format(Number(v)));
   const pct = (v) => (Number.isFinite(v) ? NUM.format(Math.round(v * 1000) / 10) + ' %' : '—');
   const hoy = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
@@ -445,9 +447,11 @@
     router();
   }
 
+  let refresco = null;
   async function router() {
     const cont = $('#contenido');
     if (!cont) return;
+    clearInterval(refresco);
     const [ruta = 'panel', ...resto] = location.hash.replace(/^#\/?/, '').split('/');
     const vista = VISTAS[ruta] ? ruta : 'panel';
     if (!permitida(vista)) {
@@ -461,6 +465,8 @@
     const item = MENU.flatMap((g) => g[1]).find((i) => i[0] === vista);
     $('#titulo').textContent = item ? `${item[1]}  ${item[2]}` : '';
     cont.innerHTML = '<div class="cargando">Cargando…</div>';
+    // El panel se actualiza solo cada minuto (si no hay una ventana abierta)
+    if (vista === 'panel') refresco = setInterval(() => { if (!$('#modal-root').innerHTML && document.visibilityState === 'visible') VISTAS.panel(cont).catch(() => {}); }, 60000);
     try { await VISTAS[vista](cont, resto); } catch (e) { fallo(e); if (e.message !== 'Sesión expirada') cont.innerHTML = `<div class="alerta bad">${esc(e.message)}</div>`; }
   }
   function tabs(el, base, lista, actual) {
@@ -469,7 +475,10 @@
   const kpi = (l, v, s = '', cls = '') => `<div class="kpi ${cls}"><div class="l">${esc(l)}</div><div class="v">${v}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`;
 
   // ───────────────────────── Panel principal ─────────────────────────
-  function graficoBarras(meses, series) {
+  function graficoBarras(meses, series, o = {}) {
+    const etq = o.etiqueta || ((m) => MES_CORTO[Number(m.slice(5)) - 1]);
+    const nomPer = o.periodo || fperiodo;
+    const fmt = o.formato || money;
     // meses: ['2026-01', …]; series: [{nombre, clase, valores[]}]
     const W = 760, H = 250, pl = 64, pb = 28, pt = 12;
     const max = Math.max(1, ...series.flatMap((s) => s.valores));
@@ -478,7 +487,7 @@
     const gw = (W - pl - 8) / meses.length;
     const bw = Math.min(22, (gw - 10) / series.length - 2);
     const y = (v) => pt + (H - pt - pb) * (1 - v / tope);
-    const compacto = (v) => (v >= 1e9 ? NUM.format(v / 1e9) + ' mil M' : v >= 1e6 ? NUM.format(Math.round(v / 1e5) / 10) + ' M' : v >= 1e3 ? NUM.format(Math.round(v / 100) / 10) + ' k' : NUM.format(v));
+    const compacto = o.eje || ((v) => (v >= 1e9 ? NUM.format(v / 1e9) + ' mil M' : v >= 1e6 ? NUM.format(Math.round(v / 1e5) / 10) + ' M' : v >= 1e3 ? NUM.format(Math.round(v / 100) / 10) + ' k' : NUM.format(v)));
     let svg = '';
     for (let i = 0; i <= 4; i++) {
       const v = (tope / 4) * i;
@@ -489,13 +498,13 @@
       series.forEach((s, j) => {
         const v = s.valores[i] || 0, h = Math.max(0, H - pb - y(v)), x = x0 + j * (bw + 2), yy = y(v), r = Math.min(4, h);
         const path = h > 0 ? `M${x},${H - pb} V${yy + r} Q${x},${yy} ${x + r},${yy} H${x + bw - r} Q${x + bw},${yy} ${x + bw},${yy + r} V${H - pb} Z` : '';
-        svg += `<g class="hit"><rect x="${x - 1}" y="${pt}" width="${bw + 2}" height="${H - pt - pb}" fill="transparent"/>${path ? `<path class="${s.clase}" d="${path}"/>` : ''}<title>${esc(s.nombre)} · ${esc(fperiodo(m))}: ${esc(money(v))}</title></g>`;
+        svg += `<g class="hit"><rect x="${x - 1}" y="${pt}" width="${bw + 2}" height="${H - pt - pb}" fill="transparent"/>${path ? `<path class="${s.clase}" d="${path}"/>` : ''}<title>${esc(s.nombre)} · ${esc(nomPer(m))}: ${esc(fmt(v))}</title></g>`;
       });
-      svg += `<text class="ax" x="${pl + gw * i + gw / 2}" y="${H - 8}" text-anchor="middle">${MES_CORTO[Number(m.slice(5)) - 1]}</text>`;
+      if (!o.cadaN || i % o.cadaN === 0 || i === meses.length - 1) svg += `<text class="ax" x="${pl + gw * i + gw / 2}" y="${H - 8}" text-anchor="middle">${esc(etq(m))}</text>`;
     });
     svg += `<line class="base" x1="${pl}" x2="${W - 8}" y1="${H - pb}" y2="${H - pb}"/>`;
-    return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ingresos y gastos por mes">${svg}</svg>
-      <div class="leg">${series.map((s) => `<span><i class="${s.clase}"></i>${esc(s.nombre)}</span>`).join('')}</div></div>`;
+    return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.titulo || 'Ingresos y gastos por mes')}">${svg}</svg>
+      ${series.length > 1 ? `<div class="leg">${series.map((s) => `<span><i class="${s.clase}"></i>${esc(s.nombre)}</span>`).join('')}</div>` : ''}</div>`;
   }
   function ultimosMeses(n) {
     const out = []; const d = new Date(); d.setDate(1);
@@ -503,10 +512,22 @@
     return out;
   }
 
+  // ───────────────────────── Unity Ads ─────────────────────────
+  const diasAtras = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  function resumenUnity(filas) {
+    const t = (rows) => ({ usd: sum(rows, 'ingresos'), vistas: sum(rows, 'vistas') });
+    const h = hoy(), ay = diasAtras(1), d7 = diasAtras(6), mes = mesActual();
+    return { hoy: t(filas.filter((f) => f.fecha === h)), ayer: t(filas.filter((f) => f.fecha === ay)), sem: t(filas.filter((f) => f.fecha >= d7)), mes: t(filas.filter((f) => f.fecha.startsWith(mes))) };
+  }
+  const ecpm = (x) => (x.vistas ? usd((x.usd / x.vistas) * 1000) : '—');
+  const haceCuanto = (iso) => { if (!iso) return 'nunca'; const m = Math.round((Date.now() - Date.parse(iso)) / 60000); return m < 1 ? 'hace un momento' : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : fts(Date.parse(iso)); };
+
   VISTAS.panel = async (el) => {
     const vis = ['movimientos', 'empleados', 'facturas', 'contratos', 'campanas', 'juegos', 'documentos', 'tareas'].filter((n) => puede(MOD[n]));
     await Promise.all([cargar(...vis), puede('facturas') ? cargarOpc('facturas', 'terceros') : null]);
     const nominas = puede('nomina') ? await api('GET', '/api/nomina') : [];
+    const uni = puede('juegos') ? await api('GET', '/api/unity/estadisticas?dias=40').catch(() => null) : null;
+    const ur = uni && uni.filas.length ? resumenUnity(uni.filas) : null;
     const C = {};
     for (const n of ['movimientos', 'empleados', 'facturas', 'contratos', 'campanas', 'juegos', 'documentos', 'tareas']) C[n] = vis.includes(n) ? S.cache[n] : [];
     const mes = mesActual(), anio = mes.slice(0, 4);
@@ -532,6 +553,12 @@
 
     el.innerHTML = `
       <h1>Hola, ${esc(S.yo.nombre.split(' ')[0])} 👋</h1><p class="muted">Resumen de ${esc(S.config.razon_social)} · ${esc(fperiodo(mes))}</p>
+      ${ur ? `<div class="kpis">
+        ${kpi('Unity Ads hoy', usd(ur.hoy.usd), `≈ ${money(ur.hoy.usd * uni.trm)} · ${NUM.format(ur.hoy.vistas)} vistas`, 'ok')}
+        ${kpi('Unity Ads ayer', usd(ur.ayer.usd), `eCPM ${ecpm(ur.ayer)}`)}
+        ${kpi('Últimos 7 días', usd(ur.sem.usd), `≈ ${money(ur.sem.usd * uni.trm)}`)}
+        ${kpi('Este mes', usd(ur.mes.usd), `≈ ${money(ur.mes.usd * uni.trm)} · <a href="#/juegos/unity">ver detalle</a>`)}
+      </div><p class="small muted">🔄 Unity Ads: datos de ${esc(haceCuanto(uni.ultima_sync))}. Se actualiza solo cada hora; esta pantalla se refresca cada minuto.</p>` : ''}
       <div class="kpis">
         ${puede('contabilidad') ? kpi('Ingresos del mes', money(ing(movMes)), `Año: ${money(ing(movAnio))}`) + kpi('Gastos del mes', money(gas(movMes)), `Año: ${money(gas(movAnio))}`) + kpi('Resultado del mes', money(ing(movMes) - gas(movMes)), `Año: ${money(ing(movAnio) - gas(movAnio))}`, ing(movMes) - gas(movMes) >= 0 ? 'ok' : 'bad') : ''}
         ${puede('facturas') ? kpi('Cuentas por cobrar', money(sum(pendientes, 'total')), `${pendientes.length} pendiente(s) · ${vencidas.length} vencida(s)`) : ''}
@@ -936,7 +963,48 @@
   });
 
   // ───────────────────────── Juegos ─────────────────────────
-  VISTAS.juegos = (el) => vistaRecurso(el, 'juegos', {
+  VISTAS.juegos = async (el, [sub = 'lista']) => {
+    el.innerHTML = tabs(el, 'juegos', [['lista', 'Portafolio'], ['unity', '📈 Ingresos Unity Ads']], sub) + '<div id="jv"></div>';
+    const jv = $('#jv', el);
+    if (sub === 'unity') return vistaUnity(jv);
+    return vistaJuegos(jv);
+  };
+  async function vistaUnity(el) {
+    const d = await api('GET', '/api/unity/estadisticas?dias=400');
+    await cargar('juegos');
+    if (!d.configurado && !d.filas.length) {
+      el.innerHTML = `<div class="card"><h2>📈 Ingresos de Unity Ads</h2><p>Aún no está conectado con Unity. ${S.yo.admin ? 'Configúrelo en <a href="#/configuracion/integraciones">Configuración → Integraciones</a>.' : 'Pídale al administrador que lo configure en Configuración → Integraciones.'}</p></div>`;
+      return;
+    }
+    const nombreJuego = (gid) => { const j = S.cache.juegos.find((x) => String(x.unity_game_id || '').trim() === gid); return j ? j.nombre : gid ? `Game ID ${gid}` : 'Sin identificar'; };
+    el.innerHTML = `<div class="toolbar"><label class="check">Periodo <select id="dias"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="90">90 días</option><option value="365">12 meses</option></select></label>
+      <span class="grow"></span><span class="small muted">Datos de ${esc(haceCuanto(d.ultima_sync))} · TRM ${esc(NUM.format(d.trm))}</span>${S.yo.admin ? '<button id="sync">🔄 Sincronizar ahora</button>' : ''}</div>
+      ${d.ultimo_error ? `<div class="alerta bad">Último error al sincronizar: ${esc(d.ultimo_error)}</div>` : ''}
+      <div id="uv"></div>`;
+    const pintar = () => {
+      const n = Number($('#dias', el).value), desde = diasAtras(n - 1);
+      const rows = d.filas.filter((f) => f.fecha >= desde);
+      const fechas = Array.from({ length: n }, (_, i) => diasAtras(n - 1 - i));
+      const porDia = fechas.map((f) => sum(rows.filter((r) => r.fecha === f), 'ingresos'));
+      const tot = { usd: sum(rows, 'ingresos'), vistas: sum(rows, 'vistas') };
+      const grupos = {};
+      for (const r of rows) { const k = `${r.game_id}|${r.plataforma}`; const g = (grupos[k] ||= { game_id: r.game_id, plataforma: r.plataforma, usd: 0, vistas: 0, inicios: 0, solicitudes: 0, disponibles: 0 }); g.usd += r.ingresos; g.vistas += r.vistas; g.inicios += r.inicios; g.solicitudes += r.solicitudes; g.disponibles += r.disponibles; }
+      const lista = Object.values(grupos).sort((a, b) => b.usd - a.usd);
+      const relleno = (g) => (g.solicitudes ? pct(g.disponibles / g.solicitudes) : '—');
+      $('#uv', el).innerHTML = `<div class="kpis">${kpi('Ingresos', usd(tot.usd), `≈ ${money(tot.usd * d.trm)}`, 'ok')}${kpi('Promedio diario', usd(tot.usd / n))}${kpi('Anuncios vistos', NUM.format(tot.vistas))}${kpi('eCPM', ecpm(tot), 'Ingreso por cada 1.000 anuncios vistos')}</div>
+        <div class="card"><h2>Ingresos por día (US$)</h2>${graficoBarras(fechas, [{ nombre: 'Ingresos Unity Ads', clase: 's1', valores: porDia }], { titulo: 'Ingresos diarios de Unity Ads', etiqueta: (f) => String(Number(f.slice(8))), periodo: fdate, formato: usd, eje: (v) => 'US$ ' + NUM.format(Math.round(v * 100) / 100), cadaN: n > 31 ? Math.ceil(n / 15) : n > 14 ? 2 : 0 })}<p class="small muted">Pase el cursor sobre una barra para ver el valor. Unity reporta en dólares; el valor en pesos es aproximado con la TRM configurada.</p></div>
+        <div class="tabla-wrap"><table><thead><tr><th>Juego</th><th>Plataforma</th><th class="num">Ingresos (US$)</th><th class="num">≈ COP</th><th class="num">Vistas</th><th class="num">Inicios</th><th class="num">eCPM</th><th class="num">Tasa de relleno</th></tr></thead>
+        <tbody>${lista.map((g) => `<tr><td><b>${esc(nombreJuego(g.game_id))}</b></td><td>${esc(g.plataforma)}</td><td class="num">${usd(g.usd)}</td><td class="num">${money(g.usd * d.trm)}</td><td class="num">${NUM.format(g.vistas)}</td><td class="num">${NUM.format(g.inicios)}</td><td class="num">${ecpm(g)}</td><td class="num">${relleno(g)}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">Sin datos en este periodo.</td></tr>'}</tbody></table></div>
+        ${lista.some((g) => !S.cache.juegos.some((j) => String(j.unity_game_id || '').trim() === g.game_id)) ? '<p class="small muted">Para ver el nombre del juego en vez del número, escriba su «Game ID de Unity» en Juegos → Portafolio → ✏️ Editar.</p>' : ''}`;
+    };
+    pintar();
+    $('#dias', el).addEventListener('change', pintar);
+    $('#sync', el)?.addEventListener('click', async (e) => {
+      e.target.disabled = true; e.target.textContent = 'Sincronizando…';
+      try { const r = await api('POST', '/api/integraciones/unity/sincronizar', {}); toast(`Sincronizado: ${r.filas} registros`); router(); } catch (err) { fallo(err); e.target.disabled = false; e.target.textContent = '🔄 Sincronizar ahora'; }
+    });
+  }
+  const vistaJuegos = (el) => vistaRecurso(el, 'juegos', {
     resumen: (rows) => `<div class="kpis">${kpi('Juegos y proyectos', String(rows.length))}${kpi('Publicados', String(rows.filter((j) => j.estado === 'Publicado').length))}${kpi('Descargas totales', NUM.format(sum(rows, 'descargas')))}${kpi('Usuarios activos / mes', NUM.format(sum(rows, 'usuarios_activos')))}</div>`,
     extraCols: [{ label: 'Tienda', html: (j) => (j.enlace ? `<a href="${esc(j.enlace)}" target="_blank" rel="noopener noreferrer">Ver ↗</a>` : '') }],
   });
@@ -972,10 +1040,11 @@
   VISTAS.configuracion = async (el, [sub = 'empresa']) => {
     S.config = await api('GET', '/api/config');
     const c = S.config;
-    el.innerHTML = tabs(el, 'configuracion', [['empresa', 'Datos de la empresa'], ['nomina', 'Parámetros de nómina'], ...(S.yo.admin ? [['respaldo', 'Respaldo de datos']] : [])], sub) + '<div id="cf"></div>';
-    if (sub === 'respaldo' && !S.yo.admin) sub = 'empresa';
+    el.innerHTML = tabs(el, 'configuracion', [['empresa', 'Datos de la empresa'], ['nomina', 'Parámetros de nómina'], ...(S.yo.admin ? [['integraciones', '🔌 Integraciones'], ['respaldo', 'Respaldo de datos']] : [])], sub) + '<div id="cf"></div>';
+    if (['respaldo', 'integraciones'].includes(sub) && !S.yo.admin) sub = 'empresa';
     const edCfg = puede('configuracion', 'editar');
     const cf = $('#cf', el);
+    if (sub === 'integraciones') return integraciones(cf);
     const inp = (k, l, t = 'text', extra = '') => `<label>${esc(l)}<input type="${t}" name="${k}" value="${esc(c[k])}" ${extra}></label>`;
     const guardar = async (form) => {
       const body = {};
@@ -1012,7 +1081,49 @@
   };
 
   // ───────────────────────── Mi cuenta y seguridad ─────────────────────────
-  const ETQ_BITACORA = { acceso: '✅ Acceso', acceso_fallido: '⛔ Acceso fallido', instalacion: '🛠️ Instalación', cambio_clave: '🔑 Cambio de clave', cambio_clave_fallido: '⛔ Cambio de clave fallido', restablecer_clave: '🔑 Restablecimiento', crear: '➕ Crear', editar: '✏️ Editar', eliminar: '🗑️ Eliminar', nomina: '💵 Nómina', configuracion: '⚙️ Configuración', respaldo: '💾 Respaldo', sesiones: '🔒 Sesiones', usuarios: '👤 Usuarios' };
+  const ETQ_BITACORA = { acceso: '✅ Acceso', acceso_fallido: '⛔ Acceso fallido', instalacion: '🛠️ Instalación', cambio_clave: '🔑 Cambio de clave', cambio_clave_fallido: '⛔ Cambio de clave fallido', restablecer_clave: '🔑 Restablecimiento', integraciones: '🔌 Integraciones', integracion_error: '⚠️ Error de integración', crear: '➕ Crear', editar: '✏️ Editar', eliminar: '🗑️ Eliminar', nomina: '💵 Nómina', configuracion: '⚙️ Configuración', respaldo: '💾 Respaldo', sesiones: '🔒 Sesiones', usuarios: '👤 Usuarios' };
+
+  async function integraciones(el) {
+    const { unity: u } = await api('GET', '/api/integraciones');
+    el.innerHTML = `<div class="card"><h2>📈 Unity Ads — ingresos por anuncios</h2>
+      <p>Descarga cada hora los ingresos, vistas e inicios de anuncios de tus juegos y los muestra en el Panel y en Juegos → Ingresos Unity Ads.</p>
+      <div class="alerta ${u.ultimo_error ? 'bad' : u.ultima_sync ? 'info' : 'warn'}">${u.ultimo_error ? `⛔ ${esc(u.ultimo_error)}` : u.ultima_sync ? `✅ Conectado. Última sincronización: ${esc(fts(Date.parse(u.ultima_sync)))}` : u.clave_configurada ? 'Clave guardada. Pulse «Sincronizar ahora» para probar la conexión.' : 'Sin configurar.'}</div>
+      <form class="form-grid" id="fi" autocomplete="off">
+        <label><span>Organization core ID <span class="req">*</span></span><input name="unity_org_id" value="${esc(u.org_id)}" placeholder="Ej.: 1234567890123" spellcheck="false"></label>
+        <label><span>Clave de «Monetization Stats API» ${u.clave_configurada ? '<span class="badge ok">guardada</span>' : '<span class="req">*</span>'}</span><input name="unity_clave" type="password" autocomplete="new-password" spellcheck="false" placeholder="${u.clave_configurada ? 'Déjelo vacío para conservar la actual' : 'Pegue aquí la clave'}"></label>
+        <label><span>TRM (pesos por dólar)</span><input name="trm" type="number" step="any" min="1" value="${esc(u.trm)}"></label>
+        <label class="check"><input type="checkbox" name="unity_contabilizar" ${u.contabilizar ? 'checked' : ''}> Registrar el ingreso estimado de cada mes en Contabilidad</label>
+        <div class="wide toolbar"><button class="primary" type="submit">Guardar</button><button type="button" id="fi-sync" ${u.clave_configurada || u.org_id ? '' : 'disabled'}>🔄 Sincronizar ahora</button>${u.clave_configurada ? '<button type="button" class="danger" id="fi-borrar">Borrar clave</button>' : ''}</div>
+      </form>
+      <details><summary class="small"><b>¿Dónde encuentro estos datos?</b></summary><ol class="small">
+        <li>Entre a <b>Unity Cloud Dashboard</b> → menú <b>Monetization</b> → <b>Settings / Configuración</b> → <b>API management / Gestión de API</b>.</li>
+        <li>En <b>«Acceso a la API de Monetization Stats»</b> pulse <b>Crear</b> (o regenerar) y copie la clave. <i>No use la «API pública de Publisher» ni una cuenta de servicio.</i></li>
+        <li>El <b>Organization core ID</b> está en la configuración de su organización en el mismo dashboard (<b>Administration → Organization settings</b>).</li>
+        <li>Opcional: en Juegos → Portafolio, escriba el <b>Game ID de Unity</b> de cada juego para ver su nombre en los reportes.</li></ol>
+        <p class="small muted">🔒 La clave se guarda solo en esta computadora, nunca se muestra de nuevo, no viaja al navegador de los usuarios ni se incluye en los respaldos. No la comparta por chat o correo.</p></details></div>`;
+    const f = $('#fi', el);
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('PUT', '/api/integraciones', { unity_org_id: f.unity_org_id.value, unity_clave: f.unity_clave.value || undefined, trm: f.trm.value, unity_contabilizar: f.unity_contabilizar.checked });
+        toast('Integración guardada');
+        if (f.unity_clave.value) {
+          f.unity_clave.value = '';
+          try { const r = await api('POST', '/api/integraciones/unity/sincronizar', {}); toast(`¡Conectado con Unity! ${r.filas} registros descargados`); } catch (err) { fallo(err); }
+        }
+        integraciones(el);
+      } catch (err) { fallo(err); }
+    });
+    $('#fi-sync', el).addEventListener('click', async (e) => {
+      e.target.disabled = true; e.target.textContent = 'Sincronizando…';
+      try { const r = await api('POST', '/api/integraciones/unity/sincronizar', {}); toast(`Sincronizado: ${r.filas} registros`); } catch (err) { fallo(err); }
+      integraciones(el);
+    });
+    $('#fi-borrar', el)?.addEventListener('click', async () => {
+      if (!(await confirmar('¿Borrar la clave de Unity? La sincronización se detendrá hasta que guarde una nueva.', { ok: 'Borrar' }))) return;
+      try { await api('PUT', '/api/integraciones', { borrar_clave: true }); toast('Clave borrada'); integraciones(el); } catch (err) { fallo(err); }
+    });
+  }
 
   VISTAS.seguridad = async (el) => {
     const s = await api('GET', '/api/seguridad');

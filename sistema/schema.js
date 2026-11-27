@@ -180,6 +180,7 @@ const RESOURCES = {
       { k: 'fecha_lanzamiento', label: 'Fecha de lanzamiento', type: 'date' },
       { k: 'enlace', label: 'Enlace a la tienda', type: 'url' },
       { k: 'paquete', label: 'ID del paquete (com.ejemplo.juego)', type: 'text' },
+      { k: 'unity_game_id', label: 'Game ID de Unity (para los reportes de anuncios)', type: 'text' },
       { k: 'descargas', label: 'Descargas', type: 'int', list: true },
       { k: 'usuarios_activos', label: 'Usuarios activos (mes)', type: 'int' },
       { k: 'calificacion', label: 'Calificación (0-5)', type: 'number', list: true },

@@ -6,8 +6,22 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const http = require('node:http');
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'icc-test-'));
 process.env.DATA_DIR = TMP;
+// Servidor falso de Unity para las pruebas
+let ultimaConsultaUnity = null;
+const hoyISO = new Date().toISOString().slice(0, 10);
+const mesISO = hoyISO.slice(0, 7);
+const unityFalso = http.createServer((q, r) => {
+  const u = new URL(q.url, 'http://x');
+  ultimaConsultaUnity = { path: u.pathname, params: Object.fromEntries(u.searchParams), accept: q.headers.accept };
+  if (u.searchParams.get('apikey') !== 'clave-de-prueba-1234567890') { r.writeHead(401); return r.end('{"error":"unauthorized"}'); }
+  r.writeHead(200, { 'Content-Type': 'text/csv' });
+  r.end(`timestamp,source_game_id,platform,adrequest_count,available_sum,revenue_sum,start_count,view_count\n${hoyISO}T00:00:00.000Z,5551234,android,1000,950,12.5,900,850\n${hoyISO}T00:00:00.000Z,5551234,ios,100,90,"1.5",80,70\n`);
+});
+unityFalso.listen(0);
+process.env.UNITY_API_URL = `http://127.0.0.1:${unityFalso.address().port}`;
 const { server, arrancar } = require('../server');
 let base, codigo, cookie = '';
 
@@ -22,7 +36,7 @@ async function req(method, url, body, extra = {}) {
 }
 
 before(async () => { ({ port: base, codigo } = await arrancar(0, '127.0.0.1', true)); base = `http://127.0.0.1:${base}`; });
-after(() => { server.close(); fs.rmSync(TMP, { recursive: true, force: true }); });
+after(() => { server.close(); unityFalso.close(); fs.rmSync(TMP, { recursive: true, force: true }); });
 
 test('instalación y acceso', async () => {
   assert.equal((await req('GET', '/api/estado')).data.configurado, false);
@@ -169,6 +183,42 @@ test('usuarios por empleado con permisos', async () => {
   assert.equal((await req('GET', '/api/opciones/empleados?para=contratos')).status, 200);
   assert.equal((await req('POST', '/api/r/contratos', { titulo: 'x', tipo: 'Otro', fecha_inicio: '2026-01-01' })).status, 403);
   cookie = admin;
+});
+
+test('integración con Unity Ads', async () => {
+  // Sin configurar
+  assert.equal((await req('POST', '/api/integraciones/unity/sincronizar', {})).status, 502);
+  assert.equal((await req('PUT', '/api/integraciones', { unity_org_id: 'org 1; DROP' })).status, 400);
+  // Clave equivocada → mensaje claro, sin filtrar la clave
+  await req('PUT', '/api/integraciones', { unity_org_id: '99887766', unity_clave: 'clave-equivocada-000000', trm: 4000 });
+  const mal = await req('POST', '/api/integraciones/unity/sincronizar', {});
+  assert.equal(mal.status, 502);
+  assert.match(mal.data.error, /rechazó la clave/);
+  assert.ok(!JSON.stringify(mal.data).includes('clave-equivocada'));
+  // Clave correcta
+  await req('PUT', '/api/integraciones', { unity_clave: 'clave-de-prueba-1234567890' });
+  const ok = await req('POST', '/api/integraciones/unity/sincronizar', {});
+  assert.equal(ok.status, 200);
+  assert.equal(ok.data.filas, 2);
+  assert.equal(ultimaConsultaUnity.path, '/stats/v1/operate/organizations/99887766');
+  assert.equal(ultimaConsultaUnity.params.groupBy, 'game,platform');
+  assert.equal(ultimaConsultaUnity.params.scale, 'day');
+  assert.match(ultimaConsultaUnity.params.fields, /revenue_sum/);
+  const est = (await req('GET', '/api/unity/estadisticas?dias=7')).data;
+  assert.equal(est.filas.length, 2);
+  assert.equal(est.filas.reduce((a, f) => a + f.ingresos, 0), 14);
+  // Movimiento contable estimado del mes (14 USD × 4000) y sin duplicar al resincronizar
+  await req('POST', '/api/integraciones/unity/sincronizar', {});
+  const movs = (await req('GET', '/api/r/movimientos')).data.filter((m) => m.origen === 'unity');
+  assert.equal(movs.length, 1);
+  assert.equal(movs[0].valor, 56000);
+  assert.equal(movs[0].comprobante, `UNITY-${mesISO}`);
+  // La clave nunca sale del servidor
+  const todo = JSON.stringify([(await req('GET', '/api/config')).data, (await req('GET', '/api/integraciones')).data]);
+  assert.ok(!todo.includes('clave-de-prueba'));
+  const resp = await fetch(base + '/api/respaldo', { headers: { Cookie: cookie } });
+  assert.ok(!(await resp.text()).includes('clave-de-prueba'));
+  assert.equal((await req('GET', '/api/integraciones')).data.unity.clave_configurada, true);
 });
 
 test('cambio de contraseña y bloqueo por intentos', async () => {

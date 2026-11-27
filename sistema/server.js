@@ -10,6 +10,7 @@ const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const { RESOURCES } = require('./schema');
 const nomina = require('./nomina');
+const unity = require('./unity');
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -94,9 +95,22 @@ const CONFIG_DEFAULT = {
   representante: '', representante_doc: '', actividad: 'Desarrollo y publicación de videojuegos',
   regimen: 'Responsable de IVA', smmlv: '1750905', aux_transporte: '249095', horas_mes: '210',
   recargo_dominical: '0.9', exoneracion_aportes: '1', prefijo_factura: 'CC-', sesion_minutos: '30',
+  trm: '4000',
 };
 const insCfg = db.prepare('INSERT OR IGNORE INTO config (clave, valor) VALUES (?, ?)');
 for (const [k, v] of Object.entries(CONFIG_DEFAULT)) insCfg.run(k, v);
+
+// Integraciones: claves privadas (nunca salen del servidor) y estadísticas descargadas
+db.exec(`
+  CREATE TABLE IF NOT EXISTS secretos (clave TEXT PRIMARY KEY, valor TEXT);
+  CREATE TABLE IF NOT EXISTS unity_stats (fecha TEXT, game_id TEXT, plataforma TEXT, ingresos REAL, vistas INTEGER,
+    inicios INTEGER, solicitudes INTEGER, disponibles INTEGER, PRIMARY KEY (fecha, game_id, plataforma));
+`);
+const secreto = (k) => { const r = db.prepare('SELECT valor FROM secretos WHERE clave = ?').get(k); return r ? r.valor : ''; };
+const ponerSecreto = (k, v) => (v ? db.prepare('INSERT INTO secretos (clave, valor) VALUES (?, ?) ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor').run(k, v)
+  : db.prepare('DELETE FROM secretos WHERE clave = ?').run(k));
+const estado = (k, v) => db.prepare('INSERT INTO config (clave, valor) VALUES (?, ?) ON CONFLICT(clave) DO UPDATE SET valor = excluded.valor').run(k, v);
+for (const [k, v] of [['unity_org_id', ''], ['unity_contabilizar', '1']]) insCfg.run(k, v);
 
 // Juego inicial de ejemplo
 if (db.prepare('SELECT COUNT(*) n FROM juegos').get().n === 0) {
@@ -374,6 +388,54 @@ function limpiarNovedades(b) {
   return n;
 }
 
+// ───────────────────────── Unity Ads ─────────────────────────
+let sincronizando = null;
+async function sincronizarUnity(origen = 'automática') {
+  if (sincronizando) return sincronizando;
+  sincronizando = (async () => {
+    const cfg = getConfig();
+    const clave = secreto('unity_clave');
+    if (!cfg.unity_org_id || !clave) return { ok: false, error: 'Falta configurar el Organization core ID o la clave de Unity.' };
+    try {
+      const filas = await unity.descargar({ orgId: cfg.unity_org_id, clave });
+      const trm = Number(cfg.trm) || 0;
+      const meses = new Set();
+      tx(() => {
+        const up = db.prepare(`INSERT INTO unity_stats (fecha, game_id, plataforma, ingresos, vistas, inicios, solicitudes, disponibles)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(fecha, game_id, plataforma) DO UPDATE SET ingresos = excluded.ingresos,
+          vistas = excluded.vistas, inicios = excluded.inicios, solicitudes = excluded.solicitudes, disponibles = excluded.disponibles`);
+        for (const f of filas) { up.run(f.fecha, f.game_id, f.plataforma, f.ingresos, f.vistas, f.inicios, f.solicitudes, f.disponibles); meses.add(f.fecha.slice(0, 7)); }
+        // Un movimiento contable por mes con el ingreso estimado (se actualiza en cada sincronización)
+        if (cfg.unity_contabilizar === '1' && trm > 0) {
+          for (const mes of meses) {
+            const usd = db.prepare('SELECT COALESCE(SUM(ingresos), 0) t FROM unity_stats WHERE fecha LIKE ?').get(mes + '-%').t;
+            const comp = `UNITY-${mes}`;
+            const ex = db.prepare("SELECT id FROM movimientos WHERE origen = 'unity' AND comprobante = ?").get(comp);
+            if (usd <= 0 && !ex) continue;
+            const [y, m] = mes.split('-').map(Number);
+            const ultimoDia = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+            const datos = {
+              fecha: ultimoDia < hoy() ? ultimoDia : hoy(), tipo: 'Ingreso', categoria: '4170 Publicidad in-app (Ads)',
+              descripcion: `Unity Ads ${mes} — ingreso estimado US$ ${usd.toFixed(2)} × TRM ${trm}`, valor: Math.round(usd * trm),
+              medio_pago: 'Pasarela / Tienda (Play, Unity)', comprobante: comp, origen: 'unity',
+              notas: 'Generado automáticamente desde Unity Ads. Es un estimado: el valor real es el que Unity transfiere (en USD, al pagar).',
+            };
+            if (ex) actualizar('movimientos', ex.id, datos); else insertar('movimientos', datos);
+          }
+        }
+      });
+      estado('unity_ultima_sync', ahora());
+      estado('unity_ultimo_error', '');
+      return { ok: true, filas: filas.length };
+    } catch (e) {
+      estado('unity_ultimo_error', `${ahora()} · ${e.message}`);
+      if (origen === 'manual') log('integracion_error', `Unity: ${e.message}`, '', 'sistema');
+      return { ok: false, error: e.message };
+    }
+  })();
+  try { return await sincronizando; } finally { sincronizando = null; }
+}
+
 // ───────────────────────── Rutas API ─────────────────────────
 async function api(req, res, url) {
   const ip = ipDe(req);
@@ -643,6 +705,50 @@ async function api(req, res, url) {
     return res.end(JSON.stringify(out, null, 1));
   }
 
+  // ─── Integraciones (solo administradores) ───
+  if (p === '/api/integraciones' && method === 'GET') {
+    exigirAdmin(yo);
+    const c = getConfig();
+    return json(res, 200, { unity: { org_id: c.unity_org_id, clave_configurada: !!secreto('unity_clave'), contabilizar: c.unity_contabilizar === '1',
+      trm: c.trm, ultima_sync: c.unity_ultima_sync || '', ultimo_error: c.unity_ultimo_error || '' } });
+  }
+  if (p === '/api/integraciones' && method === 'PUT') {
+    exigirAdmin(yo);
+    const b = await readBody(req, 10000);
+    if (b.unity_org_id !== undefined) {
+      const org = String(b.unity_org_id || '').trim();
+      if (org && !/^[A-Za-z0-9_-]{1,64}$/.test(org)) throw new HttpError(400, 'El Organization core ID solo tiene letras y números.');
+      estado('unity_org_id', org);
+    }
+    if (b.unity_clave) {
+      const k = String(b.unity_clave).trim();
+      if (!/^[A-Za-z0-9_.-]{16,200}$/.test(k)) throw new HttpError(400, 'La clave de Unity no tiene un formato válido.');
+      ponerSecreto('unity_clave', k);
+    }
+    if (b.borrar_clave) ponerSecreto('unity_clave', '');
+    if (b.trm !== undefined) { const t = Number(b.trm); if (!(t > 0 && t < 100000)) throw new HttpError(400, 'La TRM debe ser un número positivo.'); estado('trm', String(t)); }
+    if (b.unity_contabilizar !== undefined) estado('unity_contabilizar', b.unity_contabilizar ? '1' : '0');
+    log('integraciones', `Unity Ads actualizado${b.unity_clave ? ' (nueva clave)' : ''}${b.borrar_clave ? ' (clave borrada)' : ''}`, ip, quien);
+    return json(res, 200, { ok: true });
+  }
+  if (p === '/api/integraciones/unity/sincronizar' && method === 'POST') {
+    exigirAdmin(yo);
+    const r = await sincronizarUnity('manual');
+    log('integraciones', r.ok ? `Unity sincronizado (${r.filas} filas)` : `Unity: error al sincronizar`, ip, quien);
+    if (!r.ok) throw new HttpError(502, r.error);
+    return json(res, 200, r);
+  }
+  if (p === '/api/unity/estadisticas' && method === 'GET') {
+    exigir(yo, 'juegos', 'ver');
+    const dias = Math.min(400, Math.max(1, Number(url.searchParams.get('dias')) || 30));
+    const desde = new Date(Date.now() - dias * 864e5).toISOString().slice(0, 10);
+    const c = getConfig();
+    return json(res, 200, {
+      configurado: !!(c.unity_org_id && secreto('unity_clave')), ultima_sync: c.unity_ultima_sync || '', ultimo_error: c.unity_ultimo_error || '', trm: Number(c.trm) || 0,
+      filas: db.prepare('SELECT * FROM unity_stats WHERE fecha >= ? ORDER BY fecha').all(desde),
+    });
+  }
+
   // ─── Documentos (subida/descarga) ───
   if (p === '/api/documentos/subir' && method === 'POST') {
     exigir(yo, 'documentos', 'editar');
@@ -853,6 +959,12 @@ function arrancar(port = PORT, host = HOST, silencioso = false) {
   }));
 }
 
-if (require.main === module) arrancar();
+if (require.main === module) {
+  arrancar().then(() => {
+    // Unity: primera sincronización al minuto de arrancar y luego cada hora.
+    setTimeout(() => sincronizarUnity(), 60 * 1000).unref();
+    setInterval(() => sincronizarUnity(), 60 * 60 * 1000).unref();
+  });
+}
 
-module.exports = { server, db, arrancar };
+module.exports = { server, db, arrancar, sincronizarUnity };

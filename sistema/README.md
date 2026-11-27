@@ -52,6 +52,18 @@ Luego abra **http://localhost:3000** en el navegador.
 - Desactivar un usuario cierra sus sesiones de inmediato. La bitácora registra **quién** hizo cada cosa.
 - Solo los administradores gestionan usuarios, ven la bitácora completa y descargan respaldos; solo el principal puede cambiar el número de empresa.
 
+## Datos en tiempo real: Unity Ads
+
+El sistema puede descargar **cada hora** los ingresos por anuncios de tus juegos desde Unity Ads.
+
+1. En Unity Cloud Dashboard → **Monetization → Configuración → Gestión de API**, en **«Acceso a la API de Monetization Stats»**, pulsa **Crear** y copia la clave.
+2. En el sistema, como administrador: **Configuración → 🔌 Integraciones**. Pega la clave, escribe el **Organization core ID** y la **TRM** (pesos por dólar) y pulsa **Guardar**. El sistema prueba la conexión al instante.
+3. Opcional: en **Juegos → Portafolio**, escribe el **Game ID de Unity** de cada juego para verlo por nombre.
+
+Resultado: el **Panel** muestra los ingresos de hoy, ayer, los últimos 7 días y el mes, y se refresca solo cada minuto. **Juegos → Ingresos Unity Ads** tiene el gráfico diario, las vistas, el eCPM y la tasa de relleno por juego y plataforma. Si lo dejas activado, cada mes se registra en Contabilidad el **ingreso estimado** (USD × TRM).
+
+> La clave se guarda solo en tu computadora (en `data/`), nunca se muestra de nuevo, no llega al navegador de los demás usuarios y no se incluye en los respaldos. No la compartas por chat ni por correo.
+
 ## Seguridad incluida
 
 - Contraseña guardada con **scrypt + sal aleatoria** (no se puede leer ni recuperar).
