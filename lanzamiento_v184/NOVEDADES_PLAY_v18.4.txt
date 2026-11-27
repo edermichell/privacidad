@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v18.4:
+• La historia avanza poco a poco: la radio te cuenta el rumor del rescate día a día y el helicóptero solo vuela desde el día 7.
+• Cada amanecer verás el día y el capítulo en que vas.
+• En compañía ves cuándo un zombi agarra a un compañero.
+• Animaciones con más peso y nuevo ajuste «Forcejeo fácil».
+
+--- English (optional) ---
+What's new in v18.4:
+• The story unfolds slowly: the radio reveals the rescue rumor day by day, and the helicopter only flies from day 7.
+• Each dawn shows the day and the current chapter.
+• In co-op you can see when a zombie grabs a teammate.
+• Weightier animations and a new "Easy struggle" setting.

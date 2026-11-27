@@ -903,7 +903,7 @@ h1,.mlogo{animation:logop 3.6s ease-in-out infinite}
     </section>
   </div>
   <button id="bSet" type="button" aria-label="Ajustes"><svg viewBox="0 0 12 12" width="16" height="16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 0h2v2h2l1-1 1 1-1 1v2h2v2h-2v2l1 1-1 1-1-1H7v2H5v-2H3l-1 1-1-1 1-1V7H0V5h2V3L1 2l1-1 1 1h2zM5 4v4h2V4z" fill-rule="evenodd"/></svg><span>AJUSTES</span></button>
-  <div class="mfoot"><span>v18.3 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
+  <div class="mfoot"><span>v18.4 · isométrico · pixel art</span><span id="mtip"></span><button id="bNews" class="ghost" type="button" aria-label="Novedades y actualización">NOVEDADES<i id="newsDot" hidden></i></button><button id="bSndM" class="ghost" aria-label="Sonido">SONIDO</button></div>
   <div id="updBar" hidden role="status"><span id="updBarTx">Versión nueva disponible</span><button id="bUpdBar" type="button" class="ghost">ACTUALIZAR</button><button id="bUpdBarX" type="button" class="ghost" aria-label="Cerrar aviso">×</button></div>
   <div id="traitm" class="howm" hidden>
     <div class="howc card">
@@ -2328,8 +2328,12 @@ function urWeak() { try { if (UR_SRVPAGE) return false; const m = Number(navigat
    · Tras actualizar, el panel se abre una vez solo; en una instalación nueva no molesta.
    · Aviso automático: Android pregunta a Google Play (actualización dentro de la app) al abrir el menú, y el servidor puede anunciar la última versión en /salas.
      En el aviso: ACTUALIZAR → Google Play (con «actualización inmediata» si está permitida). Nada de esto toca la partida. */
-const UR_BUILD = 173, UR_VERSION = '18.3', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
+const UR_BUILD = 174, UR_VERSION = '18.4', UR_STORE = 'https://play.google.com/store/apps/details?id=com.impulso.ultimorefugio';
 const UR_NEWS = [
+  { v: '18.4', t: 'Una historia sin prisas', it: [
+    'La historia se cuenta poco a poco por la radio: el día 1 solo estática, el día 2 un mensaje entrecortado, y el día 3 por fin el rumor completo del rescate.',
+    'La misión principal ya no te da todo el plan de golpe: empiezas por averiguar qué es el Proyecto Aurora y el resto lo descubres en sus notas.',
+    'El helicóptero de evacuación solo vuela desde el día 7. Cada amanecer verás el día y el capítulo en que vas.' ] },
   { v: '18.3', t: 'En compañía se ve todo', it: [
     'Si a un compañero le agarra un zombi, ahora lo ves: tiembla y tiene un aro rojo a los pies. Golpea al zombi para soltarlo.',
     'Los golpes de los demás jugadores también hacen retroceder y destellar a los zombis en tu pantalla, igual que los tuyos.' ] },
@@ -7127,7 +7131,7 @@ function drawNpc(n) {
   if (dead) return;
   const top = Y - spr.oy + bob; ctx.textAlign = 'center'; ctx.lineJoin = 'round'; ctx.lineWidth = 3;
   if ((n.hitT && now - n.hitT < 2600) || n.follow) { const k = clamp(n.hp / n.maxhp, 0, 1), bx = X - 8, by = top - 4; ctx.fillStyle = '#000'; ctx.fillRect(bx - 1, by - 1, 18, 4); ctx.fillStyle = k > .5 ? '#7dd36a' : k > .25 ? '#e8c75a' : '#e0503c'; ctx.fillRect(bx, by, Math.round(16 * k), 2); }
-  if (d2 < 42.25 || n.follow) { ctx.font = '11px VT323, "Courier New", monospace'; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.fillStyle = FAC_COL[n.fac]; const ty = top - 8; ctx.strokeText(n.name, X, ty); ctx.fillText(n.name, X, ty); }
+  if (d2 < 42.25 || n.follow) lbl184Draw(n.name, FAC_COL[n.fac], X, top - 8);
   if (n.sayT > 0 && n.say) {
     ctx.font = '12px VT323, "Courier New", monospace'; const tw = Math.ceil(ctx.measureText(n.say).width) + 8, bx = Math.round(X - tw / 2), by = top - 30, a = clamp(n.sayT / .4, 0, 1);
     ctx.globalAlpha = a; ctx.fillStyle = 'rgba(8,10,8,.82)'; ctx.fillRect(bx, by, tw, 13); ctx.fillStyle = FAC_COL[n.fac]; ctx.fillRect(bx, by, tw, 1); ctx.fillRect(bx, by + 12, tw, 1); ctx.fillRect(bx, by, 1, 13); ctx.fillRect(bx + tw - 1, by, 1, 13);
@@ -10754,7 +10758,7 @@ function stRead(it) {
   const c = STORY.rd.length, zs = STORY.z || [];
   if (c >= 2 && !(STORY.pin & 1) && zs[0]) { STORY.pin |= 1; MK.push({ x: zs[0].x, y: zs[0].y, t: 'danger' }); say('Marcaste el hospital en el mapa: ahí está el Paciente Cero (zona peligrosa).', 'bad'); }
   if (c >= 4 && !(STORY.pin & 2) && zs[1]) { STORY.pin |= 2; MK.push({ x: zs[1].x, y: zs[1].y, t: 'danger' }); say('Marcaste otra zona peligrosa: el oficial con la radio de campaña.', 'bad'); }
-  if (c >= 5 && !STORY.fq) { STORY.fq = 1; say('Ya conoces la frecuencia de rescate: necesitas la muestra, la radio de campaña y un lugar abierto.', 'good'); jlog('Frecuencia de rescate 142.7: muestra del Paciente Cero + radio de campaña + lugar abierto.', 'info'); }
+  if (c >= 5 && !STORY.fq) { STORY.fq = 1; say('Ya conoces la frecuencia de rescate: necesitas la muestra, la radio de campaña y un lugar abierto.', 'good'); jlog('Frecuencia de rescate 142.7: muestra del Paciente Cero + radio de campaña + lugar abierto.', 'info'); if (!ST184.off) jlog('Según la grabación, el primer vuelo de evacuación sale el día ' + ST184.flyDay + '.', 'info'); }
   if (c === STORY_NOTES.length) say('Reuniste todo el archivo de Aurora.', 'good');
 }
 /* ---- uso de objetos ---- */
@@ -10774,6 +10778,7 @@ function beaconStart() {
   if (STORY.rd.length < 5) miss.push('conocer la frecuencia (lee al menos 5 notas)');
   if (!hasItem('sample')) miss.push('la muestra del Paciente Cero');
   if (miss.length) { say('Aún te falta: ' + miss.join(' y ') + '.', 'bad'); sfx('click', 0); return; }
+  if (!ST184.off && paceDay() < ST184.flyDay) { say('Solo estática en la 142.7. Según la grabación, los vuelos de evacuación empiezan el día ' + ST184.flyDay + ' (hoy es el ' + paceDay() + ').', 'bad'); sfx('click', 0); return; }
   if (P.drive || (typeof wxIndoor === 'function' && wxIndoor())) { say('Sal a un lugar abierto, fuera de edificios y autos.', 'bad'); sfx('click', 0); return; }
   BEACON = { t: 0, x: P.x, y: P.y, wv: 6, far: 0 }; sfx('scream', 8); makeNoise(P.x, P.y, 60); shake = 4;
   say('¡Señal enviada! Mantén la posición ' + SIEGE_T + ' segundos: el helicóptero ya viene.', 'good'); jlog('Activaste la señal de evacuación.', 'info'); MX.beacon = 1;
@@ -17551,6 +17556,7 @@ function m76Stage() {
   }
   if (!m76Has('sample')) return { id: 3, n: 'Muestra del Paciente Cero', sub: 'En el hospital (jefe)', tgt: m76ItemTgt('sample', ['hosp']) };
   if (!m76Has('fieldradio')) { const t = m76ItemTgt('fieldradio', ['mil', 'pol']); if (t) return { id: 4, n: 'Radio del oficial infectado', sub: 'Base militar o comisaría (jefe)', tgt: t }; }
+  if (!ST184.off && paceDay() < ST184.flyDay) return { id: 5, n: 'Espera el primer vuelo', sub: 'Día ' + ST184.flyDay + ' (faltan ' + (ST184.flyDay - paceDay()) + (ST184.flyDay - paceDay() === 1 ? ' día)' : ' días)'), tgt: null };
   return { id: 6, n: 'Llama al helicóptero', sub: 'Al aire libre: usa la radio de campaña', tgt: null };
 }
 /* flecha dorada: solo si el jugador la pidió (GUIAR); no pisa una marca puesta por él */
@@ -17640,9 +17646,9 @@ function m76Render(force) {
 /* ---------- ofertas ---------- */
 function m76Offer() {
   const a = m76Acc(); if (a === 1) return;
-  const html = '<p style="line-height:1.5">La ciudad cayó hace unos días. Por la radio se repite un mensaje: <b>evacuación por helicóptero, frecuencia 142.7</b>. Nadie sabe si es real… pero es una esperanza.</p>' +
-    '<p style="line-height:1.5"><b>Si decides ir:</b><br>① Reúne los archivos del <b>Proyecto Aurora</b> (lee 5 notas).<br>② Consigue la <b>muestra del Paciente Cero</b> (hospital).<br>③ Quítale la <b>radio de campaña</b> al oficial infectado.<br>④ Al aire libre, llama al helicóptero y resiste 150 s.</p>' +
-    '<p style="line-height:1.5;opacity:.85">Es peligroso y no hay prisa: tú decides cuándo. Mientras, sobrevive y prepárate con las misiones secundarias.</p>';
+  const html = '<p style="line-height:1.5">Esta vez la radio se oye entera, en bucle: <b>«Evacuación por helicóptero. Frecuencia 142.7. Quien transmita con la autorización del Proyecto Aurora será recogido.»</b></p>' +
+    '<p style="line-height:1.5">Nadie sabe qué es Aurora. <b>Primer paso:</b> busca sus notas (hospitales, comisarías, escuelas, oficinas…) y léelas. Lo demás lo irás descubriendo.</p>' +
+    '<p style="line-height:1.5;opacity:.85">No hay prisa: según la grabación, los vuelos no empiezan hasta el día ' + ST184.flyDay + '. Mientras, sobrevive y prepárate.</p>';
   metaModal('RUMOR DE RESCATE', html, [
     { t: 'ACEPTAR MISIÓN', cls: 'mbp', f: () => { $('metam').hidden = true; M76.sv.acc = 1; M76.id = -9; M76.tt = 0; say('Misión aceptada. Pulsa GUIAR en el panel si quieres una flecha.', 'good'); jlog('Misión: llegar a la evacuación (142.7). Notas de Aurora, muestra del Paciente Cero, radio de campaña y helicóptero.', 'info'); m76Tick(); } },
     { t: 'AHORA NO', f: () => { $('metam').hidden = true; if (M76.sv.acc === 0) { M76.sv.acc = 2; say('Queda como rumor en el panel: puedes verla cuando quieras.', 'tip'); } m76Render(true); } }]);
@@ -17670,7 +17676,7 @@ function m76Tick() {
   if (!s) M76.id = -9; M76.st = s; m76Guide(s);
   if (!s && WP && WP.n && WP.n.indexOf('Misión') === 0) WP = null;
   /* oferta de la principal: sin prisa (≥4 min jugando, primer objetivo hecho, fuera del tutorial) */
-  if (sv.acc === 0 && !STORY.rd.length && !metaTutOn() && M76.pt >= 240 && QI >= 1 && !M76.offered && m76Quiet()) { M76.mainAt = M76.pt; M76.offered = true; m76Offer(); }
+  if (sv.acc === 0 && !STORY.rd.length && !metaTutOn() && M76.pt >= 240 && QI >= 1 && !M76.offered && m76Quiet() && st184OfferOk()) { M76.mainAt = M76.pt; M76.offered = true; m76Offer(); }
   /* secundarias */
   const q = m76Side(); if (q) { let ok = false; try { ok = !!q.t(); } catch (e) { typeof dbgc === 'function' && dbgc(e); } if (ok) m76SideDone(q); }
   if (M76.card) { M76.cardT -= dt; if (M76.cardT <= 0) m76SideDecline(M76.card); }
@@ -24098,6 +24104,83 @@ function an183Dir(z) {
   };
 }
 
+/* ===================== v18.4: UNA HISTORIA SIN PRISAS =====================
+   Antes, a los 4 minutos de juego (mediodía del día 1) llegaba la misión principal con todo el plan de golpe, y en una tarde
+   podía terminarse. Ahora la historia se cuenta por la radio, poco a poco, a lo largo de una semana de juego:
+   · Día 1 «Los primeros días»: solo sobrevivir. Al anochecer, la radio da estática y media palabra.
+   · Día 2 «Una voz en la radio»: un fragmento entrecortado («…uno-cuatro-dos… helicóptero…»). Va al diario; aún no hay misión.
+   · Día 3 «El rumor»: por fin se oye entero y se ofrece la misión, pero solo con el PRIMER paso (averiguar qué es Aurora);
+     lo demás lo van revelando las notas, como hasta ahora.
+   · El helicóptero solo vuela desde el DÍA 7 (lo dice la grabación). Antes, la radio de campaña solo da estática.
+   · Cada amanecer, un título «DÍA N» con el capítulo en que vas.
+   Leer una nota de Aurora sigue contando como aceptar la misión (descubrir por tu cuenta no se castiga).
+   Las marcas se guardan con la partida (dentro de las misiones). */
+const ST184 = { flyDay: 7, off: false, el: null };
+const st184F = () => { const s = M76.sv.side; return s.h184 | 0; };
+const st184Set = b => { const s = M76.sv.side; s.h184 = (s.h184 | 0) | b; };
+function st184OfferOk() { if (ST184.off) return true; const tod = GT.min % 1440; return paceDay() >= 3 && (st184F() & 2) && tod >= 480 && tod <= 1080; }
+function st184Chapter() {
+  if (STORY.end) return 'Después';
+  if (BEACON) return 'La evacuación';
+  const a = m76Acc(), rd = STORY.rd.length;
+  if (a !== 1) return (st184F() & 2) ? (paceDay() >= 3 ? 'El rumor' : 'Una voz en la radio') : 'Los primeros días';
+  if (rd < 5) return 'El archivo Aurora';
+  if (!m76Has('sample')) return 'El Paciente Cero';
+  if (!m76Has('fieldradio')) return 'La radio del oficial';
+  return paceDay() < ST184.flyDay ? 'Esperando el vuelo' : 'La evacuación';
+}
+function st184Card(d) {
+  let el = ST184.el; if (!el) { el = ST184.el = document.createElement('div'); el.id = 'day184'; el.innerHTML = '<b></b><span></span>'; document.body.appendChild(el); }
+  el.querySelector('b').textContent = 'DÍA ' + d; el.querySelector('span').textContent = st184Chapter();
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+}
+function st184Tick() {
+  if (ST184.off || !m76On()) return;
+  const d = paceDay(), tod = GT.min % 1440, f = st184F(), quiet = m76Quiet();
+  /* tarjeta del amanecer (desde el día 2; el día 1 ya tiene su introducción) */
+  if (d >= 2 && tod >= 360 && tod < 600 && (M76.sv.side.card184 | 0) < d) { M76.sv.side.card184 = d; st184Card(d); }
+  if (!quiet) return;
+  /* día 1, al anochecer: estática */
+  if (!(f & 1) && (d >= 2 || tod >= 1140)) { st184Set(1); say('La radio vieja solo da estática… y por un instante una voz: «…evacua…». Nada más.', 'tip'); jlog('Por la radio, entre la estática, alguien dijo «evacuación».', 'info'); try { sfx('click', 0); } catch (e) { } return; }
+  /* día 2: un fragmento */
+  if ((f & 1) && !(f & 2) && d >= 2 && tod >= 600) { st184Set(2); say('La radio capta un fragmento: «…frecuencia uno-cuatro-dos… helicóptero… quien tenga…». Se corta.', 'tip'); jlog('Un mensaje entrecortado: una frecuencia que empieza por 142 y un helicóptero. Si vuelve a sonar, escúchalo entero.', 'info'); try { sfx('click', 0); } catch (e) { } }
+}
+{
+  const _mt = m76Tick; m76Tick = function () { const r = _mt.apply(this, arguments); try { st184Tick(); } catch (e) { } return r; };
+}
+/* el aviso del día 7 va ANTES de la confirmación «¿activar la señal?» (si tienes todo); si falta algo, se explica como siempre */
+{
+  const _bs = beaconStart;
+  beaconStart = function () {
+    if (!ST184.off && !BEACON && NET.role !== 'guest' && STORY.rd.length >= 5 && hasItem('sample') && paceDay() < ST184.flyDay) {
+      say('Solo estática en la 142.7. Según la grabación, los vuelos de evacuación empiezan el día ' + ST184.flyDay + ' (hoy es el ' + paceDay() + ').', 'bad'); try { sfx('click', 0); } catch (e) { } return;
+    }
+    return _bs.apply(this, arguments);
+  };
+}
+
+/* ===================== v18.4: NOMBRES SIN COSTE =====================
+   Medido: el nombre sobre cada persona cercana era lo más caro de dibujarla (más del 80 % de drawNpc). En cada cuadro y para
+   cada una se cambiaba la fuente y se escribía el texto dos veces (borde y relleno), y escribir texto en un lienzo es caro.
+   Ahora cada nombre se escribe UNA vez en una imagen pequeña (a la resolución interna, igual de nítida) y se reutiliza.
+   Si la fuente pixelada aún no ha cargado, se escribe como antes (así nunca se guarda con la fuente equivocada). */
+const LBL184 = { off: false, m: new Map(), hits: 0, made: 0 };
+function lbl184Get(txt, col, px) {
+  const k = px + '|' + col + '|' + txt; let c = LBL184.m.get(k); if (c) { LBL184.hits++; return c; }
+  const font = px + 'px VT323, "Courier New", monospace';
+  try { if (document.fonts && document.fonts.check && !document.fonts.check(px + 'px VT323')) return null; } catch (e) { }
+  const g0 = document.createElement('canvas').getContext('2d'); g0.font = font; const w = Math.ceil(g0.measureText(txt).width) + 6, h = px + 6, B = px + 1;
+  c = document.createElement('canvas'); c.width = w * RS; c.height = h * RS; c.hi = true; c.w184 = w; c.b184 = B;
+  const g = c.getContext('2d'); g.scale(RS, RS); g.font = font; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 3; g.strokeStyle = 'rgba(0,0,0,.85)'; g.fillStyle = col;
+  g.strokeText(txt, w / 2, B); g.fillText(txt, w / 2, B);
+  if (LBL184.m.size > 400) LBL184.m.clear(); LBL184.m.set(k, c); LBL184.made++; return c;
+}
+function lbl184Draw(txt, col, X, ty) {
+  const c = LBL184.off ? null : lbl184Get(String(txt), col, 11);
+  if (c) { ctx.drawImage(c, X - c.w184 / 2, ty - c.b184); return; }
+  ctx.font = '11px VT323, "Courier New", monospace'; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.fillStyle = col; ctx.strokeText(txt, X, ty); ctx.fillText(txt, X, ty);
+}
+
 const SPRC = {
   on: (function () { try { return !!window.indexedDB && !(typeof UR_SRVPAGE !== 'undefined' && UR_SRVPAGE); } catch (e) { return false; } })(),
   key() { return 'v' + UR_VERSION + '|b' + UR_BUILD + '|rs' + RS; },
@@ -25475,7 +25558,7 @@ window.GAME = {
   // Añade una tarjeta al panel de diagnóstico sin modificar su muestreador principal.
   const diag = document.getElementById('v120Diag');
   if (diag) {
-    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+    const head = diag.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
     const grid = diag.querySelector('.v120-grid');
     if (grid) { const cell = document.createElement('div'); cell.className = 'v120-cell'; cell.innerHTML = '<small>FAUNA · ACTIVOS / ATASCADOS / DESVÍOS</small><b id="v123Fauna">—</b>'; grid.appendChild(cell); const wcell = document.createElement('div'); wcell.className = 'v120-cell'; wcell.innerHTML = '<small>MUNDO · Z/N/A/OTROS</small><b id="v124WorldKinds">—</b>'; grid.appendChild(wcell); const dcell = document.createElement('div'); dcell.className = 'v120-cell'; dcell.innerHTML = '<small>MUNDO ms · S/E/T/R</small><b id="v124WorldDetail">—</b>'; grid.appendChild(dcell); }
     const copy = diag.querySelector('[data-copy]');
@@ -25516,7 +25599,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (panel) {
-    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+    const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
     const grid = panel.querySelector('.v120-grid');
     if (grid && !document.getElementById('v126NpcAi')) {
       const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25539,7 +25622,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v127BucketSort')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25568,7 +25651,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v128SpecReuse')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25602,7 +25685,7 @@ window.GAME = {
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
   const head = panel.querySelector('.v120-head span');
-  if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+  if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v129KeyMemo')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25633,7 +25716,7 @@ window.GAME = {
   }
   const panel = document.getElementById('v120Diag');
   if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v130LodNpc')) {
     const a = document.createElement('div'); a.className = 'v120-cell';
@@ -25666,7 +25749,7 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
       '\nLOD dibujo NPC distantes · completo/simple: ' + UR131_DRAW_LOD_STATS.full + '/' + UR131_DRAW_LOD_STATS.simple;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v131SimNpc')) {
     const cells = [
@@ -25695,12 +25778,12 @@ const UR131_DRAW_LOD_STATS = { full: 0, simple: 0 };
   const api = window.__UR124_DIAG || window.__UR122_DIAG;
   if (api && typeof api.getReport === 'function') {
     const base = api.getReport.bind(api);
-    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 18.3') +
+    api.getReport = () => String(base()).replace(/Último Refugio 13\.1/g, 'Último Refugio 18.4') +
       '\nRim light personajes · dibujados/creados/aciertos: ' + UR132_RIM_STATS.draws + '/' + UR132_RIM_STATS.builds + '/' + UR132_RIM_STATS.hits +
       '\nCaché rim · tamaño/expulsiones/omisiones: ' + UR132_RIM_CACHE.size + '/' + UR132_RIM_STATS.evictions + '/' + UR132_RIM_STATS.bypass;
   }
   const panel = document.getElementById('v120Diag'); if (!panel) return;
-  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.3';
+  const head = panel.querySelector('.v120-head span'); if (head) head.textContent = 'DIAGNÓSTICO · 18.4';
   const grid = panel.querySelector('.v120-grid');
   if (grid && !document.getElementById('v132Rim')) {
     const cell = document.createElement('div'); cell.className = 'v120-cell';
@@ -25916,7 +25999,17 @@ body #pause .pz-b::-webkit-scrollbar{width:6px}body #pause .pz-b::-webkit-scroll
 #grab180.hit{transform:translateX(-50%) scale(1.06)}
 @media (max-height:520px){#grab180{top:14%;padding:5px 10px 7px;min-width:180px}#grab180 b{font-size:21px}#grab180 span{font-size:14px}#grab180 i{width:170px}#grab180 u{width:170px}}
 </style>
+<style>/* v18.4: título de cada día, en una franja oscura de lado a lado (se lee sobre cualquier panel) */
+#day184{position:fixed;left:0;right:0;top:34%;z-index:35;pointer-events:none;text-align:center;font-family:VT323,"Courier New",monospace;opacity:0;color:#f1ead8;padding:10px 16px 12px;background:linear-gradient(90deg,transparent,#06080bd9 18%,#06080bd9 82%,transparent);text-shadow:0 2px 0 #000}
+#day184 b{display:block;font-size:54px;letter-spacing:10px;font-weight:400;line-height:1}
+#day184 span{display:block;font-size:22px;letter-spacing:3px;color:#f2c46b;margin-top:4px;text-transform:uppercase}
+#day184.go{animation:day184 3.6s ease forwards}
+@keyframes day184{0%{opacity:0;letter-spacing:4px}14%{opacity:1}75%{opacity:1}100%{opacity:0}}
+@media (max-height:520px){#day184{top:30%;padding:6px 16px 8px}#day184 b{font-size:40px;letter-spacing:8px}#day184 span{font-size:17px}}
+@media (prefers-reduced-motion:reduce){#day184.go{animation:day184r 3.6s linear forwards}@keyframes day184r{0%,100%{opacity:0}10%,80%{opacity:1}}}
+</style>
 </body>
+
 
 
 </html>
