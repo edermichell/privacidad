@@ -1,0 +1,15 @@
+PLAY CONSOLE → «¿Qué novedades hay en esta versión?» (máximo 500 caracteres por idioma)
+
+--- Español (Latinoamérica / España) ---
+Novedades de la v18.5:
+• Los consejos salen de uno en uno, con tiempo para leerlos; los urgentes primero.
+• La historia avanza poco a poco: la radio te cuenta el rumor del rescate día a día y el helicóptero solo vuela desde el día 7.
+• Cada amanecer verás el día y el capítulo en que vas.
+• En compañía ves cuándo un zombi agarra a un compañero.
+
+--- English (optional) ---
+What's new in v18.5:
+• Tips now show one at a time, with time to read them; urgent ones first.
+• The story unfolds slowly: the radio reveals the rescue rumor day by day, and the helicopter only flies from day 7.
+• Each dawn shows the day and the current chapter.
+• In co-op you can see when a zombie grabs a teammate.
